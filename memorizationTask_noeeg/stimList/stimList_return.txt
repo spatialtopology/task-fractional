@@ -1,0 +1,10 @@
+obj011backpack.bmp
+obj038broom.bmp
+obj063city.bmp
+obj110football.bmp
+obj130hammock.bmp
+obj187motorcycle.bmp
+obj221pinecone.bmp
+obj232purse.bmp
+obj235rabbit.bmp
+obj236raccoon.bmp
