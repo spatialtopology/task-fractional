@@ -162,7 +162,9 @@ d=clock;
 logfile=fullfile(defaults.path.data, sprintf('LOG_whyhow_sub%s.txt', subjectID));
 fprintf('\nA running log of this session will be saved to %s\n',logfile);
 fid=fopen(logfile,'a');
-if fid<1,error('could not open logfile!');end;
+if fid<1
+    error('could not open logfile!')
+end
 fprintf(fid,'Started: %s %2.0f:%02.0f\n',date,d(4),d(5));
 
 %% Make Images Into Textures %%
