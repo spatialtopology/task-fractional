@@ -25,7 +25,7 @@ while noresp && GetSecs - onset < resp_window
     
     [keyIsDown, secs ,keyCode] = KbCheck(resp_device);
     keyPressed = find(keyCode);
-    if keyIsDown & ismember(keyPressed, resp_set)
+    if keyIsDown && ismember(keyPressed, resp_set)
         
         rt = secs - onset;
         resp = KbName(keyPressed);
