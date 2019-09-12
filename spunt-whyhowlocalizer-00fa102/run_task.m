@@ -1,4 +1,18 @@
 function run_task(order, test_tag)
+% ---------------------
+% debug mode % Initial
+% debug     = 1;   % PTB Debugging
+% 
+% AssertOpenGL;
+% commandwindow;
+% ListenChar(2);
+% if debug
+%     ListenChar(0);
+%     PsychDebugWindowConfiguration;
+% end
+global p
+Screen('Preference', 'SkipSyncTests', 1);
+PsychDefaultSetup(2);
 % RUN_TASK  Run Why/How Localizer Task
 %
 %   USAGE: run_task([order], [test_tag])
@@ -64,14 +78,14 @@ if nargin<2, test_tag = 0; end
 if isempty(order), order = 0; end
 
 %% Check for Psychtoolbox %%
-try
-    ptbVersion = PsychtoolboxVersion;
-catch
-    url = 'https://psychtoolbox.org/PsychtoolboxDownload';
-    fprintf('\n\t!!! WARNING !!!\n\tPsychophysics Toolbox does not appear to on your search path!\n\tSee: %s\n\n', url);
-    return
-end
-
+% try
+%     ptbVersion = PsychtoolboxVersion;
+% catch
+%     url = 'https://psychtoolbox.org/PsychtoolboxDownload';
+%     fprintf('\n\t!!! WARNING !!!\n\tPsychophysics Toolbox does not appear to on your search path!\n\tSee: %s\n\n', url);
+%     return
+% end
+% PsychDefaultSetup(2);
 %% Print Title %%
 script_name='----------- Photo Judgment Test -----------'; boxTop(1:length(script_name))='=';
 fprintf('\n%s\n%s\n%s\n',boxTop,script_name,boxTop)
@@ -133,7 +147,7 @@ else
     subjectID = 'TEST';
 end
 
-%% Setup Input Device(s) %%
+% Setup Input Device(s) %%
 switch upper(computer)
   case 'MACI64'
     inputDevice = ptb_get_resp_device;
@@ -150,15 +164,50 @@ end
 resp_set = ptb_response_set([defaults.valid_keys defaults.escape]); % response set
 
 %% Initialize Screen %%
-try
-    w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1, defaults.screenres); % setup screen
-catch
-    disp('Could not change to recommend screen resolution. Using current.');
-    w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1);
-end
+% screens                       = Screen('Screens'); % Get the screen numbers
+% p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
+% 
+% try
+%     w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1, defaults.screenres); % setup screen
+% catch
+%     disp('Could not change to recommend screen resolution. Using current.');
+%     w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1);
+% end
 
+screens                       = Screen('Screens'); % Get the screen numbers
+p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
+p.ptb.white                   = WhiteIndex(p.ptb.screenNumber); % Define black and white
+p.ptb.black                   = BlackIndex(p.ptb.screenNumber);
+[p.ptb.window, p.ptb.rect]    = PsychImaging('OpenWindow', p.ptb.screenNumber, p.ptb.black);
+[p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize', p.ptb.window);
+p.ptb.ifi                      = Screen('GetFlipInterval', p.ptb.window);
+Screen('BlendFunction', p.ptb.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA'); % Set up alpha-blending for smooth (anti-aliased) lines
+Screen('TextFont', p.ptb.window, 'Arial');
+Screen('TextSize', p.ptb.window, 36);
+[p.ptb.xCenter, p.ptb.yCenter] = RectCenter(p.ptb.rect);
+p.fix.sizePix                  = 40; % size of the arms of our fixation cross
+p.fix.lineWidthPix             = 4; % Set the line width for our fixation cross
+% Now we set the coordinates (these are all relative to zero we will let
+% the drawing routine center the cross in the center of our monitor for us)
+p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
+p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
+p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
+
+w.win = p.ptb.window;
+w.rect = p.ptb.rect;
+w.white = p.ptb.white;  
+w.black = p.ptb.black;
+HideCursor(p.ptb.screenNumber);
 %% Initialize Logfile (Trialwise Data Recording) %%
 d=clock;
+
+
+if ~exist(defaults.path.data,'dir')
+    [canSaveData,saveDataMsg,saveDataMsgID] = mkdir(defaults.path.data);
+    if canSaveData == false
+        error(saveDataMsgID,'Cannot write in directory %s due to the following error: %s',pwd,saveDataMsg);
+    end
+end
 logfile=fullfile(defaults.path.data, sprintf('LOG_whyhow_sub%s.txt', subjectID));
 fprintf('\nA running log of this session will be saved to %s\n',logfile);
 fid=fopen(logfile,'a');
