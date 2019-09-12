@@ -8,8 +8,8 @@ function [cfg,expParam] = config_canna(cfg,expParam)
 %% Experiment session information
 
 % Set the number of sessions
-expParam.nSessions = 2; % 5
-expParam.sesTypes = {'stud1','test1', 'stud2', 'stud2'}; % 
+expParam.nSessions = 4; % 5
+expParam.sesTypes = {'stud1','test1', 'stud2', 'test2'}; %
 
 %% If this is session 1, setup the experiment
 if expParam.sessionNum == 1

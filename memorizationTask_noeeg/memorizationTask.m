@@ -21,7 +21,10 @@ function memorizationTask(expName,subNum)
 home
 
 % check for Opengl compatibility, abort otherwise:
-AssertOpenGL;
+% AssertOpenGL;
+global p
+Screen('Preference', 'SkipSyncTests', 1);
+PsychDefaultSetup(2);
 
 % Make sure keyboard mapping is the same on all supported operating systems
 % Apple MacOS/X, MS-Windows and GNU/Linux:
@@ -74,7 +77,7 @@ if nargin == 0
             repeat = 0;
         end
     end
-    
+
 elseif nargin == 1
     % cannot proceed with one argument
     error('You provided 1 argument, but you need either zero or two! Must provide either no inputs (%s;) or provide experiment name (as a string) and subject number (as an integer).',mfilename,mfilename,expName);
@@ -105,19 +108,20 @@ end
 
 % make sure subject directory exists
 cfg.files.subSaveDir = fullfile(cfg.files.dataSaveDir,expParam.subject);
-if ~exist(cfg.files.subSaveDir,'dir')
+if (~exist(cfg.files.subSaveDir, 'dir'))
     [canSaveData,saveDataMsg,saveDataMsgID] = mkdir(cfg.files.subSaveDir);
     if canSaveData == false
         error(saveDataMsgID,'Cannot write in directory %s due to the following error: %s',pwd,saveDataMsg);
     end
 end
 
+
 % set name of the file for saving experiment parameters
 cfg.files.expParamFile = fullfile(cfg.files.subSaveDir,'experimentParams.mat');
 if exist(cfg.files.expParamFile,'file')
     % if it exists that means this subject has already run a session
     load(cfg.files.expParamFile);
-    
+
     % Make sure there is a session left to run.
     % session number is incremented after the run, so after the final
     % session has been run it will be 1 greater than expParam.nSessions
@@ -143,7 +147,7 @@ if exist(cfg.files.expParamFile,'file')
 else
     % if it doesn't exist that means we're starting a new subject
     expParam.sessionNum = 1;
-    
+
     % make sure we want to start this session
     startUnanswered = 1;
     while startUnanswered
@@ -158,7 +162,7 @@ else
             end
         end
     end
-    
+
     % Load the experiment's config file. Must create this for each experiment.
     if exist(fullfile(pwd,sprintf('config_%s.m',expParam.expName)),'file')
         [cfg,expParam] = eval(sprintf('config_%s(cfg,expParam);',expParam.expName));
@@ -172,7 +176,7 @@ end
 %% Make sure the session number is in order and directories/files exist
 
 % make sure session directory exists
-cfg.files.sesSaveDir = fullfile('data',expParam.subject,sprintf('session_%d',expParam.sessionNum));
+cfg.files.sesSaveDir = fullfile(cfg.files.subSaveDir,sprintf('session_%d',expParam.sessionNum));
 if ~exist(cfg.files.sesSaveDir,'dir')
     [canSaveData,saveDataMsg,saveDataMsgID] = mkdir(cfg.files.sesSaveDir);
     if canSaveData == false
@@ -209,7 +213,7 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
 % try
     % Open data file
     logFile = fopen(cfg.files.sesLogFile,'at');
-        
+
     %% Begin PTB display setup
     % set some font display options; must be set before opening w with Screen
     DefaultFontName = 'Courier New';
@@ -228,18 +232,43 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
         Screen('Preference','DefaultFontStyle',DefaultFontStyle);
         Screen('Preference','DefaultFontSize',DefaultFontSize);
     end
-    
+
     % Get screenNumber of stimulation display. We choose the display with
     % the maximum index, which is usually the right one, e.g., the external
     % display on a Laptop:
-    screenNumber = max(Screen('Screens'));
-    screenRect = Screen('Rect', screenNumber);
-    Width = RectWidth(screenRect);
-    Height = RectHeight(screenRect);
-    
+    % screenNumber = max(Screen('Screens'));
+    % screenRect = Screen('Rect', screenNumber);
+    % Width = RectWidth(screenRect);
+    % Height = RectHeight(screenRect);
+    % cfg.screen.bgColor = GrayIndex(screenNumber);
+
+
+    screens                       = Screen('Screens'); % Get the screen numbers
+    p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
+    p.ptb.white                   = WhiteIndex(p.ptb.screenNumber); % Define black and white
+    p.ptb.black                   = BlackIndex(p.ptb.screenNumber);
+    [p.ptb.window, p.ptb.rect]    = PsychImaging('OpenWindow', p.ptb.screenNumber, p.ptb.black);
+    [p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize', p.ptb.window);
+    p.ptb.ifi                      = Screen('GetFlipInterval', p.ptb.window);
+    Screen('BlendFunction', p.ptb.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA'); % Set up alpha-blending for smooth (anti-aliased) lines
+    Screen('TextFont', p.ptb.window, 'Arial');
+    Screen('TextSize', p.ptb.window, 36);
+    [p.ptb.xCenter, p.ptb.yCenter] = RectCenter(p.ptb.rect);
+    p.fix.sizePix                  = 40; % size of the arms of our fixation cross
+    p.fix.lineWidthPix             = 4; % Set the line width for our fixation cross
+    % Now we set the coordinates (these are all relative to zero we will let
+    % the drawing routine center the cross in the center of our monitor for us)
+    p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
+    p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
+    p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
+
+
+    screenNumber = p.ptb.screenNumber;
+    Width = RectWidth(p.ptb.rect);
+    Height = RectHeight(p.ptb.rect);
     % Hide the mouse cursor:
     HideCursor;
-    
+
     % Set up the color value to be used as experiment background color
     if ~isfield(cfg.screen,'bgColor')
         cfg.screen.bgColor = GrayIndex(screenNumber);
@@ -248,39 +277,41 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
     else
         manualBgColor = true;
     end
-    
+
     % Open a double buffered fullscreen window on the stimulation screen
     % 'screenNumber' and choose/draw a background color. 'w' is the handle
     % used to direct all drawing commands to that window - the "Name" of
     % the window. 'wRect' is a rectangle defining the size of the window.
     % See "help PsychRects" for help on such rectangles and useful helper
     % functions:
+
+    % wRect = p.ptb.rect
     [w, wRect] = Screen('OpenWindow', screenNumber, cfg.screen.bgColor);
-    
+
     % store the screen dimensions
     cfg.screen.wRect = wRect;
-    
+
     % Do dummy calls to GetSecs, WaitSecs, KbCheck to make sure
     % they are loaded and ready when we need them - without delays
     % in the wrong moment:
     KbCheck;
     WaitSecs(0.1);
     GetSecs;
-    
+
     % Set priority for script execution to realtime priority:
     priorityLevel = MaxPriority(w);
     Priority(priorityLevel);
-    
+
     %% Run through the experiment
     % find out what session this will be
     sesName = expParam.sesTypes{expParam.sessionNum};
-    
+
     % record the date and start time for this session
     expParam.session.(sesName).date = date;
     startTime = fix(clock);
     expParam.session.(sesName).startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),startTime(5),startTime(6));
-    
-    switch sesName 
+
+    switch sesName
         case{'stud1','stud2','stud3','stud4','stud5','stud6','stud7','stud8','stud9'}
             if ~isfield(expParam.session.(sesName),'date')
                 expParam.session.(sesName).date = [];
@@ -291,7 +322,7 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
             if ~isfield(expParam.session.(sesName),'endTime')
                 expParam.session.(sesName).endTime = [];
             end
-            
+
             sessionIsComplete = false;
             phaseProgressFile = fullfile(cfg.files.sesSaveDir,sprintf('phaseProgress_%s_studylist.mat',sesName));
             if exist(phaseProgressFile,'file')
@@ -300,7 +331,7 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
                     sessionIsComplete = true;
                 end
             end
-            
+
             if ~sessionIsComplete
                 % Show instructions
                 isKey = true;
@@ -313,7 +344,7 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
                 % Start experiment
                 [cfg,expParam] = mt_study(w,cfg,expParam,logFile,sesName);
             end
-            
+
         case{'test1','test2','test3','test4','test5','test6','test7','test8','test9'}
             if ~isfield(expParam.session.(sesName),'date')
                 expParam.session.(sesName).date = [];
@@ -324,7 +355,7 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
             if ~isfield(expParam.session.(sesName),'endTime')
                 expParam.session.(sesName).endTime = [];
             end
-            
+
             sessionIsComplete = false;
             phaseProgressFile = fullfile(cfg.files.sesSaveDir,sprintf('phaseProgress_%s_studylist.mat',sesName));
             if exist(phaseProgressFile,'file')
@@ -333,7 +364,7 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
                     sessionIsComplete = true;
                 end
             end
-            
+
             if ~sessionIsComplete
                 % Show instructions
                 isKey = true;
@@ -349,26 +380,26 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
     end
 
     %% Session is done
-    
+
     fprintf('Done with %s session %d (%s).\n',expParam.subject,expParam.sessionNum,sesName);
-    
+
     % record the end time for this session
     endTime = fix(clock);
     expParam.session.(sesName).endTime = sprintf('%.2d:%.2d:%.2d',endTime(4),endTime(5),endTime(6));
-    
+
     % increment the session number for running the next session
     expParam.sessionNum = expParam.sessionNum + 1;
-    
+
     % save the experiment data
     save(cfg.files.expParamFile,'cfg','expParam');
 
     % close out the log file
     fclose(logFile);
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%  Finish Message  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     message = sprintf('Thank you, this session is complete.\n\nPlease wait for the experimenter.');
     Screen('TextSize', w, cfg.text.basicTextSize);
     Screen('TextFont', w, cfg.text.basicFontName);
@@ -376,14 +407,14 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
     % put the instructions on the screen
     DrawFormattedText(w, message, 'center', 'center', cfg.text.experimenterColor, cfg.text.instructCharWidth);
     Screen('Flip', w);
-    
+
     % wait until g key is pressed
     RestrictKeysForKbCheck(KbName(cfg.keys.expContinue));
     KbWait(-1,2);
     RestrictKeysForKbCheck([]);
     Screen('Flip', w);
     WaitSecs(1.000);
-    
+
     % Cleanup at end of experiment - Close window, show mouse cursor, close
     % result file, switch Matlab/Octave back to priority 0 -- normal
     % priority:
@@ -392,28 +423,28 @@ fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,e
     ShowCursor;
     ListenChar;
     Priority(0);
-    
+
     % End of experiment:
-%     return 
-    
+%     return
+
 % catch ME
 %     sesName = expParam.sesTypes{expParam.sessionNum};
 %     fprintf('\nError during %s session %d (%s). Exiting gracefully (saving experimentParams.mat). You should restart Matlab before continuing.\n',expParam.subject,expParam.sessionNum,sesName);
-%     
+%
 %     % record the error date and time for this session
 %     errorDate = date;
 %     errorTime = fix(clock);
 %     expParam.session.(sesName).errorDate = errorDate;
 %     expParam.session.(sesName).errorTime = sprintf('%.2d:%.2d:%.2d',errorTime(4),errorTime(5),errorTime(6));
-%     
+%
 %     fprintf(logFile,'!!! ERROR: Crash %s %s\n',errorDate,expParam.session.(sesName).errorTime);
-%     
+%
 %     % save the experiment info in its current state
 %     save(cfg.files.expParamFile,'cfg','expParam');
-%     
+%
 %     % close out the session log file
 %     fclose(logFile);
-%     
+%
 %     % save out the error information
 %     errorFile = fullfile(cfg.files.sesSaveDir,sprintf('error_%s_ses%d_%s_%.2d%.2d%.2d.mat',expParam.subject,expParam.sessionNum,errorDate,errorTime(4),errorTime(5),errorTime(6)));
 %     fprintf('Saving error file %s.\n',errorFile);
