@@ -62,6 +62,8 @@ for ind in range(30):
         for num in range(0,len(subset)):
             opti_r.iloc[subset.iloc[num].name] = subset.iloc[num]
 
+    opti_r['ISI1'] = opti_r['ISI1'].astype(float).round(decimals=1)
+    opti_r['ISI1'] = opti_r['ISI1'].apply(lambda x: '{0:0>2}'.format(x))
     opti_r.drop("Unnamed: 4", axis=1, inplace=True)
     save_filename = os.path.join(main_dir, 's03_updatejitter', basename + '.csv')
     opti_r.to_csv(save_filename,index=False)
