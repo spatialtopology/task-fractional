@@ -1,12 +1,26 @@
-# posner AR generation
+#!/usr/bin/env python
+
+"""
+This code first counterbalances the number of cue and targets,
+based on the valid/invalid sequence from s01_AR_seq_generator.m
+
+second, the updated jitters will be concatenated
+to form a full counterbalance csv file.
+"""
+
 import os
 import pandas as pd
 import numpy as np
 from collections import Counter
-
 import random
-# Parameters
-# dir_main = '/Users/h/Documents/projects_local/fractional_factorials/posner-AR'
+
+__author__ = "Heejung Jung"
+__version__ = "1.0.1"
+__email__ = "heejung.jung@colorado.edu"
+__status__ = "Production"
+
+
+# Parameters _______________________________________________________________________
 dir_posner = '/Users/h/Documents/projects_local/fractional_factorials/posner-AR'
 
 # 0. For loop
@@ -48,8 +62,6 @@ for sub in list(range(1,151)):
         for ind, loca in enumerate(invalid_loc):
             cue_v.loc[loca, 'cue'] = invalid[ind]
 
-
-
     # 4 valid cue left right ________________________________________________________
     if (a['valid']%2) == 0:
         valid = np.repeat(['left', 'right'], int(a['valid']//2))
@@ -84,9 +96,3 @@ for sub in list(range(1,151)):
 
     save_filename = os.path.join(dir_posner, 'design', 's04_counterbalance', 'sub-' + '{:03d}'.format(sub) + '_task-posner_counterbalance.csv')
     cue_v.to_csv(save_filename,index=False)
-
-# columns:
-# condition type
-# target location
-# cue location
-# fixation duration
