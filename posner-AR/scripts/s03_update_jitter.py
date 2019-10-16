@@ -48,7 +48,7 @@ for ind in range(30):
         increments = diff / num_trials_to_change1
 
         subset = opti_r.loc[opti_r.ISI1 > 1.5,].sample(n=num_trials_to_change1)
-        subset.ISI1  = subset.ISI1 + increments
+        subset.ISI1  = subset.ISI1 + increments.round(2)
         for num in range(0,len(subset)):
             opti_r.iloc[subset.iloc[num].name] = subset.iloc[num]
 
@@ -58,7 +58,7 @@ for ind in range(30):
         diff = abs(total_jitter_length-total)
         increments = diff / num_trials_to_change2
         subset = opti_r.loc[opti_r.ISI1 > 1.5,].sample(n=num_trials_to_change2)
-        subset.ISI1  = subset.ISI1 - increments
+        subset.ISI1  = subset.ISI1 - increments.round(2)
         for num in range(0,len(subset)):
             opti_r.iloc[subset.iloc[num].name] = subset.iloc[num]
 
