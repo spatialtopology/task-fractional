@@ -63,5 +63,5 @@ for ind in range(30):
             opti_r.iloc[subset.iloc[num].name] = subset.iloc[num]
 
     opti_r.drop("Unnamed: 4", axis=1, inplace=True)
-    save_filename = os.path.join(dir_posner, 'design', 's03_updatejitter', basename + '.csv')
+    save_filename = os.path.join(main_dir, 's03_updatejitter', basename + '.csv')
     opti_r.to_csv(save_filename,index=False)
