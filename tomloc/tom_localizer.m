@@ -1,4 +1,6 @@
-function tom_localizer(subjID, run)
+% function tom_localizer(subjID, run_num)
+function tom_localizer(subjID)
+run_num=2;
 %% Version: September 7, 2011
 %__________________________________________________________________________
 %
@@ -10,21 +12,21 @@ function tom_localizer(subjID, run)
 % There are blocks of false belief stories, in which a story is told
 % involving a false belief, which is presented for 10 seconds, then a
 % probe question about the story presented for 4 seconds. In
-% between each block, there is a fixation period of 12 seconds. 
+% between each block, there is a fixation period of 12 seconds.
 %
-% To run this script, you need Matlab and the PsychToolbox, which is available
-% as a free download. 
+% To run_num this script, you need Matlab and the PsychToolbox, which is available
+% as a free download.
 %
 %__________________________________________________________________________
 %
 %							INPUTS
 %
-% - subjID: STRING The string you wish to use to identify the participant. 
+% - subjID: STRING The string you wish to use to identify the participant.
 %			"PI name"_"study name"_"participant number" is a common
 %			convention. This will be the name used to save the files.
-% - run   : NUMBER The current run number. (e.g., 1) 
+% - run_num   : NUMBER The current run_num number. (e.g., 1)
 %
-% Example usage: 
+% Example usage:
 %					tom_localizer("SAX_TOM_01",1)
 %
 %__________________________________________________________________________
@@ -34,13 +36,13 @@ function tom_localizer(subjID, run)
 %	This contains information about the IPS of the scan, when stories were
 %	presented, reaction time, and response info. It also contains
 %	information necessary to perform the analysis with SPM. The file is
-%	saved as subjectID.tom_localizer.run#.m
+%	saved as subjectID.tom_localizer.run_num#.m
 %
 %	In the event of a crash, the script creates a running behavioural file
-%	of partial data after each trial. 
+%	of partial data after each trial.
 %__________________________________________________________________________
 %
-%						  CONDITIONS 
+%						  CONDITIONS
 %
 %				1 - Belief (stimuli  1b to 10b)
 %				2 - Photo  (stimuli  1p to 10p)
@@ -52,7 +54,7 @@ function tom_localizer(subjID, run)
 % The run length can be calculated according to the following:
 %
 % (trials per run)*(fixation duration + story duration)+(fixation duration)
-% 
+%
 % The phrases used above are related to the variable values according to
 % the following:
 %
@@ -72,27 +74,27 @@ function tom_localizer(subjID, run)
 %
 %	Note 1
 %		Make sure to change the inputs in the 'Variables unique to scanner/
-%		computer' section of the script. 
+%		computer' section of the script.
 %
 %	Note 2
 %		The use of intersect(89:92, find(keyCode)) determines if the
 %		keystroke found by KbCheck is one of the proper response set. Of
 %		course, these intersection values are a consequence of the workings
-%		of our MRI response button. Your response button may differ. 
+%		of our MRI response button. Your response button may differ.
 %		Use KbCheck() to determine which button pushes from the response box
-%		correspond to numbers 1:4. Otherwise, you may not retain any 
+%		correspond to numbers 1:4. Otherwise, you may not retain any
 %		behavioural data.
 %
 %	Note 3
 %		For simplicity, we have set up the experiment so that the order of
 %		items and conditions is identical for every subject - they see
-%		design 1 in run 1, with stimuli 1 - 5 form each condition, in that 
-%		order. In our own research, we typically counterbalance the order 
+%		design 1 in run 1, with stimuli 1 - 5 form each condition, in that
+%		order. In our own reseas5rch, we typically counterbalance the order
 %		of items within a run, and the order of designs across runs, across
-%		subjects (so half of our participants see design 1 in run 2). If 
-%		you are comfortable enough with matlab, we encourage you to add 
-%		this counterbalancing back into the experiment - and make sure to 
-%		save separate variables for each subject tracking the order of 
+%		subjects (so half of our participants see design 1 in run 2). If
+%		you are comfortable enough with matlab, we encourage you to add
+%		this counterbalancing back into the experiment - and make sure to
+%		save separate variables for each subject tracking the order of
 %		items and conditions across runs.
 %__________________________________________________________________________
 %
@@ -105,12 +107,12 @@ function tom_localizer(subjID, run)
 %	statement and question periods separately, we have found that the
 %	outcomes are nearly identical, due to the BOLD signal being
 %	predominantly due to participants reading and encoding the text,
-%	rather than answering the questions. 
+%	rather than answering the questions.
 %
 %	Analysis consists of five primary steps:
-%		1. Motion correction by rigid rotation and translation about the 6 
+%		1. Motion correction by rigid rotation and translation about the 6
 %		   orthogonal axes of motion.
-%		2. (optional) Normalization to the SPM template. 
+%		2. (optional) Normalization to the SPM template.
 %		3. Smoothing, FWHM, 5 mm smoothing kernel if normalization has been
 %		   performed, 8 mm otherwise.
 %		4. Modeling
@@ -118,10 +120,10 @@ function tom_localizer(subjID, run)
 %				  plot convolved with the standard HRF.
 %				- The data is high pass filtered (filter frequency is 128
 %				  seconds per cycle)
-%		5. A simple contrast and a map of t-test t values is produced for 
+%		5. A simple contrast and a map of t-test t values is produced for
 %		   analysis in each subject. We look for activations thresholded at
 %		   p < 0.001 (voxelwise) with a minimum extent threshold of 5
-%		   contiguous voxels. 
+%		   contiguous voxels.
 %
 %	Random effects analyses show significant results with n > 10
 %	participants, though it should be evident that the experiment is
@@ -131,12 +133,12 @@ function tom_localizer(subjID, run)
 %					SPM Parameters
 %
 %	If using scripts to automate data analysis, these parameters are set in
-%	the SPM.mat file prior to modeling or design matrix configuration. 
+%	the SPM.mat file prior to modeling or design matrix configuration.
 %
 %	SPM.xGX.iGXcalc    = {'Scaling'}		global normalization: OPTIONS:'Scaling'|'None'
 %	SPM.xX.K.HParam    = filter_frequency   high-pass filter cutoff (secs) [Inf = no filtering]
 %	SPM.xVi.form       = 'none'             intrinsic autocorrelations: OPTIONS: 'none'|'AR(1) + w'
-%	SPM.xBF.name       = 'hrf'				Basis function name 
+%	SPM.xBF.name       = 'hrf'				Basis function name
 %	SPM.xBF.T0         = 1                 	reference time bin
 %	SPM.xBF.UNITS      = 'scans'			OPTIONS: 'scans'|'secs' for onsets
 %	SPM.xBF.Volterra   = 1					OPTIONS: 1|2 = order of convolution; 1 = no Volterra
@@ -151,186 +153,226 @@ function tom_localizer(subjID, run)
 %	01.18.11 : Fixed a bug that caused the same stimuli to be loaded during
 %			   both runs.
 %   09.07.11 : Fixed a bug the erroneously eliminated the final fixation
-%			   period. 
+%			   period.
 %__________________________________________________________________________
 %
 %% Variables unique to scanner / computer
-
-[rootdir b c]		= fileparts(mfilename('fullpath'));			% path to the directory containing the behavioural / stimuli directories. If this script is not in that directory, this line must be changed. 
-triggerKey			= '+';										% this is the value of the key the scanner sends to the presentation computer
+% [rootdir b c]		= fileparts(mfilename('fullpath'));			% path to the directory containing the behavioural / stimuli directories. If this script is not in that directory, this line must be changed.
 
 %% Set up necessary variables
-orig_dir			= pwd;
+rootdir             = '/Users/h/Documents/projects_local/fractional_factorials/tomloc/';
+% orig_dir			= pwd;
 textdir				= fullfile(rootdir, 'text_files');
 behavdir			= fullfile(rootdir, 'behavioural');
-designs				= [ 1 2 2 1 2 1 2 1 1 2 ;
-					    2 1 2 1 1 2 2 1 2 1 ; ];
-design				= designs(run,:);
+designs				= [ 1 2 2 1 2 1 2 1 1 2 ;  2 1 2 1 1 2 2 1 2 1 ; ];
+design				= designs(run_num,:);
 conds				= {'belief','photo'};
 condPrefs			= {'b','p'};								% stimuli textfile prefixes, used in loading stimuli content
 fixDur				= 12;										% fixation duration
 storyDur			= 10;										% story duration
 questDur			=  4;										% probe duration
-trialsPerRun		=  length(design);
+trialsPerRun		= length(design);
 key					= zeros(trialsPerRun,1);
 RT					= key;
 items				= key;
 trialsOnsets        = key;                                      % trial onsets in seconds
 ips					= ((trialsPerRun) * (fixDur + storyDur + questDur) + (fixDur))/2;
 
-%% Verify that all necessary files and folders are in place. 
+%% Verify that all necessary files and folders are in place.
 if isempty(dir(textdir))
-	uiwait(warndlg(sprintf('Your stimuli directory is missing! Please create directory %s and populate it with stimuli. When Directory is created, hit ''Okay''',textdir),'Missing Directory','modal'));
+    uiwait(warndlg(sprintf('Your stimuli directory is missing! Please create directory %s and populate it with stimuli. When Directory is created, hit ''Okay''',textdir),'Missing Directory','modal'));
 end
 if isempty(dir(behavdir))
-	outcome = questdlg(sprintf('Your behavioral directory is missing! Please create directory %s.',behavdir),'Missing Directory','Okay','Do it for me','Do it for me');
-	if strcmpi(outcome,'Do it for me')
-		mkdir(behavdir);
-		if isempty(dir(behavdir))
-			warndlg(sprintf('Couldn''t create directory %s!',behavdir),'Missing Directory');
-			return
-		end
-	else
-		if isempty(dir(behavdir))
-			return
-		end
-	end
+    outcome = questdlg(sprintf('Your behavioral directory is missing! Please create directory %s.',behavdir),'Missing Directory','Okay','Do it for me','Do it for me');
+    if strcmpi(outcome,'Do it for me')
+        mkdir(behavdir);
+        if isempty(dir(behavdir))
+            warndlg(sprintf('Couldn''t create directory %s!',behavdir),'Missing Directory');
+            return
+        end
+    else
+        if isempty(dir(behavdir))
+            return
+        end
+    end
 end
 
 %% Psychtoolbox
 %  Here, all necessary PsychToolBox functions are initiated and the
 %  instruction screens are set up.
 try
-	PsychJavaTrouble;
-	cd(textdir);
-	HideCursor;
-	displays    = Screen('screens');
-	[w, wRect]  = Screen('OpenWindow',displays(1),0);
-	scrnRes     = Screen('Resolution',displays(1));               % Get Screen resolution
-	[x0 y0]		= RectCenter([0 0 scrnRes.width scrnRes.height]);   % Screen center.
-	Screen(   'Preference', 'SkipSyncTests', 0);                       
-	Screen(w, 'TextFont', 'Helvetica');                         
-	Screen(w, 'TextSize', 30);
-	task		= sprintf('True or False');
-	instr_1		= sprintf('Press left button (1) for "True"');
-	instr_2		= sprintf('Press right button (2) for "False"');
-	Screen(w, 'DrawText', task, x0-125, y0-60, [255]);
-	Screen(w, 'DrawText', instr_1, x0-300, y0, [255]);
-	Screen(w, 'DrawText', instr_2, x0-300, y0+60, [255]);
-	Screen(w, 'Flip');												% Instructional screen is presented.
+    %     PsychJavaTrouble;
+    cd(textdir);
+    HideCursor;
+    
+    Screen('Preference', 'SkipSyncTests', 1);
+    PsychDefaultSetup(2);
+    screens                        = Screen('Screens');
+    p.ptb.screenNumber             = max(screens);
+    p.ptb.white                    = WhiteIndex(p.ptb.screenNumber); % Define black and white
+    p.ptb.black                    = BlackIndex(p.ptb.screenNumber);
+    p.ptb.green                    = [0 1 0];
+    [p.ptb.window, p.ptb.rect]     = PsychImaging('OpenWindow',p.ptb.screenNumber,p.ptb.black);
+    % 	[w, wRect]  = Screen('OpenWindow',displays(1),0);
+    % 	scrnRes     = Screen('Resolution',displays(1));               % Get Screen resolution
+    [p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize',p.ptb.window);
+    [p.ptb.xCenter, p.ptb.yCenter] = RectCenter(p.ptb.rect);
+    p.ptb.ifi                      = Screen('GetFlipInterval',p.ptb.window);
+    Screen('BlendFunction', p.ptb.window,'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA'); % Set up alpha-blending for smooth (anti-aliased) lines
+    
+    % 	[x0 y0]		= RectCenter([0 0 scrnRes.width scrnRes.height]);   % Screen center.
+    %% E. Keyboard information _____________________________________________________
+    KbName('UnifyKeyNames');
+    p.keys.confirm                 = KbName('return');
+    p.keys.right                   = KbName('2@');
+    p.keys.left                    = KbName('1!');
+    p.keys.space                   = KbName('space');
+    p.keys.esc                     = KbName('ESCAPE');
+    p.keys.trigger                 = KbName('5%');
+    p.keys.start                   = KbName('s');
+    p.keys.end                     = KbName('e');
+    % triggerKey			= '5';										% this is the value of the key the scanner sends to the presentation computer
+    p.fix.sizePix                  = 40; % size of the arms of our fixation cross
+    p.fix.lineWidthPix             = 4; % Set the line width for our fixation cross
+    p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
+    p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
+    p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
+    Screen( 'Preference', 'SkipSyncTests', 0);
+    Screen( p.ptb.window, 'TextFont', 'Helvetica');
+    Screen( p.ptb.window, 'TextSize', 30);
+    task                           = sprintf('True or False');
+    instr_1                    	   = sprintf('Press left button (1) for "True"');
+    instr_2                        = sprintf('Press right button (2) for "False"');
+    Screen(p.ptb.window, 'DrawText', task, p.ptb.xCenter-125, p.ptb.yCenter-60, [255]);
+    Screen(p.ptb.window, 'DrawText', instr_1, p.ptb.xCenter-300, p.ptb.yCenter, [255]);
+    Screen(p.ptb.window, 'DrawText', instr_2,p.ptb.xCenter-300, p.ptb.yCenter+60, [255]);
+    Screen(p.ptb.window, 'Flip');												% Instructional screen is presented.
 catch exception
-	ShowCursor;
-	sca;
-	warndlg(sprintf('PsychToolBox has encountered the following error: %s',exception.message),'Error');
-	return
+    ShowCursor;
+    sca;
+    warndlg(sprintf('PsychToolBox has encountered the following error: %s',exception.message),'Error');
+    return
 end
 
 %% Wait for the trigger.
-%  If your scanner does not use a '+' as a trigger pulse, change the value 
-%  of triggerKey accordingly. 
-
-while 1  
-    FlushEvents;
-    trig = GetChar;
-    if strcmp(trig, triggerKey);
-        break
-    end
-end
+%  If your scanner does not use a '+' as a trigger pulse, change the value
+%  of triggerKey accordingly.
+%% _______________________ Wait for Trigger to Begin ___________________________
+DisableKeysForKbCheck([]);
+KbTriggerWait(p.keys.start);
+KbTriggerWait(p.keys.trigger);
 
 %% Main Experimental Loop
-counter				= zeros(1,2)+(5*(run-1));
-experimentStart		= GetSecs;
-Screen(w, 'TextSize', 24);
-try
-	for trial = 1:trialsPerRun
-		cd(textdir);
-		trialStart		= GetSecs;
-		empty_text		= ' ';
-		Screen(w, 'DrawText', empty_text,x0,y0);
-		Screen(w, 'Flip');
-		counter(1,design(trial)) = counter(1,design(trial)) + 1;
-
-		%%%%%%%%% Determine stimuli filenames %%%%%%%%%
-		trialT			= design(trial);							% trial type. 1 = false belief, 2 = false photograph
-		numbeT			= counter(1,trialT);						% the number of the stimuli
-		storyname		= sprintf('%d%s_story.txt',numbeT,condPrefs{trialT});
-		questname		= sprintf('%d%s_question.txt',numbeT,condPrefs{trialT});
-		items(trial,1)	= numbeT;
-
-		%%%%%%%%% Open Story %%%%%%%%%
-		textfid			= fopen(storyname);
-		lCounter		= 1;										% line counter
-		while 1
-			tline		= fgetl(textfid);							% read line from text file.
-			if ~ischar(tline), break, end
-			Screen(w, 'DrawText',tline,x0-380,y0-160+lCounter*45,[255]);
-			lCounter	= lCounter + 1;
-		end
-		fclose(textfid);
-
-		while GetSecs - trialStart < fixDur; end					% wait for fixation period to elapse
-
-		%%%%%%%%% Display Story %%%%%%%%%
-		Screen(w, 'Flip');										
+counter				    = zeros(1,2)+(5*(run_num-1));
+experimentStart		    = GetSecs;
+Screen(p.ptb.window, 'TextSize', 24);
+% try
+    for trial = 1:trialsPerRun
+        cd(textdir);
+        trialStart		= GetSecs;
+        empty_text		= ' ';
+        
+        Screen(p.ptb.window, 'DrawText', empty_text,p.ptb.xCenter,p.ptb.yCenter);
+        Screen(p.ptb.window, 'Flip');
+        counter(1,design(trial)) = counter(1,design(trial)) + 1;
+        
+        %%%%%%%%% Determine stimuli filenames %%%%%%%%%
+        trialT			= design(trial);							% trial type. 1 = false belief, 2 = false photograph
+        numbeT			= counter(1,trialT);						% the number of the stimuli
+        storyname		= fullfile(textdir, sprintf('%d%s_story.txt',numbeT,condPrefs{trialT}));
+        questname		= fullfile(textdir, sprintf('%d%s_question.txt',numbeT,condPrefs{trialT}));
+        items(trial,1)	= numbeT;
+        
+        %%%%%%%%% Open Story %%%%%%%%%
+        textfid			= fopen(storyname, 'r');
+        lCounter		= 1;										% line counter
+        
+        while GetSecs - trialStart < fixDur
+            Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+                p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+            Screen('Flip', p.ptb.window);
+        end					% wait for fixation period to elapse
+        
+        %%%%%%%%% Display Story %%%%%%%%%
+        while 1
+            tline		= fgetl(textfid);							% read line from text file.
+            if ~ischar(tline), break, end
+            Screen(p.ptb.window, 'DrawText',tline,p.ptb.xCenter-380,p.ptb.yCenter-160+lCounter*45,[255]);
+            lCounter	= lCounter + 1;
+        end
+        fclose(textfid);
+        
+        Screen(p.ptb.window, 'Flip');
         trialsOnsets (trial) = GetSecs-experimentStart;
-		%%%%%%%%% Open Question %%%%%%%%%
-		textfid			= fopen(questname);
-		lCounter		= 1; 
-		while 1
-			tline		= fgetl(textfid);							% read line from text file.
-			if ~ischar(tline), break, end
-			Screen(w, 'DrawText',tline,x0-380,y0-160+lCounter*45,[255]);
-			lCounter	= lCounter + 1;
-		end
+        %%%%%%%%% Open Question %%%%%%%%%
+        textfid			= fopen(questname);
+        lCounter		= 1;
+        while 1
+            tline		= fgetl(textfid);							% read line from text file.
+            if ~ischar(tline), break, end
+            Screen(p.ptb.window, 'DrawText',tline,p.ptb.xCenter-380,p.ptb.yCenter-160+lCounter*45,[255]);
+            lCounter	= lCounter + 1;
+        end
+        
+        while GetSecs - trialStart < fixDur + storyDur; end			% wait for story presentation period
+        
+        %%%%%%%%% Display Question %%%%%%%%%
+        Screen(p.ptb.window, 'Flip');
+        
+        responseStart	= GetSecs;
+        
+        %%%%%%%%% Collect Response %%%%%%%%%
+        while ( GetSecs - responseStart ) < questDur
+            [keyIsDown,secs,keyCode]	= KbCheck;					% check to see if a key is being pressed
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %--------------------------SEE NOTE 2-----------------------------%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %            s5 button						= intersect([89:92], find(keyCode));
+            %             if(RT(trial,1) == 0) && keyIsDown == 1%~isempty(button)
+            %                 RT(trial,1)				= GetSecs - responseStart;
+            %                 key(trial,1)			= str2num(KbName(keyCode));
+            if keyCode(p.keys.esc)
+                ShowCursor;
+                sca;
+                return
+            elseif keyCode(p.keys.right)
+                RT(trial,1)				= GetSecs - responseStart;
+                key(trial,1)			= 2;
+            elseif keyCode(p.keys.left)
+                RT(trial,1)				= GetSecs - responseStart;
+                key(trial,1)			= 1;
 
-		while GetSecs - trialStart < fixDur + storyDur; end			% wait for story presentation period
+            end
+        end
 
-		%%%%%%%%% Display Question %%%%%%%%%
-		Screen(w, 'Flip');
-
-		responseStart	= GetSecs;
-
-		%%%%%%%%% Collect Response %%%%%%%%%
-		while ( GetSecs - responseStart ) < questDur
-			[keyIsDown,secs,keyCode]	= KbCheck;					% check to see if a key is being pressed
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			%--------------------------SEE NOTE 2-----------------------------%
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			button						= intersect([89:92], find(keyCode));   
-			if(RT(trial,1) == 0) & ~isempty(button)
-				RT(trial,1)				= GetSecs - responseStart;
-				key(trial,1)			= str2num(KbName(button));
-			end
-		end
-
-		%%%%%%%%% Save information in the event of a crash %%%%%%%%%
-		cd(behavdir);
-		save([subjID '.tom_localizer.' num2str(run) '.mat'],'subjID','run','design','items','key','RT','trialsOnsets');
-	end
-catch exception
-	ShowCursor;
-	sca
-	warndlg(sprintf('The experiment has encountered the following error during the main experimental loop: %s',exception.message),'Error');
-	return
-end
+        %%%%%%%%% Save information in the event of a crash %%%%%%%%%
+        cd(behavdir);
+        save([subjID '.tom_localizer.' num2str(run_num) '.mat'],'subjID','run_num','design','items','key','RT','trialsOnsets');
+    end
+% catch exception
+%     ShowCursor;
+%     sca
+%     warndlg(sprintf('The experiment has encountered the following error during the main experimental loop: %s',exception.message),'Error');
+%     return
+% end
 
 %% Final fixation, save information
-Screen(w, 'Flip');
+Screen(p.ptb.window, 'Flip');
 trials_end			= GetSecs;
-while GetSecs - trials_end < fixDur; end;
+while GetSecs - trials_end < fixDur; end
 
 experimentEnd		= GetSecs;
 experimentDuration	= experimentEnd - experimentStart;
 numconds			= 2;
 try
-	sca
-	responses = sortrows([design' items key RT]);
-	save([subjID '.tom_localizer.' num2str(run) '.mat'],'subjID','run','design','items','key','RT','trialsOnsets','responses','experimentDuration','ips');
-	ShowCursor;
-	cd(orig_dir);
+    sca
+    responses = sortrows([design' items key RT]);
+    save([subjID '.tom_localizer.' num2str(run_num) '.mat'],'subjID','run_num','design','items','key','RT','trialsOnsets','responses','experimentDuration','ips');
+    ShowCursor;
+%     cd(orig_dir);
 catch exception
-	sca
-	ShowCursor;
-	warndlg(sprintf('The experiment has encountered the following error while saving the behavioral data: %s',exception.message),'Error');
-	cd(orig_dir);
+    sca
+    ShowCursor;
+    warndlg(sprintf('The experiment has encountered the following error while saving the behavioral data: %s',exception.message),'Error');
+    cd(orig_dir);
 end					% end main function
