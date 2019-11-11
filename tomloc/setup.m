@@ -39,8 +39,8 @@ for f=1:length(textF)
 end
 disp(sprintf('\n----------------------------\n'));
 disp(sprintf('Copying tom_localizer.m'));
-copyfile(fullfile(pwd,'tom_localizer.m'),fullfile(root_dir,'tom_localizer.m'));
-fileList{end+1} = fullfile(root_dir,'tom_localizer.m');
+copyfile(fullfile(pwd,'tom_localizer','tom_localizer.m'),fullfile(root_dir,'tom_localizer','tom_localizer.m'));
+fileList{end+1} = fullfile(root_dir,'tom_localizer','tom_localizer.m');
 disp(sprintf('\n----------------------------\n'));
 disp('...Validating...');
 jlen = 0;
