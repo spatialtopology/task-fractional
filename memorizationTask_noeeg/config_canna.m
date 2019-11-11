@@ -6,10 +6,11 @@ function [cfg,expParam] = config_canna(cfg,expParam)
 %  file should be edited for your particular experiment.
 
 %% Experiment session information
-
+%expParam.subject = 1;
 % Set the number of sessions
+%expParam.sessionNum = 1;
 expParam.nSessions = 4; % 5
-expParam.sesTypes = {'stud1','test1', 'stud2', 'test2'}; %
+expParam.sesTypes = {'stud1', 'test1', 'stud2', 'test2'}; %
 
 %% If this is session 1, setup the experiment
 if expParam.sessionNum == 1
@@ -23,11 +24,11 @@ if expParam.sessionNum == 1
         expParam.isEven = false;
     end
     % subject number ends in 1-5 or 6-0
-    if str2double(expParam.subject(end)) >= 1 && str2double(expParam.subject(end)) <= 5
-        expParam.is15 = true;
-    else
-        expParam.is15 = false;
-    end
+%     if str2double(expParam.subject(end)) >= 1 && str2double(expParam.subject(end)) <= 5
+%         expParam.is15 = true;
+%     else
+%         expParam.is15 = false;
+%     end
 
     %% Screen parameters
     cfg.screen.bgColor = uint8((rgb('White') * 255) + 0.5);
@@ -80,25 +81,32 @@ if expParam.sessionNum == 1
     %% Define the response keys
 
     % the experimenter's secret key to continue the experiment
+    KbName('UnifyKeyNames');
+    cfg.keys.start = 's';
+    cfg.keys.trigger = '5';
+    cfg.keys.end = 'e';
     cfg.keys.expContinue = 'g';
-
     cfg.keys.keyRow = 'upper';
 
     % subordinate matching keys (counterbalanced based on subNum 1-5, 6-0)
     if expParam.isEven
         % upper row
-        cfg.keys.responseKeyNames = {'r','u'};
+        cfg.keys.responseKeyNames = {'f','j'};
     else
         % middle row
         cfg.keys.responseKeyNames = {'f','j'};
     end
-    if expParam.is15
-        cfg.keys.oldKey = cfg.keys.responseKeyNames{1};
-        cfg.keys.newKey = cfg.keys.responseKeyNames{2};
-    else
-        cfg.keys.oldKey = cfg.keys.responseKeyNames{2};
-        cfg.keys.newKey = cfg.keys.responseKeyNames{1};
-    end
+%     cfg.keys.responseKeyNames = {'f','j'};
+    cfg.keys.oldKey = cfg.keys.responseKeyNames{1};
+    cfg.keys.newKey = cfg.keys.responseKeyNames{2};
+% 
+%     if expParam.is15
+%         cfg.keys.oldKey = cfg.keys.responseKeyNames{1};
+%         cfg.keys.newKey = cfg.keys.responseKeyNames{2};
+%     else
+%         cfg.keys.oldKey = cfg.keys.responseKeyNames{2};
+%         cfg.keys.newKey = cfg.keys.responseKeyNames{1};
+%     end
 
     %% Screen, text, and symbol configuration for size and color
 
@@ -174,7 +182,8 @@ if expParam.sessionNum == 1
             %             cfg.stim.(sesName).preStim = [0.5 0.7];
             % create the stimulus list
             cfg.stim.(sesName).stimListFile = fullfile(cfg.files.subSaveDir,['stimList_' sesName '.txt']);
-            [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName,[]);
+%            [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName,[]);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName);
 
             % instruction message
             m1 = 'You are going to be shown a series of stimuli.\n\n\n\n';
@@ -202,7 +211,9 @@ if expParam.sessionNum == 1
             cfg.stim.(sesName).answerFast = true; % false: wait after 2.0
             % create the stimulus list
             cfg.stim.(sesName).stimListFile = fullfile(cfg.files.subSaveDir,['stimList_' sesName '.txt']);
-            [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName,[]);
+            %[cfg,expParam] =
+            %mt_saveStimList_images(cfg,expParam,sesName,[]);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName);
 
             % instruction message
             m1 = 'You are going to be shown a series of stimuli.\n\n\n\n';
