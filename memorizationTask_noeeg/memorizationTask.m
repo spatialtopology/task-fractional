@@ -1,4 +1,4 @@
-function memorizationTask(expName,subNum)
+function memorizationTask(subNum)
 % function memorizationTask(expName,subNum)
 
 
@@ -42,7 +42,7 @@ end
 
 % make sure there are somewhere betwen 0 and 2 arguments
 minArg = 0;
-maxArg = 2;
+maxArg = 1;
 narginchk(minArg,maxArg);
 
 if nargin == 0
@@ -84,9 +84,9 @@ if nargin == 0
     %         end
     %     end
     
-elseif nargin == 1
-    % cannot proceed with one argument
-    error('You provided 1 argument, but you need either zero or two! Must provide either no inputs (%s;) or provide experiment name (as a string) and subject number (as an integer).',mfilename,mfilename,expName);
+% elseif nargin == 0
+%     % cannot proceed with one argument
+%     error('You provided 1 argument, but you need either zero or two! Must provide either no inputs (%s;) or provide experiment name (as a string) and subject number (as an integer).',mfilename,mfilename,expName);
 end
 
 %% Experiment database struct preparation
@@ -135,7 +135,7 @@ if exist(cfg.files.expParamFile,'file')
         % make sure we want to start this session
         startUnanswered = 1;
         while startUnanswered
-            startSession = input(sprintf('Do you want to start %s session %d (%s)? (type 1 or 0 and press enter). ',expParam.subject,expParam.sessionNum,expParam.sesTypes{expParam.sessionNum}));
+            startSession = input(sprintf('Do you want to start %s session %d (%s)? (type 1 for yes or 0 for no and press enter). ',expParam.subject,expParam.sessionNum,expParam.sesTypes{expParam.sessionNum}));
             if isnumeric(startSession) && (startSession == 1 || startSession == 0)
                 if startSession
                     fprintf('Starting %s session %d (%s).\n',expParam.subject,expParam.sessionNum,expParam.sesTypes{expParam.sessionNum});
@@ -198,7 +198,7 @@ if exist(cfg.files.sesLogFile,'file')
     warning('Log file for this session already exists (%s).',cfg.files.sesLogFile);
     resumeUnanswered = 1;
     while resumeUnanswered
-        resumeSession = input(sprintf('Do you want to resume %s session %d? (type 1 or 0 and press enter). ',expParam.subject,expParam.sessionNum));
+        resumeSession = input(sprintf('Do you want to resume %s session %d? (type 1 for yes or 0 for no and press enter). ',expParam.subject,expParam.sessionNum));
         if isnumeric(resumeSession) && (resumeSession == 1 || resumeSession == 0)
             if resumeSession
                 fprintf('Attempting to resume %s session %d (%s)...\n',expParam.subject,expParam.sessionNum,cfg.files.sesLogFile);
