@@ -89,7 +89,7 @@ run_num=2;
 %		For simplicity, we have set up the experiment so that the order of
 %		items and conditions is identical for every subject - they see
 %		design 1 in run 1, with stimuli 1 - 5 form each condition, in that
-%		order. In our own reseas5rch, we typically counterbalance the order
+%		order. In our own research, we typically counterbalance the order
 %		of items within a run, and the order of designs across runs, across
 %		subjects (so half of our participants see design 1 in run 2). If
 %		you are comfortable enough with matlab, we encourage you to add
@@ -327,7 +327,7 @@ Screen(p.ptb.window, 'TextSize', 24);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %--------------------------SEE NOTE 2-----------------------------%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %            s5 button						= intersect([89:92], find(keyCode));
+            %             button						= intersect([89:92], find(keyCode));
             %             if(RT(trial,1) == 0) && keyIsDown == 1%~isempty(button)
             %                 RT(trial,1)				= GetSecs - responseStart;
             %                 key(trial,1)			= str2num(KbName(keyCode));
