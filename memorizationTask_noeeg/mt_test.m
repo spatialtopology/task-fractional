@@ -7,7 +7,7 @@ function [cfg,expParam] = mt_test(w,cfg,expParam,logFile,sesName)
 fprintf('Running %s (testing)...\n',sesName);
 
 %% set the starting date and time for this session
-thisDate = date;
+thisDate = date;    
 startTime = fix(clock);
 startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),startTime(5),startTime(6));
 
@@ -114,16 +114,20 @@ for s = 1 : length(stimList)
     if sessionCfg.answerFast % get the answer as fast as possible
         % Wait for answer
         respToBeMade = true;
-        keyCode = zeros(1,256);
+%         keyCode = zeros(1,256);
         timeStim = GetSecs - thisGetSecs;
         while respToBeMade && timeStim < sessionCfg.stim
+            fprintf('wait for response\n');%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % check the keyboard
             [keyIsDown,secs, keyCode] = KbCheck;
+            fprintf('%d\n',keyIsDown);
             if keyCode(KbName(cfg.keys.oldKey))
+                fprintf('OLD KEY\n');%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 respToBeMade = false;
                 answer = '1';
                 RT = secs-StimulusOnsetTime;
             elseif keyCode(KbName(cfg.keys.newKey))
+                fprintf('NEW KEY\n');%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 respToBeMade = false;
                 answer = '0';
                 RT = secs-StimulusOnsetTime;
@@ -148,10 +152,12 @@ for s = 1 : length(stimList)
                 % check the keyboard
                 [keyIsDown,secs, keyCode] = KbCheck;
                 if keyCode(KbName(cfg.keys.oldKey))
+                    fprintf('? OLD KEY\n');%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     respToBeMade = false;
                     answer = '1';
                     RT = secs-StimulusOnsetTime;
                 elseif keyCode(KbName(cfg.keys.newKey))
+                    fprintf('? NEW KEY\n');%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     respToBeMade = false;
                     answer = '0';
                     RT = secs-StimulusOnsetTime;

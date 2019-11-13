@@ -23,7 +23,7 @@ switch task1
     case 'posner'
         t1 = fullfile(main_dir, 'posner-AR', 'scripts', 'posner.m');
     case 'mem'
-        t1 = fullfile(main_dir, 'mt_study.m');
+        t1 = fullfile(main_dir, 'memorizationTask_noeeg','memorizationTask.m');
 end
 switch task2
     case 'tom'
@@ -33,11 +33,11 @@ switch task2
     case 'posner'
         t2 = fullfile(main_dir, 'posner-AR', 'scripts', 'posner.m');
     case 'mem'
-        t2 = fullfile(main_dir, 'mt_study.m');
+        t2 = fullfile(main_dir, 'memorizationTask_noeeg','memorizationTask.m');
         
 end
 
-t1; t2;
+run (t1); run (t2);
 
 
 
