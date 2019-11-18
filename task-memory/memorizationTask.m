@@ -15,13 +15,28 @@ function memorizationTask(subNum)
 %     A popup window will prompt for the above info. It is not possible to
 %     run the photoCellTest using this method.
 
+% Code provided by Tim Curran
+% Minimal changes maded by Heejung Jung
 %% preliminary
 % Clear Matlab window:
 %clc
-addpath .;
+
 % check for Opengl compatibility, abort otherwise:
 % AssertOpenGL;
 global p
+% =================================================== 8< ==================
+% REMOVE THIS SECTION FOR MAIN EXPERIMENT
+% debug mode % Initial
+debug                          = 1;   % PTB Debugging
+AssertOpenGL;
+commandwindow;
+ListenChar(2);
+if debug
+    ListenChar(0);
+    PsychDebugWindowConfiguration;
+end
+% ========================= 8< ============================================
+
 Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(2);
 
@@ -64,9 +79,10 @@ if nargin == 0
     expName = 'canna';
     prompt = 'session number : ';
     session = input(prompt);
-    prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
-    subNum = input(prompt);
+
     if isempty(subNum) || ~isnumeric(subNum) || mod(subNum,1) ~= 0 || subNum <= 0
+        prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
+        subNum = input(prompt);
         %         if isempty(str2double(subNum)) || ~isnumeric(str2double(subNum)) || mod(str2double(subNum),1) ~= 0 || str2double(subNum) <= 0
         h = errordlg('Subject number must be an integer (e.g., 9) and greater than zero. Try again.', 'Input Error');
         repeat = 1;
@@ -270,6 +286,17 @@ p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
 p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
 p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
+%% E. Keyboard information _____________________________________________________
+KbName('UnifyKeyNames');
+p.keys.confirm                 = KbName('return');
+p.keys.right                   = KbName('j');
+p.keys.left                    = KbName('f');
+p.keys.space                   = KbName('space');
+p.keys.esc                     = KbName('ESCAPE');
+p.keys.trigger                 = KbName('5%');
+p.keys.start                   = KbName('s');
+p.keys.end                     = KbName('e');
+
 
 screenNumber = p.ptb.screenNumber;
 Width = RectWidth(p.ptb.rect);
@@ -290,15 +317,15 @@ end
 % Open a double buffered fullscreen window on the stimulation screen
 % 'screenNumber' and choose/draw a background color. 'w' is the handle
 % used to direct all drawing commands to that window - the "Name" of
-% the window. 'wRect' is a rectangle defining the size of the window.
+% the window. 'wRect/p.ptb.rect' is a rectangle defining the size of the window.
 % See "help PsychRects" for help on such rectangles and useful helper
 % functions:
 
 % wRect = p.ptb.rect
-[w, wRect] = Screen('OpenWindow', p.ptb.screenNumber, cfg.screen.bgColor);
-
+% [w, wRect] = Screen('OpenWindow', p.ptb.screenNumber, cfg.screen.bgColor);
+[p.ptb.window, p.ptb.rect]  = Screen('OpenWindow', p.ptb.screenNumber, cfg.screen.bgColor);
 % store the screen dimensions
-cfg.screen.wRect = wRect;
+cfg.screen.wRect = p.ptb.rect;
 
 % Do dummy calls to GetSecs, WaitSecs, KbCheck to make sure
 % they are loaded and ready when we need them - without delays
@@ -308,7 +335,7 @@ WaitSecs(0.1);
 GetSecs;
 
 % Set priority for script execution to realtime priority:
-priorityLevel = MaxPriority(w);
+priorityLevel = MaxPriority(p.ptb.window);
 Priority(priorityLevel);
 
 %% Run through the experiment
@@ -344,14 +371,14 @@ switch sesName
         if ~sessionIsComplete
             % Show instructions
             isKey = true;
-            Screen('TextSize', w, cfg.text.basicTextSize);
-            Screen('TextFont', w, cfg.text.basicFontName);
-            Screen('TextStyle', w, cfg.text.basicFontStyle);
-            DrawFormattedText(w, cfg.text.(sesName).instructionsMessage, 'center', 'center', cfg.text.basicTextColor);
-            Screen('Flip', w);
-            KbStrokeWait;
+%             Screen('TextSize', w, cfg.text.basicTextSize);
+%             Screen('TextFont', w, cfg.text.basicFontName);
+%             Screen('TextStyle', w, cfg.text.basicFontStyle);
+%             DrawFormattedText(w, cfg.text.(sesName).instructionsMessage, 'center', 'center', cfg.text.basicTextColor);
+%             Screen('Flip', w);
+%             KbStrokeWait;
             % Start experiment
-            [cfg,expParam] = mt_study(w,cfg,expParam,logFile,sesName);
+            [cfg,expParam] = mt_study(p,cfg,expParam,logFile,sesName);
         end
         
     case{'test1','test2','test3','test4','test5','test6','test7','test8','test9'}
@@ -377,14 +404,14 @@ switch sesName
         if ~sessionIsComplete
             % Show instructions
             isKey = true;
-            Screen('TextSize', w, cfg.text.basicTextSize);
-            Screen('TextFont', w, cfg.text.basicFontName);
-            Screen('TextStyle', w, cfg.text.basicFontStyle);
-            DrawFormattedText(w, cfg.text.(sesName).instructionsMessage, 'center', 'center', cfg.text.basicTextColor);
-            Screen('Flip', w);
-            KbStrokeWait;
+%             Screen('TextSize', w, cfg.text.basicTextSize);
+%             Screen('TextFont', w, cfg.text.basicFontName);
+%             Screen('TextStyle', w, cfg.text.basicFontStyle);
+%             DrawFormattedText(w, cfg.text.(sesName).instructionsMessage, 'center', 'center', cfg.text.basicTextColor);
+%             Screen('Flip', w);
+%             KbStrokeWait;
             % Start experiment
-            [cfg,expParam] = mt_test(w,cfg,expParam,logFile,sesName);
+            [cfg,expParam] = mt_test(p, cfg,expParam,logFile,sesName);
         end
 end
 
@@ -410,18 +437,18 @@ fclose(logFile);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 message = sprintf('Thank you, this session is complete.\n\nPlease wait for the experimenter.');
-Screen('TextSize', w, cfg.text.basicTextSize);
-Screen('TextFont', w, cfg.text.basicFontName);
-Screen('TextStyle', w, cfg.text.basicFontStyle);
+Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
+Screen('TextFont', p.ptb.window, cfg.text.basicFontName);
+Screen('TextStyle', p.ptb.window, cfg.text.basicFontStyle);
 % put the instructions on the screen
-DrawFormattedText(w, message, 'center', 'center', cfg.text.experimenterColor, cfg.text.instructCharWidth);
-Screen('Flip', w);
+DrawFormattedText(p.ptb.window, message, 'center', 'center', cfg.text.experimenterColor, cfg.text.instructCharWidth);
+Screen('Flip', p.ptb.window);
 
 % wait until g key is pressed
-RestrictKeysForKbCheck(KbName(cfg.keys.expContinue));
+RestrictKeysForKbCheck(KbName(cfg.keys.end));
 KbWait(-1,2);
 RestrictKeysForKbCheck([]);
-Screen('Flip', w);
+Screen('Flip', p.ptb.window);
 WaitSecs(1.000);
 
 % Cleanup at end of experiment - Close window, show mouse cursor, close
