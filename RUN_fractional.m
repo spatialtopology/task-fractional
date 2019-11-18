@@ -1,5 +1,12 @@
+% To Do 
+% [ ] memory should run 4 times
+% [ ] there should be a task in between memory 2.5 min each
+% [x] time memory task : study 1 min, test 1.5 min
+% [ ] make sure tomsaxe runs smoothly
+% [ ]
+
 % 1. grab participant number ___________________________________________________
-clear all
+clear all;
 prompt = 'session number : ';
 session = input(prompt);
 prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
@@ -16,30 +23,46 @@ counterbalancefile              = fullfile(main_dir, 'counterbalance.csv');
 countBalMat                     = readtable(counterbalancefile);
 task1 = string(countBalMat.task1{subj_num});
 task2 = string(countBalMat.task2{subj_num});
+
+disp(strcat('Today, sub-', num2str(subj_num) ,' will go through study 1)', task1 ,'  and 2) ', task2));
+
 switch task1
     case 'tom'
-        t1 = fullfile(main_dir,'tomloc', 'tom_localizer');
+        chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-tomsaxe' ), ''')');
+        t1 = fullfile(main_dir, 'task-tomsaxe', 'tom_localizer');
     case 'whyhow'
-        t1 = fullfile(main_dir,'spunt_whyhowlocalizer-00fa102','run_task');
+        chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-tomspunt') , ''')');
+        t1 = fullfile(main_dir, 'task-tomspunt','run_task');
     case 'posner'
-        t1 = fullfile(main_dir, 'posner-AR', 'scripts', 'posner');
+        chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-posnerAR' ), ''')');
+        t1 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'posner');
     case 'mem'
-        t1 = fullfile(main_dir, 'memorizationTask_noeeg','memorizationTask');
+        chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
+        t1 = fullfile(main_dir, 'task-memory','memory_wrapper');
 end
 switch task2
     case 'tom'
-        t2 = fullfile(main_dir,'tomloc', 'tom_localizer');
+        chdir_t2 = strcat('cd(''', fullfile(main_dir, 'task-tomsaxe') , ''')');
+        t2 = fullfile(main_dir, 'task-tomsaxe', 'tom_localizer');
     case 'whyhow'
-        t2 = fullfile(main_dir,'spunt_whyhowlocalizer-00fa102','run_task');
+        chdir_t2 = strcat('cd(''',fullfile(main_dir, 'task-tomspunt') , ''')');
+        t2 = fullfile(main_dir, 'task-tomspunt','run_task');
     case 'posner'
-        t2 = fullfile(main_dir, 'posner-AR', 'scripts', 'posner');
+        chdir_t2 = strcat('cd(''', fullfile(main_dir,'task-posnerAR') , ''')');
+        t2 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'posner');
     case 'mem'
-        t2 = fullfile(main_dir, 'memorizationTask_noeeg','memorizationTask');
+        chdir_t2 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
+        t2 = fullfile(main_dir, 'task-memory','memory_wrapper');
+
         
 end
+
 run_task1 = strcat(t1, '(' ,num2str(subj_num), ')');
 run_task2 = strcat(t2, '(' ,num2str(subj_num), ')');
+
+eval(chdir_t1);
 run(run_task1);
+eval(chdir_t2);
 run(run_task2);
 
 
