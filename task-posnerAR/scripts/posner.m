@@ -216,7 +216,7 @@ while (GetSecs - T.p3_target_onset(trl)) < trial_duration
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         T.p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
         WaitSecs(remainder_time);
-        T.p4_fixation_duration = remainder_time;
+        T.p4_fixation_duration(trl) = remainder_time;
 
 
     elseif keyCode(p.keys.right) 
@@ -231,7 +231,7 @@ while (GetSecs - T.p3_target_onset(trl)) < trial_duration
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         T.p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
         WaitSecs(remainder_time);
-        T.p4_fixation_duration = remainder_time;
+        T.p4_fixation_duration(trl) = remainder_time;
 
     end
 
