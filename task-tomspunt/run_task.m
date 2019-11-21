@@ -94,6 +94,11 @@ fprintf('\n%s\n%s\n%s\n',boxTop,script_name,boxTop)
 defaults = task_defaults;
 KbName('UnifyKeyNames');
 trigger = KbName(defaults.trigger);
+% KbTriggerWait(trigger);
+TR = 0.46;
+% T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
+
+
 addpath(defaults.path.utilities)
 
 %% Load Design and Setup Seeker Variable %%
@@ -228,7 +233,7 @@ for i = 1:length(design.qim)
     slideTex{i} = Screen('MakeTexture',w.win,tmp2);
     DrawFormattedText(w.win,sprintf('LOADING\n\n%d%% complete', ceil(100*i/length(design.qim))),'center','center',w.white,defaults.font.wrap);
     Screen('Flip',w.win);
-end;
+end
 instructTex = Screen('MakeTexture', w.win, imread([defaults.path.stim filesep 'instruction.jpg']));
 fixTex = Screen('MakeTexture', w.win, imread([defaults.path.stim filesep 'fixation.jpg']));
 line1       = strcat('Is the person', repmat('\n', 1, defaults.font.linesep));
@@ -251,8 +256,9 @@ Screen('DrawTexture',w.win, instructTex); Screen('Flip',w.win);
 
 %% Wait for Trigger to Begin %%
 DisableKeysForKbCheck([]);
-secs=KbTriggerWait(trigger,inputDevice);
+secs=KbTriggerWait(trigger);%,inputDevice);
 anchor=secs;
+WaitSecs(TR*6);
 
 try
 
@@ -362,7 +368,7 @@ try
 catch
 	fprintf('couldn''t save %s\n saving to whyhow.mat\n', outfile);
 	save whyhow.mat
-end;
+end
 
 %% End of Test Screen %%
 DrawFormattedText(w.win,'TEST COMPLETE\n\nPress any key to exit.','center','center',w.white,defaults.font.wrap);
