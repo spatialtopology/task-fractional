@@ -1,6 +1,6 @@
 % function tom_localizer(subjID, run_num)
 function tom_localizer(subjID)
-run_num=2;
+run_num=1;
 %% Version: September 7, 2011
 %__________________________________________________________________________
 %
@@ -160,17 +160,23 @@ run_num=2;
 % [rootdir b c]		= fileparts(mfilename('fullpath'));			% path to the directory containing the behavioural / stimuli directories. If this script is not in that directory, this line must be changed.
 
 %% Set up necessary variables
-rootdir             = '/Users/h/Documents/projects_local/fractional_factorials/tomloc/';
+rootdir             = '/Users/h/Documents/projects_local/fractional_factorials/task-tomsaxe/';
 % orig_dir			= pwd;
 textdir				= fullfile(rootdir, 'text_files');
-behavdir			= fullfile(rootdir, 'behavioural');
-designs				= [ 1 2 2 1 2 1 2 1 1 2 ;  2 1 2 1 1 2 2 1 2 1 ; ];
-design				= designs(run_num,:);
+behavdir			= fullfile(rootdir, 'data', strcat('sub-', sprintf('%04d', subjID)), 'beh');
+if ~exist(behavdir, 'dir')
+    mkdir(behavdir)
+end
+
+% designs				= [ 1 2 2 1 2 1 2 1 1 2 ;  2 1 2 1 1 2 2 1 2 1 ; ];
+% % changed by FRACTIONAL
+% design				= designs(run_num,:); % changed by FRACTIONAL
+design				= [ 1 2 2 1 2 1 2 1 1 2 2 1 2 1 1 2 2 1 2 1  ]; % changed by FRACTIONAL
 conds				= {'belief','photo'};
 condPrefs			= {'b','p'};								% stimuli textfile prefixes, used in loading stimuli content
 fixDur				= 12;										% fixation duration
-storyDur			= 10;										% story duration
-questDur			=  4;										% probe duration
+storyDur			= 11;										% story duration
+questDur			=  5;										% probe duration
 trialsPerRun		= length(design);
 key					= zeros(trialsPerRun,1);
 RT					= key;
@@ -231,7 +237,6 @@ try
     p.keys.trigger                 = KbName('5%');
     p.keys.start                   = KbName('s');
     p.keys.end                     = KbName('e');
-    % triggerKey			= '5';										% this is the value of the key the scanner sends to the presentation computer
     p.fix.sizePix                  = 40; % size of the arms of our fixation cross
     p.fix.lineWidthPix             = 4; % Set the line width for our fixation cross
     p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
@@ -260,11 +265,11 @@ end
 %% _______________________ Wait for Trigger to Begin ___________________________
 DisableKeysForKbCheck([]);
 KbTriggerWait(p.keys.start);
-KbTriggerWait(p.keys.trigger);
+experimentStart = KbTriggerWait(p.keys.trigger);
 
 %% Main Experimental Loop
 counter				    = zeros(1,2)+(5*(run_num-1));
-experimentStart		    = GetSecs;
+% experimentStart		    = GetSecs;
 Screen(p.ptb.window, 'TextSize', 24);
 % try
     for trial = 1:trialsPerRun
@@ -346,8 +351,10 @@ Screen(p.ptb.window, 'TextSize', 24);
         end
 
         %%%%%%%%% Save information in the event of a crash %%%%%%%%%
-        cd(behavdir);
-        save([subjID '.tom_localizer.' num2str(run_num) '.mat'],'subjID','run_num','design','items','key','RT','trialsOnsets');
+%         cd(behavdir);
+        save_filename = [strcat('sub-', sprintf('%04d', subjID)), '_ses-04_task-tomsaxe.mat'];
+        save_fullfile = fullfile(behavdir, save_filename);
+        save(save_fullfile,'subjID','run_num','design','items','key','RT','trialsOnsets');
     end
 % catch exception
 %     ShowCursor;
@@ -367,7 +374,8 @@ numconds			= 2;
 try
     sca
     responses = sortrows([design' items key RT]);
-    save([subjID '.tom_localizer.' num2str(run_num) '.mat'],'subjID','run_num','design','items','key','RT','trialsOnsets','responses','experimentDuration','ips');
+    
+    save(save_fullfile,'subjID','run_num','design','items','key','RT','trialsOnsets','responses','experimentDuration','ips');
     ShowCursor;
 %     cd(orig_dir);
 catch exception
