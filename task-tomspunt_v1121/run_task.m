@@ -257,7 +257,7 @@ Screen('DrawTexture',w.win, instructTex); Screen('Flip',w.win);
 
 %% Wait for Trigger to Begin %%
 DisableKeysForKbCheck([]);
-KbTriggerWait(defaults.start);
+KbTriggerWait(KbName(defaults.start));
 secs=KbTriggerWait(trigger);%,inputDevice);
 anchor=secs;
 WaitSecs(TR*6);
@@ -375,7 +375,7 @@ end
 %% End of Test Screen %%
 DrawFormattedText(w.win,'TEST COMPLETE\n\nPress any key to exit.','center','center',w.white,defaults.font.wrap);
 Screen('Flip', w.win);
-KbTriggerWait(defaults.end);
+KbTriggerWait(KbName(defaults.end));
 
 %% Exit %%
 ptb_exit;
