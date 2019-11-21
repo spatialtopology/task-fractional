@@ -31,8 +31,8 @@ defaults.screenres      = [1024 768];   % recommended screen resolution (if
 %==========================================================================
 defaults.escape         = 'ESCAPE'; % escape key (to exit early)
 defaults.trigger        = '5%'; % task trigger key (to start task)
-defaults.end        = 'e';
-defaults.start        = 's';
+defaults.end            = 'e';
+defaults.start          = 's';
 defaults.valid_keys     = {'1!' '2@' '3#' '4$'}; % valid response keys
 % These correspond to the keys that the participant can use to make their
 % responses during task performance. The key in the first position (e.g.,

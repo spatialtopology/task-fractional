@@ -375,7 +375,7 @@ end
 %% End of Test Screen %%
 DrawFormattedText(w.win,'TEST COMPLETE\n\nPress any key to exit.','center','center',w.white,defaults.font.wrap);
 Screen('Flip', w.win);
-ptb_any_key;
+KbTriggerWait(defaults.end);
 
 %% Exit %%
 ptb_exit;
