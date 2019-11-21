@@ -1,0 +1,34 @@
+!!! Start of stud1 (mt_study) 20-Nov-2019 16:55:08
+562991.506948	0046	stud1	STUDY_START
+!!! Start of stud1 (mt_study) 20-Nov-2019 16:55:42
+563025.847054	0046	stud1	STUDY_START
+!!! Start of stud1 (mt_study) 20-Nov-2019 16:56:58
+563101.644531	0046	stud1	STUDY_START
+!!! Start of stud1 (mt_study) 20-Nov-2019 16:59:32
+563256.226839	0046	stud1	STUDY_START
+563257.324294	0046	stud1	STUDY_STIM	image	0	obj037bridge.png
+563259.386439	0046	stud1	STUDY_STIM	image	0	obj038broom.png
+563261.454782	0046	stud1	STUDY_STIM	image	0	obj157knife.png
+563263.522978	0046	stud1	STUDY_STIM	image	1	obj295teapot.png
+563265.593987	0046	stud1	STUDY_STIM	image	1	obj281spaghetti.png
+563267.657763	0046	stud1	STUDY_STIM	image	1	obj331watermelon.png
+563269.725702	0046	stud1	STUDY_STIM	image	1	obj262screw.png
+563271.796292	0046	stud1	STUDY_STIM	image	1	obj158knight.png
+563273.859818	0046	stud1	STUDY_STIM	image	1	obj104fish.png
+563275.931303	0046	stud1	STUDY_STIM	image	1	obj259scarf.png
+563277.996969	0046	stud1	STUDY_STIM	image	1	obj280sofa.png
+563280.061179	0046	stud1	STUDY_STIM	image	1	obj273sled.png
+563282.131545	0046	stud1	STUDY_STIM	image	1	obj208paper.png
+563284.197623	0046	stud1	STUDY_STIM	image	1	obj073crackers.png
+563286.266263	0046	stud1	STUDY_STIM	image	1	obj230priest.png
+563288.333451	0046	stud1	STUDY_STIM	image	1	obj193needle.png
+563290.402523	0046	stud1	STUDY_STIM	image	1	obj079desk.png
+563292.469163	0046	stud1	STUDY_STIM	image	1	obj068cork.png
+563294.536491	0046	stud1	STUDY_STIM	image	1	obj080diaper.png
+563296.605659	0046	stud1	STUDY_STIM	image	1	obj048candle.png
+563298.671952	0046	stud1	STUDY_STIM	image	1	obj019basket.png
+563300.740800	0046	stud1	STUDY_STIM	image	1	obj326violin.png
+563302.807231	0046	stud1	STUDY_STIM	image	1	obj292sword.png
+563304.874508	0046	stud1	STUDY_STIM	image	0	obj212pear.png
+563306.943778	0046	stud1	STUDY_STIM	image	0	obj278snowman.png
+563309.011325	0046	stud1	STUDY_STIM	image	0	obj323vacuum.png

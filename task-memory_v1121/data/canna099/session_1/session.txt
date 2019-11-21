@@ -1,0 +1,8 @@
+!!! Start of stud1 (mt_study) 05-Nov-2019 09:48:44
+528.026045	canna099	stud1	STUDY_START
+529.158092	canna099	stud1	STUDY_STIM	image	0	obj006apple.png
+531.188736	canna099	stud1	STUDY_STIM	image	0	obj100feather.png
+533.242610	canna099	stud1	STUDY_STIM	image	0	obj164lemon.png
+535.275715	canna099	stud1	STUDY_STIM	image	1	obj012ball.png
+537.315439	canna099	stud1	STUDY_STIM	image	1	obj278snowman.png
+539.346594	canna099	stud1	STUDY_STIM	image	1	obj328waiter.png
