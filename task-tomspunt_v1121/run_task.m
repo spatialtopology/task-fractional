@@ -343,7 +343,7 @@ try
     end % END BLOCK LOOP
 
     %% Present Fixation Screen Until End of Scan %%
-    WaitSecs('UntilTime', anchor + totalTime);
+%     WaitSecs('UntilTime', anchor + totalTime);
 
 catch
 
