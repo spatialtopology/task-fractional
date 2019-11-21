@@ -257,6 +257,7 @@ Screen('DrawTexture',w.win, instructTex); Screen('Flip',w.win);
 
 %% Wait for Trigger to Begin %%
 DisableKeysForKbCheck([]);
+KbTriggerWait(defaults.start);
 secs=KbTriggerWait(trigger);%,inputDevice);
 anchor=secs;
 WaitSecs(TR*6);
