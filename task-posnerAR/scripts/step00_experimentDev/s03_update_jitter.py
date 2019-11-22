@@ -27,7 +27,9 @@ main_dir = '/Users/h/Documents/projects_local/fractional_factorials/task-posnerA
 total_jitter_length = 300
 num_trials_to_change1 = 10
 num_trials_to_change2 = 20
-
+update_dir = os.path.join(main_dir, 's03_updatejitter')
+if not os.path.exists(update_dir):
+    os.makedirs(update_dir)
 for ind in range(30):
     # 1) load txt save_filename ________________________________________________
     jitter_filename = os.path.join(main_dir, 's02_jitter',
