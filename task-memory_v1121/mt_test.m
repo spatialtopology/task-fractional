@@ -19,7 +19,7 @@ expParam.session.(sesName).startTime = startTime;
 Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
 Screen('TextFont', p.ptb.window, cfg.text.basicFontName);
 Screen('TextStyle', p.ptb.window, cfg.text.basicFontStyle);
-DrawFormattedText(p.ptb.window, cfg.text.(sesName).instructionsMessage, 'center', 'center', cfg.text.basicTextColor);
+DrawFormattedText(p.ptb.window, cfg.text.(sesName).instructionsMessage, 'center', 'center', cfg.text.whiteTextColor);
 Screen('Flip', p.ptb.window);
 % KbStrokeWait;
 % put it in the log file
@@ -28,8 +28,8 @@ fprintf(logFile,'!!! Start of %s (%s) %s %s\n',sesName,mfilename,thisDate,startT
 %% _______________________ Wait for Trigger to Begin ___________________________
 % DisableKeysForKbCheck([]);
 KbName('UnifyKeyNames');
-KbTriggerWait(p.keys.start);
-KbTriggerWait(p.keys.trigger);
+% KbTriggerWait(p.keys.start);
+% KbTriggerWait(p.keys.trigger);
 
 thisGetSecs = GetSecs;
 fprintf(logFile,'%f\t%s\t%s\t%s\n',...
@@ -147,6 +147,8 @@ for s = 1 : length(stimList)
 %         keyCode = zeros(1,256);
         timeStim = GetSecs - thisGetSecs;
         while respToBeMade && timeStim < sessionCfg.stim
+            answer = '99';
+            RT = [];
             % check the keyboard
             [keyIsDown,secs, keyCode] = KbCheck;
 %             fprintf('%d\n',keyIsDown);
@@ -154,10 +156,16 @@ for s = 1 : length(stimList)
                 respToBeMade = false;
                 answer = '1';
                 RT = secs-StimulusOnsetTime;
+                DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, [255 0 0]); % Text output of mouse position draw in the centre of the screen
+                DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, p.ptb.white); % Text output of mouse position draw in the centre of the screen
+
             elseif keyCode(KbName(cfg.keys.newKey))
                 respToBeMade = false;
                 answer = '0';
                 RT = secs-StimulusOnsetTime;
+                DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, p.ptb.white); % Text output of mouse position draw in the centre of the screen
+                DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, [255 0 0]); % Text output of mouse position draw in the centre of the screen
+
             end
             timeStim = GetSecs - thisGetSecs;
         end
@@ -168,54 +176,54 @@ for s = 1 : length(stimList)
                 clear stimImg
         end
         
-        if respToBeMade && timeStim >= sessionCfg.stim %if not answer made after the presentation time of the stimuli, display a ?
-            % Question mark
-            Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
-            DrawFormattedText(p.ptb.window, cfg.text.respSymbol, 'center', 'center', cfg.text.basicTextColor);
-            Screen('Flip', p.ptb.window);
-            
-            % Wait for answer
-            while respToBeMade
-                % check the keyboard
-                [keyIsDown,secs, keyCode] = KbCheck;
-                if keyCode(KbName(cfg.keys.oldKey))
-                    respToBeMade = false;
-                    answer = '1';
-                    RT = secs-StimulusOnsetTime;
-                elseif keyCode(KbName(cfg.keys.newKey))
-                    respToBeMade = false;
-                    answer = '0';
-                    RT = secs-StimulusOnsetTime;
-                end
-            end
-        end
-        
-    else % wait for the presentation time of the stimuli before getting the answer
-        WaitSecs(sessionCfg.stim);
-        
-        % Question mark
-        Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
-        DrawFormattedText(p.ptb.window, cfg.text.respSymbol, 'center', 'center', cfg.text.basicTextColor);
-        Screen('Flip', p.ptb.window);
-        
-        % Wait for answer
-        respToBeMade = true;
-%         keyCode = zeros(1,256);
-        while respToBeMade
-            % check the keyboard
-            [keyIsDown,secs, keyCode] = KbCheck;
-            if keyCode(KbName(cfg.keys.oldKey))
-                respToBeMade = false;
-                answer = '1';
-                RT = secs-StimulusOnsetTime;
-            elseif keyCode(KbName(cfg.keys.newKey))
-                respToBeMade = false;
-                answer = '0';
-                RT = secs-StimulusOnsetTime;
-            end
-        end
-    end
-    
+%         if respToBeMade && timeStim >= sessionCfg.stim %if not answer made after the presentation time of the stimuli, display a ?
+%             % Question mark
+%             Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
+%             DrawFormattedText(p.ptb.window, cfg.text.respSymbol, 'center', 'center', cfg.text.basicTextColor);
+%             Screen('Flip', p.ptb.window);
+%             
+%             % Wait for answer
+%             while respToBeMade
+%                 % check the keyboard
+%                 [keyIsDown,secs, keyCode] = KbCheck;
+%                 if keyCode(KbName(cfg.keys.oldKey))
+%                     respToBeMade = false;
+%                     answer = '1';
+%                     RT = secs-StimulusOnsetTime;
+%                 elseif keyCode(KbName(cfg.keys.newKey))
+%                     respToBeMade = false;
+%                     answer = '0';
+%                     RT = secs-StimulusOnsetTime;
+%                 end
+%             end
+end
+%         
+%     else % wait for the presentation time of the stimuli before getting the answer
+%         WaitSecs(sessionCfg.stim);
+%         
+%         % Question mark
+%         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
+%         DrawFormattedText(p.ptb.window, cfg.text.respSymbol, 'center', 'center', cfg.text.basicTextColor);
+%         Screen('Flip', p.ptb.window);
+%         
+%         % Wait for answer
+%         respToBeMade = true;
+% %         keyCode = zeros(1,256);
+%         while respToBeMade
+%             % check the keyboard
+%             [keyIsDown,secs, keyCode] = KbCheck;
+%             if keyCode(KbName(cfg.keys.oldKey))
+%                 respToBeMade = false;
+%                 answer = '1';
+%                 RT = secs-StimulusOnsetTime;
+%             elseif keyCode(KbName(cfg.keys.newKey))
+%                 respToBeMade = false;
+%                 answer = '0';
+%                 RT = secs-StimulusOnsetTime;
+%             end
+%         end
+
+%     
     thisGetSecs = GetSecs;
     fprintf(logFile,'%f\t%s\t%s\t%s\t%s\t%s\t%f\n',...
         thisGetSecs,...

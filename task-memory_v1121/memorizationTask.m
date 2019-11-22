@@ -353,9 +353,12 @@ expParam.session.(sesName).startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),sta
 
 [cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud1');
 % insert distration task
+distraction(p, cfg, 'task1');
 [cfg,expParam] = mt_test(p, cfg,expParam,logFile, 'test1');
 [cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud2');
 % insert distraction task
+distraction(p, cfg,  'task2');
+
 [cfg,expParam] = mt_test(p, cfg,expParam,logFile, 'test2');
         
 
