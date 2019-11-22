@@ -59,7 +59,7 @@ for ver = 1:versions
 for i = 1:iter
 
 %         [meanrecipvif(i, 1), vifs, design_struct] = generate_jittered_er_design_HJ('noplot', 'ISImean', ISImean);
-        [meanrecipvif(i, 1), vifs, design_struct] = j01_generate_jittered_er_design('noplot');
+        [meanrecipvif(i, 1), vifs, design_struct] = s02_generate_jittered_er_design('noplot');
 
         scanduration(i, 1) = design_struct.scanlength;
 
