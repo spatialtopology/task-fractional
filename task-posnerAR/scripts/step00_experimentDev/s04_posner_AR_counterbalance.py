@@ -21,7 +21,7 @@ __status__ = "Production"
 
 
 # Parameters _______________________________________________________________________
-dir_posner = '/Users/h/Documents/projects_local/fractional_factorials/posner-AR'
+dir_posner = '/Users/h/Documents/projects_local/fractional_factorials/task-posnerAR'
 
 # 0. For loop
 for sub in list(range(1,151)):

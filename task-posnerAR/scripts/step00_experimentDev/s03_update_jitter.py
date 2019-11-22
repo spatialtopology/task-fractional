@@ -5,7 +5,7 @@ so that the total length of the experiment is kept constant across simulations
 
 parameters to tweak:
 * main_dir
-* total_jitter_length: 240 e.g. 120 trials * average jitter 2s = 240 s
+* total_jitter_length: 300 e.g. 120 trials * average jitter 2.5s = 300 s
 * num_trials_to_change: 10 e.g. adjust jitter for a subset of 10 trials
 """
 
@@ -23,8 +23,8 @@ __status__ = "Production"
 
 
 # parameters to change _______________________________________________________________________
-main_dir = '/Users/h/Documents/projects_local/fractional_factorials/posner-AR/design'
-total_jitter_length = 240
+main_dir = '/Users/h/Documents/projects_local/fractional_factorials/task-posnerAR/design'
+total_jitter_length = 300
 num_trials_to_change1 = 10
 num_trials_to_change2 = 20
 
