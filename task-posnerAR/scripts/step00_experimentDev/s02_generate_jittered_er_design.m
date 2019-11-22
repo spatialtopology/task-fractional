@@ -79,20 +79,20 @@ doplot = 1;
 % we want to get 10 trials/condition in 5 mins -
 % so, 20 trials/condition total across 2 5-min runs
 
-event1duration = 5;    % duration of cue
+event1duration = 2.5;    % duration of cue
 % event2duration = 8;    % duration of feedback
 
 trialtypes = 2;  %4      % neutral, 2 levels of loss, 2 levels of gain
-trialspertype = 60;
+trialspertype = 120;
 ISI1isconstant = 0;    % ITI is constant (as opposed to jittered).
 ISI1constantvalue = 0; % in seconds, used only if ISI2isconstant
 
 % All ISI times in sec.
 isidistribution = 'exponential';  % 'exponential' or 'geometric'
-ISI1min = 0;   %0        % Constraints: Psychological (can subjects process cue) and statistical (longer = less BOLD nonlinearity, which is difficult to model).
-ISI1mean = 2;     %2       % For 'exponential' only.  Includes ISImin.  There is an optimal empirical value -- longer is better for deconvolution/FIR, but we also need to fit within total scan time constraints.
+ISI1min = 0.5;   %0        % Constraints: Psychological (can subjects process cue) and statistical (longer = less BOLD nonlinearity, which is difficult to model).
+ISI1mean = 2.5;     %2       % For 'exponential' only.  Includes ISImin.  There is an optimal empirical value -- longer is better for deconvolution/FIR, but we also need to fit within total scan time constraints.
 ISI1step = .65;          % For 'geometric' only.  There is an optimal empirical value -- longer is better for deconvolution/FIR, but we also need to fit within total scan time constraints.
-ISI1max = 4;     %4        % Truncate to avoid VERY long ISIs
+ISI1max = 5;     %4        % Truncate to avoid VERY long ISIs
 
 % ISI2min = 0;   %0        % Constraints: Psychological (can subjects process cue) and statistical (longer = less BOLD nonlinearity, which is difficult to model).
 % ISI2mean = 1;     %2       % For 'exponential' only.  Includes ISImin.  There is an optimal empirical value -- longer is better for deconvolution/FIR, but we also need to fit within total scan time constraints.
