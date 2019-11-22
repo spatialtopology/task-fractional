@@ -46,18 +46,18 @@ p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
 % 2nd attempt
 p.rect.baseRect                = [0 0 p.ptb.screenYpixels*2/9 p.ptb.screenYpixels*2/9];
-p.rect.squareXpos              = [p.ptb.screenXpixels * 0.20 p.ptb.screenXpixels * 0.70];
+p.rect.squareXpos              = [p.ptb.screenXpixels * 0.30 p.ptb.screenXpixels * 0.70];
 numSquares                     = length(p.rect.squareXpos);
 p.rect.allRects                = nan(4, 3);
 for i = 1:numSquares
     p.rect.allRects(:, i)      = CenterRectOnPointd(p.rect.baseRect, p.rect.squareXpos(i), p.ptb.yCenter);
 end
-p.rect.leftRects = CenterRectOnPointd(p.rect.baseRect, p.ptb.screenXpixels * 0.20, p.ptb.yCenter);
+p.rect.leftRects = CenterRectOnPointd(p.rect.baseRect, p.ptb.screenXpixels * 0.30, p.ptb.yCenter);
 p.rect.rightRects = CenterRectOnPointd(p.rect.baseRect, p.ptb.screenXpixels * 0.70, p.ptb.yCenter);
 p.rect.penWidthPixels          = 6;
 
 p.target.dotSizePix            = 20;
-p.target.leftXpos              = p.ptb.screenXpixels * 0.20;
+p.target.leftXpos              = p.ptb.screenXpixels * 0.30;
 p.target.rightXpos             = p.ptb.screenXpixels * 0.70;
 
 p.rect.LcenteredRect           = CenterRectOnPointd(p.rect.baseRect, -100, p.ptb.yCenter);
@@ -124,6 +124,9 @@ Screen('Flip',p.ptb.window);
 %% ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
 KbTriggerWait(p.keys.start);
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+Screen('Flip', p.ptb.window);
 T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
 WaitSecs(TR*6);
 % KbTriggerWait(p.keys.trigger);
@@ -202,7 +205,7 @@ timeStim = GetSecs;
 %     while respToBeMade && timeStim < trial_duration
 while (GetSecs - T.p3_target_onset(trl)) < trial_duration
     response = 99;
-    RT = [];
+    RT = 99;
     [keyIsDown,secs, keyCode] = KbCheck;
 
     if keyCode(p.keys.esc)
@@ -248,6 +251,10 @@ T.p4_responseonset(trl) = secs;
 T.p4_responsekey(trl) = response;
 T.p4_RT(trl) = RT;
 
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+Screen('Flip', p.ptb.window);
+WaitSecs(0.2)
 end
 
 
