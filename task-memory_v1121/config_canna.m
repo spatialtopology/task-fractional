@@ -32,6 +32,7 @@ if expParam.sessionNum == 1
 
     %% Screen parameters
     cfg.screen.bgColor = uint8((rgb('White') * 255) + 0.5);
+    cfg.screen.blackbgColor = uint8((rgb('Black') * 255) + 0.5);
 
     %% Stimulus parameters
 
@@ -133,6 +134,7 @@ if expParam.sessionNum == 1
 
     % text colors
     cfg.text.basicTextColor = uint8((rgb('Black') * 255) + 0.5);
+    cfg.text.whiteTextColor = uint8((rgb('Black') * 255) + 0.5);
     cfg.text.instructColor = uint8((rgb('Black') * 255) + 0.5);
     % text color when experimenter's attention is needed
     cfg.text.experimenterColor = uint8((rgb('Red') * 255) + 0.5);
