@@ -12,14 +12,14 @@ global p
 % =================================================== 8< ==================
 % REMOVE THIS SECTION FOR MAIN EXPERIMENT
 % debug mode % Initial
-debug                          = 1;   % PTB Debugging
-AssertOpenGL;
-commandwindow;
-ListenChar(2);
-if debug
-    ListenChar(0);
-    PsychDebugWindowConfiguration;
-end
+% debug                          = 1;   % PTB Debugging
+% AssertOpenGL;
+% commandwindow;
+% ListenChar(2);
+% if debug
+%     ListenChar(0);
+%     PsychDebugWindowConfiguration;
+% end
 % ========================= 8< ============================================
 
 Screen('Preference', 'SkipSyncTests', 1);
@@ -31,6 +31,8 @@ p.ptb.black                    = BlackIndex(p.ptb.screenNumber);
 p.ptb.green                    = [0 1 0];
 [p.ptb.window, p.ptb.rect]     = PsychImaging('OpenWindow',p.ptb.screenNumber,p.ptb.black);
 [p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize',p.ptb.window);
+p.ptb.screenYpixels
+p.ptb.screenXpixels
 p.ptb.ifi                      = Screen('GetFlipInterval',p.ptb.window);
 Screen('BlendFunction', p.ptb.window,'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA'); % Set up alpha-blending for smooth (anti-aliased) lines
 Screen('TextFont', p.ptb.window, 'Arial');
@@ -198,6 +200,7 @@ timeStim = GetSecs;
 %     while respToBeMade && timeStim < trial_duration
 while (GetSecs - T.p3_target_onset(trl)) < trial_duration
     response = 99;
+    RT = [];
     [keyIsDown,secs, keyCode] = KbCheck;
 
     if keyCode(p.keys.esc)
