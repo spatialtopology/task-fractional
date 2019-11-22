@@ -1,5 +1,5 @@
-function [cfg,expParam] = mt_study(w,cfg,expParam,logFile,sesName)
-% function [cfg,expParam] = mt_studylist(w,cfg,expParam,logFile,sesName)
+function [cfg,expParam] = mt_study(p,cfg,expParam,logFile,sesName)
+% function [cfg,expParam] = mt_studylist(p.ptb.window,cfg,expParam,logFile,sesName)
 %
 % Description:
 %  This function runs the study task. There are no blocks.
@@ -92,9 +92,9 @@ end
 for s = 1 : length(stimList)
     if sessionCfg.isFix
         % fixation cross
-        Screen('TextSize', w, cfg.text.basicTextSize);
-        DrawFormattedText(w, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
-        Screen('Flip', w);
+        Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
+        DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
+        Screen('Flip', p.ptb.window);
         timeFix = sessionCfg.preStim(1) + ((sessionCfg.preStim(2) - sessionCfg.preStim(1)).*rand(1,1));
         WaitSecs(timeFix);
     end
@@ -104,9 +104,9 @@ for s = 1 : length(stimList)
             stimImgFile(stimImgFile=='\') = '/';
             stimImg = imread(stimImgFile);
             stimImg = uint8(stimImg);
-            imageTexture = Screen('MakeTexture', w, stimImg);
-            Screen('DrawTexture', w, imageTexture, [],[],0,0);
-            [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip', w);
+            imageTexture = Screen('MakeTexture', p.ptb.window, stimImg);
+            Screen('DrawTexture', p.ptb.window, imageTexture, [],[],0,0);
+            [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip', p.ptb.window);
             WaitSecs(sessionCfg.stim);
             
             if isStim(s)
@@ -126,9 +126,9 @@ for s = 1 : length(stimList)
                 stimList{s});
         case('w') % show words
             currentWord = stimList{s}(7:end-4);
-            Screen('TextSize', w, cfg.text.basicTextSize);
-            DrawFormattedText(w, currentWord, 'center', 'center', cfg.text.basicTextColor);
-            Screen('Flip', w);
+            Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
+            DrawFormattedText(p.ptb.window, currentWord, 'center', 'center', cfg.text.basicTextColor);
+            Screen('Flip', p.ptb.window);
             WaitSecs(sessionCfg.stim);
             
             if isStim(s)
@@ -150,8 +150,8 @@ for s = 1 : length(stimList)
     end
     
     % isi
-    Screen('FillRect', w, cfg.screen.bgColor);
-    Screen('Flip', w);
+    Screen('FillRect', p.ptb.window, cfg.screen.bgColor);
+    Screen('Flip', p.ptb.window);
     WaitSecs(sessionCfg.isi);
     
     switch cfg.stim.studyType
