@@ -2,7 +2,7 @@ function run_task(order, test_tag)
 % ---------------------
 % debug mode % Initial
 % debug     = 1;   % PTB Debugging
-% 
+%
 % AssertOpenGL;
 % commandwindow;
 % ListenChar(2);
@@ -93,7 +93,7 @@ fprintf('\n%s\n%s\n%s\n',boxTop,script_name,boxTop)
 %% DEFAULTS %%
 defaults = task_defaults;
 KbName('UnifyKeyNames');
-trigger = KbName(defaults.trigger);
+
 % KbTriggerWait(trigger);
 TR = 0.46;
 % T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
@@ -171,7 +171,7 @@ resp_set = ptb_response_set([defaults.valid_keys defaults.escape]); % response s
 %% Initialize Screen %%
 % screens                       = Screen('Screens'); % Get the screen numbers
 % p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
-% 
+%
 % try
 %     w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1, defaults.screenres); % setup screen
 % catch
@@ -200,7 +200,7 @@ p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
 w.win = p.ptb.window;
 w.rect = p.ptb.rect;
-w.white = p.ptb.white;  
+w.white = p.ptb.white;
 w.black = p.ptb.black;
 HideCursor(p.ptb.screenNumber);
 %% Initialize Logfile (Trialwise Data Recording) %%
@@ -256,7 +256,10 @@ Screen('DrawTexture',w.win, instructTex); Screen('Flip',w.win);
 
 %% Wait for Trigger to Begin %%
 DisableKeysForKbCheck([]);
-secs=KbTriggerWait(trigger);%,inputDevice);
+trigger = KbName(defaults.trigger);
+KbTriggerWait(KbName(defaults.start)); % s
+secs=KbTriggerWait(trigger);%,inputDevice); % scanner trigger
+
 anchor=secs;
 WaitSecs(TR*6);
 

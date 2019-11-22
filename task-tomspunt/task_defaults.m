@@ -15,7 +15,7 @@ function defaults = task_defaults
 % Paths
 %==========================================================================
 defaults.language       = 'english'; % 'english' (default) or 'german'
-defaults.pace           = 'slow'; % 'fast' (default) or 'slow'
+defaults.pace           = 'fast'; % 'fast' (default) or 'slow'
                                   % 'slow' gives participants more time to
                                   % read the question cues and make their
                                   % response and may be ideal for studies
@@ -31,7 +31,10 @@ defaults.screenres      = [1024 768];   % recommended screen resolution (if
 %==========================================================================
 defaults.escape         = 'ESCAPE'; % escape key (to exit early)
 defaults.trigger        = '5%'; % task trigger key (to start task)
-defaults.valid_keys     = {'1!' '2@' '3#' '4$'}; % valid response keys
+defaults.end            = 'e';
+defaults.start          = 's';
+defaults.valid_keys     = {'1!' '4$'}; % valid response keys
+% defaults.valid_keys     = {'1!' '2@' '3#' '4$'}; % valid response keys
 % These correspond to the keys that the participant can use to make their
 % responses during task performance. The key in the first position (e.g.,
 % '1!') will be numerically coded as a 1 in the output data file; the key
@@ -65,9 +68,9 @@ defaults.font.linesep   = 3;  % spacing between first and second lines of questi
 
 % Timing (specify all in seconds)
 %==========================================================================
-defaults.TR             = 1;        % Your TR (in secs) - Task runtime will be adjusted
+defaults.TR             = 0.46;        % Your TR (in secs) - Task runtime will be adjusted
                                     % to a multiple of the TR
-defaults.prestartdur    = 4;        % duration of fixation period after trigger
+defaults.prestartdur    = 0;        % duration of fixation period after trigger
                                     % and before first block
 defaults.ignoreDur      = 0.15;     % dur after trial presentation in which
                                     % button presses are ignored (this is
@@ -76,5 +79,3 @@ defaults.ignoreDur      = 0.15;     % dur after trial presentation in which
                                     % DEFAULT VALUE = 0.15
 defaults.practiceenddur = 2.5;      % Dur of fixation period following last practice trial
 end
-
-
