@@ -79,7 +79,7 @@ doplot = 1;
 % we want to get 10 trials/condition in 5 mins -
 % so, 20 trials/condition total across 2 5-min runs
 
-event1duration = 2.5;    % duration of cue
+event1duration = 2.2;    % duration of cue
 % event2duration = 8;    % duration of feedback
 
 trialtypes = 2;  %4      % neutral, 2 levels of loss, 2 levels of gain

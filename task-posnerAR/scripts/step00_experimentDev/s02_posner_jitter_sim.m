@@ -50,9 +50,9 @@
 tic
 versions = 30;
 iter = 10000;
-ISI1mean = 2;
+ISI1mean = 2.5;
 % ISI2mean = 1;
-idealLength = 558;
+idealLength = 564;
 
 [meanrecipvif, scanduration] = deal(zeros(iter, 1));
 for ver = 1:versions
