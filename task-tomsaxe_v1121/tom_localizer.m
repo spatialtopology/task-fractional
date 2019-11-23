@@ -1,4 +1,7 @@
 % function tom_localizer(subjID, run_num)
+% [ ] change instruction screen
+% [ ] think of a way to distinguish 12 fixsation and 6 trs
+% [x] hide cursor
 function tom_localizer(subjID)
 run_num=1;
 %% Version: September 7, 2011
@@ -160,19 +163,29 @@ run_num=1;
 % [rootdir b c]		= fileparts(mfilename('fullpath'));			% path to the directory containing the behavioural / stimuli directories. If this script is not in that directory, this line must be changed.
 
 %% Set up necessary variables
-rootdir             = '/Users/h/Documents/projects_local/fractional_factorials/task-tomsaxe/';
-% orig_dir			= pwd;
-textdir				= fullfile(rootdir, 'text_files');
-behavdir			= fullfile(rootdir, 'data', strcat('sub-', sprintf('%04d', subjID)), 'beh');
+% rootdir             = '/Users/h/Documents/projects_local/fractional_factorials/task-tomsaxe/';
+repo_dir			= pwd;
+tomsaxe_dir   = fileparts(repo_dir); % task
+textdir				= fullfile(tomsaxe_dir, 'text_files');
+behavdir			= fullfile(tomsaxe_dir, 'data', strcat('sub-', sprintf('%04d', subjID)), 'beh');
 if ~exist(behavdir, 'dir')
     mkdir(behavdir)
 end
+
+vnames = {'param_fmriSession', 'param_triggerOnset',...
+    'p1_fixation_onset',
+    'p2_filename', 'p2_filetype','p2_story_rawonset',...
+    'p3_ques_onset',...
+    'p4_responseonset','p4_responsekey','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',
+    'param_end_instruct_onset'};
+T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
+T.Properties.VariableNames     = vnames;
 
 % designs				= [ 1 2 2 1 2 1 2 1 1 2 ;  2 1 2 1 1 2 2 1 2 1 ; ];
 % % changed by FRACTIONAL
 % design				= designs(run_num,:); % changed by FRACTIONAL
 design				= [ 1 2 2 1 2 1 2 1 1 2 2 1 2 1 1 2 2 1 2 1  ]; % changed by FRACTIONAL
-conds				= {'belief','photo'};
+conds				  = {'belief','photo'};
 condPrefs			= {'b','p'};								% stimuli textfile prefixes, used in loading stimuli content
 fixDur				= 12;	%12									% fixation duration
 storyDur			= 11;	%10									% story duration
@@ -184,6 +197,15 @@ items				= key;
 trialsOnsets        = key;                                      % trial onsets in seconds
 endDur              = 3;
 ips					= ((trialsPerRun) * (fixDur + storyDur + questDur) + (endDur))/0.46;
+trial_type = {'false_belief', 'false_photo'}
+taskname = 'tomsaxe'
+
+%% G. instructions _____________________________________________________
+instruct_filepath              = fullfile(main_dir,  'instructions');
+instruct_start_name            = ['task-', taskname, '_start.png'];
+instruct_end_name              = ['task-', taskname, '_end.png'];
+instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
+instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 
 
 %% Verify that all necessary files and folders are in place.
@@ -211,7 +233,7 @@ end
 try
     %     PsychJavaTrouble;
     cd(textdir);
-%     HideCursor;
+    HideCursor;
 
     Screen('Preference', 'SkipSyncTests', 1);
     PsychDefaultSetup(2);
@@ -249,14 +271,15 @@ try
     Screen( 'Preference', 'SkipSyncTests', 0);
     Screen( p.ptb.window, 'TextFont', 'Helvetica');
     Screen( p.ptb.window, 'TextSize', 30);
-    task                           = sprintf('True or False');
-    instr_1                    	   = sprintf('Press left button (1) for "True"');
-    instr_2                        = sprintf('Press right button (2) for "False"');
-    
-    Screen(p.ptb.window, 'DrawText', task, p.ptb.xCenter-125, p.ptb.yCenter-60, [255]);
-    Screen(p.ptb.window, 'DrawText', instr_1, p.ptb.xCenter-300, p.ptb.yCenter, [255]);
-    Screen(p.ptb.window, 'DrawText', instr_2,p.ptb.xCenter-300, p.ptb.yCenter+60, [255]);
-    Screen(p.ptb.window, 'Flip');												% Instructional screen is presented.
+
+    % task                           = sprintf('True or False');
+    % instr_1                    	   = sprintf('Press left button (1) for "True"');
+    % instr_2                        = sprintf('Press right button (2) for "False"');
+    %
+    % Screen(p.ptb.window, 'DrawText', task, p.ptb.xCenter-125, p.ptb.yCenter-60, [255]);
+    % Screen(p.ptb.window, 'DrawText', instr_1, p.ptb.xCenter-300, p.ptb.yCenter, [255]);
+    % Screen(p.ptb.window, 'DrawText', instr_2,p.ptb.xCenter-300, p.ptb.yCenter+60, [255]);
+											% Instructional screen is presented.
 catch exception
     ShowCursor;
     sca;
@@ -268,9 +291,21 @@ end
 %  If your scanner does not use a '+' as a trigger pulse, change the value
 %  of triggerKey accordingly.
 %% _______________________ Wait for Trigger to Begin ___________________________
+
+
+%% ______________________________ Instructions _________________________________
+Screen('TextSize',p.ptb.window,72);
+start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
+Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
+Screen(p.ptb.window, 'Flip');
 DisableKeysForKbCheck([]);
 KbTriggerWait(p.keys.start);
-experimentStart = KbTriggerWait(p.keys.trigger);
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+    p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+Screen('Flip', p.ptb.window);
+
+T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
+experimentStart = T.param_triggerOnset(1)
 % include fixation cross
 %% Main Experimental Loop
 counter				    = zeros(1,2)+(5*(run_num-1));
@@ -279,7 +314,7 @@ Screen(p.ptb.window, 'TextSize', 24);
 % try
     for trial = 1:trialsPerRun
         cd(textdir);
-        trialStart(trl)		= GetSecs;
+        trialStart		= GetSecs;
         empty_text		= ' ';
 
         Screen(p.ptb.window, 'DrawText', empty_text,p.ptb.xCenter,p.ptb.yCenter);
@@ -292,7 +327,8 @@ Screen(p.ptb.window, 'TextSize', 24);
         storyname		= fullfile(textdir, sprintf('%d%s_story.txt',numbeT,condPrefs{trialT}));
         questname		= fullfile(textdir, sprintf('%d%s_question.txt',numbeT,condPrefs{trialT}));
         items(trial,1)	= numbeT;
-
+        T.p2_filename(trial) = sprintf('%d%s_story.txt',numbeT,condPrefs{trialT});
+        T.p2_filetype(trial) = trial_type{trialT};
         %%%%%%%%% Open Story %%%%%%%%%
         textfid			= fopen(storyname, 'r');
         lCounter		= 1;										% line counter
@@ -312,8 +348,9 @@ Screen(p.ptb.window, 'TextSize', 24);
         end
         fclose(textfid);
 
-        Screen(p.ptb.window, 'Flip');
-        trialsOnsets (trial) = GetSecs-experimentStart;
+        T.p2_story_rawonset(trial) = Screen(p.ptb.window, 'Flip');
+
+        trialsOnsets(trial) = GetSecs-experimentStart;
         %%%%%%%%% Open Question %%%%%%%%%
         textfid			= fopen(questname);
         lCounter		= 1;
@@ -327,12 +364,13 @@ Screen(p.ptb.window, 'TextSize', 24);
         while GetSecs - trialStart < fixDur + storyDur; end			% wait for story presentation period
 
         %%%%%%%%% Display Question %%%%%%%%%
-        Screen(p.ptb.window, 'Flip');
+        T.p3_ques_onset(trial) = Screen(p.ptb.window, 'Flip');
 
         responseStart	= GetSecs;
 
         %%%%%%%%% Collect Response %%%%%%%%%
-        while ( GetSecs - responseStart ) < questDur
+        % while ( GetSecs - responseStart ) < questDur
+        while ( GetSecs - T.p3_ques_onset(trial) ) < questDur
             [keyIsDown,secs,keyCode]	= KbCheck;					% check to see if a key is being pressed
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %--------------------------SEE NOTE 2-----------------------------%
@@ -346,11 +384,13 @@ Screen(p.ptb.window, 'TextSize', 24);
                 sca;
                 return
             elseif keyCode(p.keys.right)
-                RT(trial,1)				= GetSecs - responseStart;
-                key(trial,1)			= 2;
+                RT(trial,1)				= GetSecs - T.p3_ques_onset(trial); %responseStart;
+                key(trial,1)    	= 2;
+                T.p4_responsekey(trial)    = 2;
             elseif keyCode(p.keys.left)
-                RT(trial,1)				= GetSecs - responseStart;
+                RT(trial,1)				= GetSecs - T.p3_ques_onset(trial); %responseStart;
                 key(trial,1)			= 1;
+                T.p4_responsekey(trial) = 1;
 
             end
         end
@@ -369,10 +409,23 @@ Screen(p.ptb.window, 'TextSize', 24);
 % end
 
 %% Final fixation, save information
-Screen(p.ptb.window, 'Flip');
 trials_end			= GetSecs;
+% while GetSecs - trials_end < endDur;
+  Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+      p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+T.param_final_fixation = Screen('Flip', p.ptb.window);
+
+WaitSecs(endDur);
+%% _________________________ End Instructions _____________________________
+end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
+Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
+T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
+KbTriggerWait(p.keys.end);
+
+
+T.experimentDuration(:) = T.param_end_instruct_onset
 % while GetSecs - trials_end < fixDur; end
-while GetSecs - trials_end < endDur; end
+
 experimentEnd		= GetSecs;
 experimentDuration	= experimentEnd - experimentStart;
 numconds			= 2;
@@ -389,3 +442,4 @@ catch exception
     warndlg(sprintf('The experiment has encountered the following error while saving the behavioral data: %s',exception.message),'Error');
     cd(orig_dir);
 end					% end main function
+end
