@@ -71,10 +71,11 @@ cue_duration                   = 0.200;
 %% D. making output table _________________________________________________
 vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
     'param_jitter', 'param_AR_invalid_sequence', 'param_valid_type', 'param_cue', 'param_target',...
-    'p1_fixation_onset', 'p1_fixation_duration',...
+    'p1_fixation_onset', 'p1_fixation_duration','p1_fixation_offset','p1_ptb_fixation_duration',...
     'p2_cue_type','p2_cue_onset','p2_cue_offset','p2_cue_duration',...
     'p3_target_onset',...
-    'p4_responseonset','p4_responsekey','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration'};
+    'p4_responseonset','p4_responsekey','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',...
+    'p5_fixation_onset'};
 T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 
@@ -133,12 +134,11 @@ for trl = 1:size(countBalMat,1)
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
     Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
-    fStart1 = Screen('Flip', p.ptb.window);
+    T.p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
     WaitSecs(jitter1);
-    fEnd1 = GetSecs;
-
-    T.p1_fixation_onset(trl) = fStart1;
-    T.p1_fixation_duration(trl) = fEnd1 - fStart1;
+    T.p1_fixation_offset(trl) = GetSecs;
+    T.p1_ptb_fixation_duration(trl) = fEnd1 - T.p1_fixation_onset(trl);
+    T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
 
     %% ------------------------------------------------------------------------
     %                               2. cue 0.2 s
@@ -171,8 +171,6 @@ for trl = 1:size(countBalMat,1)
     %% ------------------------------------------------------------------------
     %                              3. target 2 s
     % -------------------------------------------------------------------------
-    timing.initialized=GetSecs;
-
     if string(countBalMat.target{trl}) == "left"
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
@@ -203,7 +201,8 @@ for trl = 1:size(countBalMat,1)
             return
         elseif keyCode(p.keys.left)
             RT = secs - T.p3_target_onset(trl);
-            response = 1;
+            T.p4_RT(trl) = secs - T.p3_target_onset(trl);
+            T.p4_responsekey(trl)  = 1;
             % 4.2. calculated response remainder time _____________________________
             WaitSecs(0.5);
 
@@ -216,8 +215,9 @@ for trl = 1:size(countBalMat,1)
 
 
         elseif keyCode(p.keys.right)
-            RT = secs - T.p3_target_onset(trl);
-            response = 2;
+          RT = secs - T.p3_target_onset(trl);
+            T.p4_RT(trl) = secs - T.p3_target_onset(trl);
+            T.p4_responsekey(trl)  = 2;
             % 4.2. calculated response remainder time _____________________________
             WaitSecs(0.5);
 
@@ -235,31 +235,37 @@ for trl = 1:size(countBalMat,1)
 
     % 4.3.record key press ________________________________________________
     T.p4_responseonset(trl) = secs;
-    T.p4_responsekey(trl) = response;
-    T.p4_RT(trl) = RT;
+    % T.p4_responsekey(trl) = response;
+    % T.p4_RT(trl) = RT;
 
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-    Screen('Flip', p.ptb.window);
+    T.p5_fixation_onset(trl) = Screen('Flip', p.ptb.window);
     WaitSecs(0.2)
 end
 
 
+
+
+
+%% _________________________ End Instructions _____________________________
+end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
+Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
+T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
+KbTriggerWait(p.keys.end);
+
+T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
+
 %% ------------------------------------------------------------------------
 %                              save parameter
 % -------------------------------------------------------------------------
-
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
 
 psychtoolbox_saveFileName = fullfile(sub_save_dir, [strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_psychtoolbox_params.mat' ]);
 save(psychtoolbox_saveFileName, 'p');
 
-%% _________________________ End Instructions _____________________________
-end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
-Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
-Screen('Flip',p.ptb.window);
-KbTriggerWait(p.keys.end);
+
     function WaitKeyPress(kID)
         while KbCheck(-3); end
         while 1
