@@ -45,20 +45,20 @@ p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
 p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
 % 2nd attempt
-p.rect.baseRect                = [0 0 200 200];
-p.rect.squareXpos              = [p.ptb.screenXpixels * 0.35 p.ptb.screenXpixels * 0.65];
+p.rect.baseRect                = [0 0 p.ptb.screenYpixels*2/9 p.ptb.screenYpixels*2/9];
+p.rect.squareXpos              = [p.ptb.screenXpixels * 0.30 p.ptb.screenXpixels * 0.70];
 numSquares                     = length(p.rect.squareXpos);
 p.rect.allRects                = nan(4, 3);
 for i = 1:numSquares
     p.rect.allRects(:, i)      = CenterRectOnPointd(p.rect.baseRect, p.rect.squareXpos(i), p.ptb.yCenter);
 end
-p.rect.leftRects = CenterRectOnPointd(p.rect.baseRect, p.ptb.screenXpixels * 0.35, p.ptb.yCenter);
-p.rect.rightRects = CenterRectOnPointd(p.rect.baseRect, p.ptb.screenXpixels * 0.65, p.ptb.yCenter);
+p.rect.leftRects = CenterRectOnPointd(p.rect.baseRect, p.ptb.screenXpixels * 0.30, p.ptb.yCenter);
+p.rect.rightRects = CenterRectOnPointd(p.rect.baseRect, p.ptb.screenXpixels * 0.70, p.ptb.yCenter);
 p.rect.penWidthPixels          = 6;
 
 p.target.dotSizePix            = 20;
-p.target.leftXpos              = p.ptb.screenXpixels * 0.35;
-p.target.rightXpos             = p.ptb.screenXpixels * 0.65;
+p.target.leftXpos              = p.ptb.screenXpixels * 0.30;
+p.target.rightXpos             = p.ptb.screenXpixels * 0.70;
 
 p.rect.LcenteredRect           = CenterRectOnPointd(p.rect.baseRect, -100, p.ptb.yCenter);
 p.rect.RcenteredRect           = CenterRectOnPointd(p.rect.baseRect, 100, p.ptb.yCenter);
@@ -80,7 +80,7 @@ trial_duration                 = 2.000;
 cue_duration                   = 0.200;
 % cue to target duration: 200ms
     % response: give 2s
-    
+
 %% D. making output table _________________________________________________
 vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
     'param_jitter', 'param_AR_invalid_sequence', 'param_valid_type', 'param_cue', 'param_target',...
@@ -94,8 +94,10 @@ T.Properties.VariableNames     = vnames;
 %% E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
-p.keys.right                   = KbName('j');
-p.keys.left                    = KbName('f');
+% p.keys.right                   = KbName('j');
+% p.keys.left                    = KbName('f');
+p.keys.right                   = KbName('4$');
+p.keys.left                    = KbName('1!');
 p.keys.space                   = KbName('space');
 p.keys.esc                     = KbName('ESCAPE');
 p.keys.trigger                 = KbName('5%');
@@ -105,23 +107,32 @@ p.keys.end                     = KbName('e');
 %% F. fmri Parameters __________________________________________________________
 TR                             = 0.46;
 
-%% G. Instructions _____________________________________________________________
-instruct_start                 = 'The cueing task is about to start. \n Please wait for the experimenter';
-instruct_end                   = 'This is the end of the experiment. \n Please wait for the experimenter';
-
-
+% %% G. Instructions _____________________________________________________________
+% instruct_start                 = 'The cueing task is about to start. \n Please wait for the experimenter';
+% instruct_end                   = 'This is the end of the experiment. \n Please wait for the experimenter';
+% 
+%% G. instructions _____________________________________________________
+instruct_filepath              = fullfile(main_dir, 'design', 'instructions');
+instruct_start_name            = ['task-', taskname, '_start.png'];
+instruct_end_name              = ['task-', taskname, '_end.png'];
+instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
+instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 %% ------------------------------------------------------------------------
 %                             Start Experiment
 % -------------------------------------------------------------------------
 
-%% _________________________ 0. Instructions ______________________________
+%% ______________________________ Instructions _________________________________
 Screen('TextSize',p.ptb.window,72);
-DrawFormattedText(p.ptb.window,instruct_start,'centerblock',p.ptb.screenYpixels/2,255);
+start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
+Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 Screen('Flip',p.ptb.window);
 
 %% ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
 KbTriggerWait(p.keys.start);
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+Screen('Flip', p.ptb.window);
 T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
 WaitSecs(TR*6);
 % KbTriggerWait(p.keys.trigger);
@@ -129,7 +140,7 @@ WaitSecs(TR*6);
 
 %% __________________________ Experimental loop ___________________________
 for trl = 1:size(countBalMat,1)
-    
+
 %% ------------------------------------------------------------------------
 %                        1. Fixtion Jitter 0-4 sec
 % -------------------------------------------------------------------------
@@ -140,7 +151,7 @@ Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthP
 fStart1 = Screen('Flip', p.ptb.window);
 WaitSecs(jitter1);
 fEnd1 = GetSecs;
-    
+
 T.p1_fixation_onset(trl) = fStart1;
 T.p1_fixation_duration(trl) = fEnd1 - fStart1;
 
@@ -171,7 +182,7 @@ else
 end
 T.p2_cue_type(trl) = string(countBalMat.cue(trl));
 
-    
+
 %% ------------------------------------------------------------------------
 %                              3. target
 % -------------------------------------------------------------------------
@@ -190,7 +201,7 @@ elseif string(countBalMat.target{trl}) == "right"
     Screen('DrawDots', p.ptb.window, [p.target.rightXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
     T.p3_target_onset(trl) = Screen('Flip', p.ptb.window);
 end
-    
+
 %% ------------------------------------------------------------------------
 %                            4. button press
 % -------------------------------------------------------------------------
@@ -200,17 +211,17 @@ timeStim = GetSecs;
 %     while respToBeMade && timeStim < trial_duration
 while (GetSecs - T.p3_target_onset(trl)) < trial_duration
     response = 99;
-    RT = [];
+    RT = 99;
     [keyIsDown,secs, keyCode] = KbCheck;
 
     if keyCode(p.keys.esc)
         ShowCursor;
         sca;
-        return            
+        return
     elseif keyCode(p.keys.left)
         RT = secs - T.p3_target_onset(trl);
         respToBeMade = false;
-        response = 1;    
+        response = 1;
                    % 4.2. calculated response remainder time _____________________________
         WaitSecs(0.5);
 
@@ -222,7 +233,7 @@ while (GetSecs - T.p3_target_onset(trl)) < trial_duration
         T.p4_fixation_duration(trl) = remainder_time;
 
 
-    elseif keyCode(p.keys.right) 
+    elseif keyCode(p.keys.right)
         RT = secs - T.p3_target_onset(trl);
         respToBeMade = false;
         response = 2;
@@ -245,7 +256,11 @@ end
 T.p4_responseonset(trl) = secs;
 T.p4_responsekey(trl) = response;
 T.p4_RT(trl) = RT;
-    
+
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+Screen('Flip', p.ptb.window);
+WaitSecs(0.2)
 end
 
 
@@ -260,10 +275,9 @@ psychtoolbox_saveFileName = fullfile(sub_save_dir, [strcat('sub-', sprintf('%04d
 save(psychtoolbox_saveFileName, 'p');
 
 %% _________________________ End Instructions _____________________________
-Screen('TextSize',p.ptb.window,72);
-DrawFormattedText(p.ptb.window,instruct_end,'centerblock',p.ptb.screenYpixels/2,255);
+end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
+Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 Screen('Flip',p.ptb.window);
-DisableKeysForKbCheck([]);
 KbTriggerWait(p.keys.end);
 
 close all;
