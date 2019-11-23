@@ -9,19 +9,6 @@ function posner(sub_num)
 %% A. psychtoolbox parameters _____________________________________________
 global p
 
-% =================================================== 8< ==================
-% REMOVE THIS SECTION FOR MAIN EXPERIMENT
-% debug mode % Initial
-% debug                          = 1;   % PTB Debugging
-% AssertOpenGL;
-% commandwindow;
-% ListenChar(2);
-% if debug
-%     ListenChar(0);
-%     PsychDebugWindowConfiguration;
-% end
-% ========================= 8< ============================================
-
 Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(2);
 screens                        = Screen('Screens'); % Get the screen numbers
@@ -79,7 +66,7 @@ end
 trial_duration                 = 2.000;
 cue_duration                   = 0.200;
 % cue to target duration: 200ms
-    % response: give 2s
+% response: give 2s
 
 %% D. making output table _________________________________________________
 vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
@@ -110,7 +97,7 @@ TR                             = 0.46;
 % %% G. Instructions _____________________________________________________________
 % instruct_start                 = 'The cueing task is about to start. \n Please wait for the experimenter';
 % instruct_end                   = 'This is the end of the experiment. \n Please wait for the experimenter';
-% 
+%
 %% G. instructions _____________________________________________________
 instruct_filepath              = fullfile(main_dir, 'design', 'instructions');
 instruct_start_name            = ['task-', taskname, '_start.png'];
@@ -131,136 +118,130 @@ Screen('Flip',p.ptb.window);
 DisableKeysForKbCheck([]);
 KbTriggerWait(p.keys.start);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+    p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
 T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
 WaitSecs(TR*6);
-% KbTriggerWait(p.keys.trigger);
-
 
 %% __________________________ Experimental loop ___________________________
 for trl = 1:size(countBalMat,1)
 
-%% ------------------------------------------------------------------------
-%                        1. Fixtion Jitter 0-4 sec
-% -------------------------------------------------------------------------
-jitter1 = countBalMat.jitter(trl);
-Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
-fStart1 = Screen('Flip', p.ptb.window);
-WaitSecs(jitter1);
-fEnd1 = GetSecs;
-
-T.p1_fixation_onset(trl) = fStart1;
-T.p1_fixation_duration(trl) = fEnd1 - fStart1;
-
-%% ------------------------------------------------------------------------
-%                               2. cue
-% -------------------------------------------------------------------------
-if string(countBalMat.cue{trl}) == "left"
+    %% ------------------------------------------------------------------------
+    %                        1. Fixtion Jitter 300 / 120 = 2.5 sec
+    % -------------------------------------------------------------------------
+    jitter1 = countBalMat.jitter(trl);
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
     Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
-    Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.leftRects, p.rect.penWidthPixels);
-    T.p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
-    WaitSecs(cue_duration);
-    T.p2_cue_offset(trl) = GetSecs;
-    T.p2_cue_duration(trl) = T.p2_cue_offset(trl)- T.p2_cue_onset(trl);
+    fStart1 = Screen('Flip', p.ptb.window);
+    WaitSecs(jitter1);
+    fEnd1 = GetSecs;
 
-elseif string(countBalMat.cue{trl}) == "right"
-    Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-    Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
-    Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.rightRects, p.rect.penWidthPixels);
-    T.p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
-    WaitSecs(cue_duration);
-    T.p2_cue_offset(trl) = GetSecs;
-    T.p2_cue_duration(trl) = T.p2_cue_offset(trl)- T.p2_cue_onset(trl);
-else
-    error('check!');
-end
-T.p2_cue_type(trl) = string(countBalMat.cue(trl));
+    T.p1_fixation_onset(trl) = fStart1;
+    T.p1_fixation_duration(trl) = fEnd1 - fStart1;
 
-
-%% ------------------------------------------------------------------------
-%                              3. target
-% -------------------------------------------------------------------------
-timing.initialized=GetSecs;
-
-if string(countBalMat.target{trl}) == "left"
-    Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-    Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
-    Screen('DrawDots', p.ptb.window, [p.target.leftXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
-    T.p3_target_onset(trl) = Screen('Flip', p.ptb.window);
-elseif string(countBalMat.target{trl}) == "right"
-    Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-        p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-    Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
-    Screen('DrawDots', p.ptb.window, [p.target.rightXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
-    T.p3_target_onset(trl) = Screen('Flip', p.ptb.window);
-end
-
-%% ------------------------------------------------------------------------
-%                            4. button press
-% -------------------------------------------------------------------------
-respToBeMade = true;
-timeStim = GetSecs;
-% 4.1. record key press _______________________________________________
-%     while respToBeMade && timeStim < trial_duration
-while (GetSecs - T.p3_target_onset(trl)) < trial_duration
-    response = 99;
-    RT = 99;
-    [keyIsDown,secs, keyCode] = KbCheck;
-
-    if keyCode(p.keys.esc)
-        ShowCursor;
-        sca;
-        return
-    elseif keyCode(p.keys.left)
-        RT = secs - T.p3_target_onset(trl);
-        respToBeMade = false;
-        response = 1;
-                   % 4.2. calculated response remainder time _____________________________
-        WaitSecs(0.5);
-
-        remainder_time = trial_duration - 0.5 - RT;
+    %% ------------------------------------------------------------------------
+    %                               2. cue 0.2 s
+    % -------------------------------------------------------------------------
+    if string(countBalMat.cue{trl}) == "left"
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-        T.p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
-        WaitSecs(remainder_time);
-        T.p4_fixation_duration(trl) = remainder_time;
+        Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
+        Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.leftRects, p.rect.penWidthPixels);
+        T.p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
+        WaitSecs(cue_duration);
+        T.p2_cue_offset(trl) = GetSecs;
+        T.p2_cue_duration(trl) = T.p2_cue_offset(trl)- T.p2_cue_onset(trl);
 
-
-    elseif keyCode(p.keys.right)
-        RT = secs - T.p3_target_onset(trl);
-        respToBeMade = false;
-        response = 2;
-                   % 4.2. calculated response remainder time _____________________________
-        WaitSecs(0.5);
-
-        remainder_time = trial_duration - 0.5 - RT;
+    elseif string(countBalMat.cue{trl}) == "right"
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-        T.p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
-        WaitSecs(remainder_time);
-        T.p4_fixation_duration(trl) = remainder_time;
+        Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
+        Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.rightRects, p.rect.penWidthPixels);
+        T.p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
+        WaitSecs(cue_duration);
+        T.p2_cue_offset(trl) = GetSecs;
+        T.p2_cue_duration(trl) = T.p2_cue_offset(trl)- T.p2_cue_onset(trl);
+    else
+        error('check!');
+    end
+    T.p2_cue_type(trl) = string(countBalMat.cue(trl));
+
+
+    %% ------------------------------------------------------------------------
+    %                              3. target 2 s
+    % -------------------------------------------------------------------------
+    timing.initialized=GetSecs;
+
+    if string(countBalMat.target{trl}) == "left"
+        Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+            p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+        Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
+        Screen('DrawDots', p.ptb.window, [p.target.leftXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
+        T.p3_target_onset(trl) = Screen('Flip', p.ptb.window);
+    elseif string(countBalMat.target{trl}) == "right"
+        Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+            p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+        Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
+        Screen('DrawDots', p.ptb.window, [p.target.rightXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
+        T.p3_target_onset(trl) = Screen('Flip', p.ptb.window);
+    end
+
+    %% ------------------------------------------------------------------------
+    %                            4. button press within 2s
+    % -------------------------------------------------------------------------
+    % 4.1. record key press _______________________________________________
+    %     while respToBeMade && timeStim < trial_duration
+    while (GetSecs - T.p3_target_onset(trl)) < trial_duration
+        response = 99;
+        RT = 99;
+        [keyIsDown,secs, keyCode] = KbCheck;
+
+        if keyCode(p.keys.esc)
+            ShowCursor;
+            sca;
+            return
+        elseif keyCode(p.keys.left)
+            RT = secs - T.p3_target_onset(trl);
+            response = 1;
+            % 4.2. calculated response remainder time _____________________________
+            WaitSecs(0.5);
+
+            remainder_time = trial_duration - 0.5 - RT;
+            Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+                p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+            T.p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
+            WaitSecs(remainder_time);
+            T.p4_fixation_duration(trl) = remainder_time;
+
+
+        elseif keyCode(p.keys.right)
+            RT = secs - T.p3_target_onset(trl);
+            response = 2;
+            % 4.2. calculated response remainder time _____________________________
+            WaitSecs(0.5);
+
+            remainder_time = trial_duration - 0.5 - RT;
+            Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+                p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+            T.p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
+            WaitSecs(remainder_time);
+            T.p4_fixation_duration(trl) = remainder_time;
+
+        end
 
     end
 
-end
 
+    % 4.3.record key press ________________________________________________
+    T.p4_responseonset(trl) = secs;
+    T.p4_responsekey(trl) = response;
+    T.p4_RT(trl) = RT;
 
-% 4.3.record key press ________________________________________________
-T.p4_responseonset(trl) = secs;
-T.p4_responsekey(trl) = response;
-T.p4_RT(trl) = RT;
-
-Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+    Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-Screen('Flip', p.ptb.window);
-WaitSecs(0.2)
+    Screen('Flip', p.ptb.window);
+    WaitSecs(0.2)
 end
 
 
@@ -279,7 +260,20 @@ end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 Screen('Flip',p.ptb.window);
 KbTriggerWait(p.keys.end);
-
+    function WaitKeyPress(kID)
+        while KbCheck(-3); end
+        while 1
+            [keyIsDown, ~, keyCode ] = KbCheck(-3);
+            if keyIsDown
+                if keyCode(p.keys.esc)
+                    cleanup; break;
+                elseif keyCode(kID)
+                    break;
+                end
+                while KbCheck(-3); end
+            end
+        end
+    end
 close all;
 sca;
 
