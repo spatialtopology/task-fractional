@@ -107,18 +107,24 @@ p.keys.end                     = KbName('e');
 %% F. fmri Parameters __________________________________________________________
 TR                             = 0.46;
 
-%% G. Instructions _____________________________________________________________
-instruct_start                 = 'The cueing task is about to start. \n Please wait for the experimenter';
-instruct_end                   = 'This is the end of the experiment. \n Please wait for the experimenter';
-
-
+% %% G. Instructions _____________________________________________________________
+% instruct_start                 = 'The cueing task is about to start. \n Please wait for the experimenter';
+% instruct_end                   = 'This is the end of the experiment. \n Please wait for the experimenter';
+% 
+%% G. instructions _____________________________________________________
+instruct_filepath              = fullfile(main_dir, 'design', 'instructions');
+instruct_start_name            = ['task-', taskname, '_start.png'];
+instruct_end_name              = ['task-', taskname, '_end.png'];
+instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
+instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 %% ------------------------------------------------------------------------
 %                             Start Experiment
 % -------------------------------------------------------------------------
 
-%% _________________________ 0. Instructions ______________________________
+%% ______________________________ Instructions _________________________________
 Screen('TextSize',p.ptb.window,72);
-DrawFormattedText(p.ptb.window,instruct_start,'centerblock',p.ptb.screenYpixels/2,255);
+start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
+Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 Screen('Flip',p.ptb.window);
 
 %% ____________________ 1. Wait for Trigger to Begin ______________________
@@ -269,10 +275,9 @@ psychtoolbox_saveFileName = fullfile(sub_save_dir, [strcat('sub-', sprintf('%04d
 save(psychtoolbox_saveFileName, 'p');
 
 %% _________________________ End Instructions _____________________________
-Screen('TextSize',p.ptb.window,72);
-DrawFormattedText(p.ptb.window,instruct_end,'centerblock',p.ptb.screenYpixels/2,255);
+end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
+Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 Screen('Flip',p.ptb.window);
-DisableKeysForKbCheck([]);
 KbTriggerWait(p.keys.end);
 
 close all;
