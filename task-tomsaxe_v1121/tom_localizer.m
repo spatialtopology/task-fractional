@@ -1,5 +1,5 @@
 % function tom_localizer(subjID, run_num)
-% [ ] change instruction screen
+% [x] change instruction screen
 % [ ] think of a way to distinguish 12 fixsation and 6 trs
 % [x] hide cursor
 function tom_localizer(subjID)
