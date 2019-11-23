@@ -423,7 +423,7 @@ T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
 KbTriggerWait(p.keys.end);
 
 
-T.experimentDuration(:) = T.param_end_instruct_onset
+T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 % while GetSecs - trials_end < fixDur; end
 
 experimentEnd		= GetSecs;
