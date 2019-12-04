@@ -1,4 +1,4 @@
-function [cfg,expParam] = mt_study(p,cfg,expParam,logFile,sesName)
+function [cfg,expParam] = mt_study(p,cfg,expParam,logFile,sesName, sub_num)
 % function [cfg,expParam] = mt_studylist(p.ptb.window,cfg,expParam,logFile,sesName)
 %
 % Description:
@@ -88,33 +88,60 @@ else
     end
 end
 
+
+%% D. making output table ________________________________________________________
+vnames                         = {'param_fmriSession','param_experiment_start','param_memory_session_name'...
+                                  'p1_fixation_onset','p1_fixation_duration',...
+                                  'p2_stimuli_onset','p2_dummy_stimuli','p2_stimuli_filename',...
+                                  'param_end_instruct_onset', 'param_experimentDuration'};
+T                              = array2table(zeros(size(stimList,1),size(vnames,2)));
+T.Properties.VariableNames     = vnames;
+T.param_memory_session_name    = cell(size(stimList,1),1);
+T.param_memory_session_name(:) = {sesName};
+T.p2_stimuli_filename          = cell(size(stimList,1),1);
+
+%% G. instructions _____________________________________________________
+main_dir                       = pwd;
+instruct_filepath              = fullfile(main_dir, 'instructions');
+instruct_study_name            = 'memory_study.png';
+instruct_study                 = fullfile(instruct_filepath, instruct_study_name);
+
+%% ______________________________ Instructions _________________________________
+Screen('TextSize',p.ptb.window,72);
+start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_study));
+Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
+T.param_experiment_start(:) = Screen('Flip', p.ptb.window);
+WaitSecs(5);
+
 %% display stimuli
-for s = 1 : length(stimList)
+for trl = 1 : length(stimList)
     if sessionCfg.isFix
         % fixation cross
         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
         DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
-        Screen('Flip', p.ptb.window);
+        T.p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
         timeFix = sessionCfg.preStim(1) + ((sessionCfg.preStim(2) - sessionCfg.preStim(1)).*rand(1,1));
+        T.p1_fixation_duration(trl) = timeFix;
         WaitSecs(timeFix);
     end
     switch cfg.stim.studyType
         case('i') % show images
-            stimImgFile = fullfile(stimDir,stimList{s});
+            stimImgFile = fullfile(stimDir,stimList{trl});
             stimImgFile(stimImgFile=='\') = '/';
             stimImg = imread(stimImgFile);
             stimImg = uint8(stimImg);
             imageTexture = Screen('MakeTexture', p.ptb.window, stimImg);
             Screen('DrawTexture', p.ptb.window, imageTexture, [],[],0,0);
             [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip', p.ptb.window);
+            T.p2_stimuli_onset(trl) = StimulusOnsetTime;
             WaitSecs(sessionCfg.stim);
-            
-            if isStim(s)
-                type = '1';
+            type = 99;
+            if isStim(trl)
+                type = 1;
             else
-                type = '0';
+                type = 0;
             end
-            
+
             thisGetSecs = GetSecs;
             fprintf(logFile,'%f\t%s\t%s\t%s\t%s\t%s\t%s\n',...
                 thisGetSecs,...
@@ -122,21 +149,23 @@ for s = 1 : length(stimList)
                 sesName,...
                 'STUDY_STIM',...
                 'image',...
-                type,...
-                stimList{s});
+                num2str(type),...
+                stimList{trl});
+            T.p2_dummy_stimuli(trl) = type;
+            T.p2_stimuli_filename{trl} = stimList{trl};
         case('w') % show words
-            currentWord = stimList{s}(7:end-4);
+            currentWord = stimList{trl}(7:end-4);
             Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
             DrawFormattedText(p.ptb.window, currentWord, 'center', 'center', cfg.text.basicTextColor);
             Screen('Flip', p.ptb.window);
             WaitSecs(sessionCfg.stim);
-            
-            if isStim(s)
+
+            if isStim(trl)
                 type = '1';
             else
                 type = '0';
             end
-            
+
             thisGetSecs = GetSecs;
             fprintf(logFile,'%f\t%s\t%s\t%s\t%s\t%s\t%s\n',...
                 thisGetSecs,...
@@ -146,14 +175,14 @@ for s = 1 : length(stimList)
                 'word',...
                 type,...
                 currentWord);
-            
+
     end
-    
+
     % isi
     Screen('FillRect', p.ptb.window, cfg.screen.bgColor);
     Screen('Flip', p.ptb.window);
     WaitSecs(sessionCfg.isi);
-    
+
     switch cfg.stim.studyType
         case('i') % images
 %             Screen('Close', imageTexture);
@@ -161,3 +190,11 @@ for s = 1 : length(stimList)
     end
 end
 
+T.param_end_instruct_onset(:) = GetSecs;
+T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);
+
+%% __________________________ save parameter ___________________________________
+sub_save_dir = cfg.files.sesSaveDir;
+saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-memory-',sesName, '_beh.csv' ]);
+writetable(T,saveFileName);
+end
