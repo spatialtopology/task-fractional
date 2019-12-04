@@ -1,4 +1,4 @@
-function distraction(p, cfg, task_folder)
+function distraction(p, cfg, task_folder,sub_num)
 
 % % set up parameters
 % 
@@ -170,6 +170,6 @@ fix = Screen('MakeTexture',p.ptb.window, imread(fixation));
 Screen('DrawTexture',p.ptb.window,fix,[],[]);
 Screen('Flip',p.ptb.window);
 WaitSecs(5); %4
-
+% close
 
 end
