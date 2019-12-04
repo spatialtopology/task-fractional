@@ -448,8 +448,6 @@ KbTriggerWait(p.keys.end);
 
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 
-
-
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
 
