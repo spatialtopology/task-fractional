@@ -1,8 +1,8 @@
-% function tom_localizer(subjID, run_num)
+% function tom_localizer(sub_num, run_num)
 % [x] change instruction screen
 % [ ] think of a way to distinguish 12 fixsation and 6 trs
 % [x] hide cursor
-function tom_localizer(subjID)
+function tom_localizer(sub_num)
 run_num=1;
 %% Version: September 7, 2011
 %__________________________________________________________________________
@@ -24,7 +24,7 @@ run_num=1;
 %
 %							INPUTS
 %
-% - subjID: STRING The string you wish to use to identify the participant.
+% - sub_num: STRING The string you wish to use to identify the participant.
 %			"PI name"_"study name"_"participant number" is a common
 %			convention. This will be the name used to save the files.
 % - run_num   : NUMBER The current run_num number. (e.g., 1)
@@ -164,64 +164,73 @@ run_num=1;
 
 %% Set up necessary variables
 % rootdir             = '/Users/h/Documents/projects_local/fractional_factorials/task-tomsaxe/';
-repo_dir			= pwd;
-tomsaxe_dir   = fileparts(repo_dir); % task
+tomsaxe_dir			= pwd;
+% tomsaxe_dir   = fileparts(repo_dir); % task
 textdir				= fullfile(tomsaxe_dir, 'text_files');
-behavdir			= fullfile(tomsaxe_dir, 'data', strcat('sub-', sprintf('%04d', subjID)), 'beh');
-if ~exist(behavdir, 'dir')
-    mkdir(behavdir)
+sub_save_dir			= fullfile(tomsaxe_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh');
+if ~exist(sub_save_dir, 'dir')
+    mkdir(sub_save_dir)
 end
 
-vnames = {'param_fmriSession', 'param_triggerOnset',...
-    'p1_fixation_onset',
-    'p2_filename', 'p2_filetype','p2_story_rawonset',...
-    'p3_ques_onset',...
-    'p4_responseonset','p4_responsekey','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',
-    'param_end_instruct_onset'};
-T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
-T.Properties.VariableNames     = vnames;
+
+
 
 % designs				= [ 1 2 2 1 2 1 2 1 1 2 ;  2 1 2 1 1 2 2 1 2 1 ; ];
 % % changed by FRACTIONAL
 % design				= designs(run_num,:); % changed by FRACTIONAL
-design				= [ 1 2 2 1 2 1 2 1 1 2 2 1 2 1 1 2 2 1 2 1  ]; % changed by FRACTIONAL
-conds				  = {'belief','photo'};
-condPrefs			= {'b','p'};								% stimuli textfile prefixes, used in loading stimuli content
-fixDur				= 12;	%12									% fixation duration
-storyDur			= 11;	%10									% story duration
-questDur			= 6.5;	%4									% probe duration
-trialsPerRun		= length(design);
-key					= zeros(trialsPerRun,1);
-RT					= key;
-items				= key;
-trialsOnsets        = key;                                      % trial onsets in seconds
-endDur              = 3;
-ips					= ((trialsPerRun) * (fixDur + storyDur + questDur) + (endDur))/0.46;
-trial_type = {'false_belief', 'false_photo'}
-taskname = 'tomsaxe'
+
+design				                     = [ 1 2 2 1 2 1 2 1 1 2 2 1 2 1 1 2 2 1 2 1  ]; % changed by FRACTIONAL
+conds				                       = {'belief','photo'};
+condPrefs			                     = {'b','p'};								% stimuli textfile prefixes, used in loading stimuli content
+fixDur				                     = 12;	%12									% fixation duration
+storyDur		                       = 11;	%10									% story duration
+questDur			                     = 6.5;	%4									% probe duration
+trialsPerRun		                   = length(design);
+key					                       = zeros(trialsPerRun,1);
+RT					                       = key;
+items				                       = key;
+trialsOnsets                       = key;                                      % trial onsets in seconds
+endDur                             = 3;
+ips					                       = ((trialsPerRun) * (fixDur + storyDur + questDur) + (endDur))/0.46;
+trial_type                         = {'false_belief', 'false_photo'};
+taskname                           = 'tomsaxe';
+TR                                 = 0.46;
+vnames                             = {'param_fmriSession', 'param_triggerOnset',...
+                                  'p1_fixation_onset',...
+                                  'p2_filename', 'p2_filetype','p2_story_rawonset',...
+                                  'p3_ques_onset',...
+                                  'p4_responseonset','p4_responsekey','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',...
+                                  'param_end_instruct_onset', 'experimentDuration'};
+
+T                                  = array2table(zeros(trialsPerRun,size(vnames,2)));
+T.Properties.VariableNames         = vnames;
+T.p2_filetype                      = cell(20,1);
+T.p2_filename                      = cell(20,1);
+
+
 
 %% G. instructions _____________________________________________________
-instruct_filepath              = fullfile(main_dir,  'instructions');
-instruct_start_name            = ['task-', taskname, '_start.png'];
-instruct_end_name              = ['task-', taskname, '_end.png'];
-instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
-instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
+instruct_filepath                  = fullfile(tomsaxe_dir,  'instructions');
+instruct_start_name                = ['task-', taskname, '_start.png'];
+instruct_end_name                  = ['task-', taskname, '_end.png'];
+instruct_start                     = fullfile(instruct_filepath, instruct_start_name);
+instruct_end                       = fullfile(instruct_filepath, instruct_end_name);
 
 
 %% Verify that all necessary files and folders are in place.
 if isempty(dir(textdir))
     uiwait(warndlg(sprintf('Your stimuli directory is missing! Please create directory %s and populate it with stimuli. When Directory is created, hit ''Okay''',textdir),'Missing Directory','modal'));
 end
-if isempty(dir(behavdir))
-    outcome = questdlg(sprintf('Your behavioral directory is missing! Please create directory %s.',behavdir),'Missing Directory','Okay','Do it for me','Do it for me');
+if isempty(dir(sub_save_dir))
+    outcome = questdlg(sprintf('Your behavioral directory is missing! Please create directory %s.',sub_save_dir),'Missing Directory','Okay','Do it for me','Do it for me');
     if strcmpi(outcome,'Do it for me')
-        mkdir(behavdir);
-        if isempty(dir(behavdir))
-            warndlg(sprintf('Couldn''t create directory %s!',behavdir),'Missing Directory');
+        mkdir(sub_save_dir);
+        if isempty(dir(sub_save_dir))
+            warndlg(sprintf('Couldn''t create directory %s!',sub_save_dir),'Missing Directory');
             return
         end
     else
-        if isempty(dir(behavdir))
+        if isempty(dir(sub_save_dir))
             return
         end
     end
@@ -295,17 +304,19 @@ end
 
 %% ______________________________ Instructions _________________________________
 Screen('TextSize',p.ptb.window,72);
-start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
+start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start)); % start image
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 Screen(p.ptb.window, 'Flip');
 DisableKeysForKbCheck([]);
-KbTriggerWait(p.keys.start);
+% KbTriggerWait(p.keys.start); % press s
+WaitKeyPress(p.keys.start)
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-    p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+    p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2); % will flip immediately
 Screen('Flip', p.ptb.window);
 
 T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
-experimentStart = T.param_triggerOnset(1)
+experimentStart = T.param_triggerOnset(1);
+WaitSecs(TR*6);
 % include fixation cross
 %% Main Experimental Loop
 counter				    = zeros(1,2)+(5*(run_num-1));
@@ -327,8 +338,8 @@ Screen(p.ptb.window, 'TextSize', 24);
         storyname		= fullfile(textdir, sprintf('%d%s_story.txt',numbeT,condPrefs{trialT}));
         questname		= fullfile(textdir, sprintf('%d%s_question.txt',numbeT,condPrefs{trialT}));
         items(trial,1)	= numbeT;
-        T.p2_filename(trial) = sprintf('%d%s_story.txt',numbeT,condPrefs{trialT});
-        T.p2_filetype(trial) = trial_type{trialT};
+        T.p2_filename{trial} = {sprintf('%d%s_story.txt',numbeT,condPrefs{trialT})};
+        T.p2_filetype{trial} = trial_type{trialT};
         %%%%%%%%% Open Story %%%%%%%%%
         textfid			= fopen(storyname, 'r');
         lCounter		= 1;										% line counter
@@ -397,9 +408,9 @@ Screen(p.ptb.window, 'TextSize', 24);
 
         %%%%%%%%% Save information in the event of a crash %%%%%%%%%
 %         cd(behavdir);
-        save_filename = [strcat('sub-', sprintf('%04d', subjID)), '_ses-04_task-tomsaxe.mat'];
-        save_fullfile = fullfile(behavdir, save_filename);
-        save(save_fullfile,'subjID','run_num','design','items','key','RT','trialsOnsets');
+        save_filename = [strcat('sub-', sprintf('%04d', sub_num)), '_ses-04_task-tomsaxe.mat'];
+        save_fullfile = fullfile(sub_save_dir, save_filename);
+        save(save_fullfile,'sub_num','run_num','design','items','key','RT','trialsOnsets');
     end
 % catch exception
 %     ShowCursor;
@@ -413,7 +424,7 @@ trials_end			= GetSecs;
 % while GetSecs - trials_end < endDur;
   Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
       p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-T.param_final_fixation = Screen('Flip', p.ptb.window);
+T.param_final_fixation(:) = Screen('Flip', p.ptb.window);
 
 WaitSecs(endDur);
 %% _________________________ End Instructions _____________________________
@@ -429,11 +440,16 @@ T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1
 experimentEnd		= GetSecs;
 experimentDuration	= experimentEnd - experimentStart;
 numconds			= 2;
+
+%% __________________________ save parameter ___________________________________
+saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
+writetable(T,saveFileName);
+
 try
     sca
     responses = sortrows([design' items key RT]);
 
-    save(save_fullfile,'subjID','run_num','design','items','key','RT','trialsOnsets','responses','experimentDuration','ips');
+    save(save_fullfile,'sub_num','run_num','design','items','key','RT','trialsOnsets','responses','experimentStart','experimentEnd','experimentDuration','ips');
     ShowCursor;
 %     cd(orig_dir);
 catch exception
@@ -442,4 +458,21 @@ catch exception
     warndlg(sprintf('The experiment has encountered the following error while saving the behavioral data: %s',exception.message),'Error');
     cd(orig_dir);
 end					% end main function
+
+
+    function WaitKeyPress(kID)
+        while KbCheck(-3); end
+        while 1
+            [keyIsDown, ~, keyCode ] = KbCheck(-3);
+            if keyIsDown
+                if keyCode(p.keys.esc)
+                    cleanup; break;
+                elseif keyCode(kID)
+                    break;
+                end
+                while KbCheck(-3); end
+            end
+        end
+    end
+
 end
