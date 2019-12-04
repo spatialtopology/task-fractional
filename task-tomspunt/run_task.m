@@ -2,7 +2,7 @@ function run_task(order, test_tag)
 % ---------------------
 % debug mode % Initial
 % debug     = 1;   % PTB Debugging
-% 
+%
 % AssertOpenGL;
 % commandwindow;
 % ListenChar(2);
@@ -101,6 +101,18 @@ TR = 0.46;
 
 addpath(defaults.path.utilities)
 
+%% -----------------------------------------------------------------------------
+%                                Parameters
+% ______________________________________________________________________________
+task_dir                        = pwd;
+% main_dir                        = fileparts(fileparts(task_dir));
+taskname                        = 'tomspunt';
+
+
+sub_save_dir                    = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub)), 'beh' );
+if ~exist(sub_save_dir, 'dir')
+    mkdir(sub_save_dir)
+end
 %% Load Design and Setup Seeker Variable %%
 load([defaults.path.design filesep 'design.mat'])
 if order==0, randidx = randperm(4); order = randidx(1); end
@@ -139,6 +151,33 @@ blockSeeker(:,3)    = eventTimes(1:end-1);
 numTRs              = ceil(eventTimes(end)/defaults.TR);
 totalTime           = defaults.TR*numTRs;
 
+
+%% D. making output table ________________________________________________________
+vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
+                                'param_block_num','param_trial_num',...
+                                'param_cond_type','param_normative_response',...
+                                'param_stimulus_no',...
+                                'p1_trial_onset','p1_isi',...
+                                'p2_RT','p2_actual_response_key','p3_trialoffset',...
+                                'param_end_instruct_onset', 'param_experimentDuration'};
+T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
+T.Properties.VariableNames     = vnames;
+T.p2_cue_type                  = cell(size(countBalMat,1),1);
+T.p2_cue_filename              = cell(size(countBalMat,1),1);
+
+T.param_block_num = trialSeeker:,1)
+T.param_trial_num = trialSeeker:,2)
+T.param_cond_type = trialSeeker:,3)
+T.param_normative_response = trialSeeker:,4)
+T.param_stimulus_no = trialSeeker:,5)
+%     trialSeeker (stores trial-wise runtime data)
+%     1 - block #
+%     2 - trial # (within-block)
+%     2 - condition (1=WhyFace, 2=WhyHand, 3=HowFace, 4=HowHand)
+%     4 - normative response (1=Yes, 2=No) [used to evaluate accuracy]
+%     5 - stimulus # (corresponds to qim & qdata from design.mat file)
+
+
 %% Print Defaults %%
 fprintf('Test Duration:         %d secs (%d TRs)', totalTime, numTRs);
 fprintf('\nTrigger Key:           %s', defaults.trigger);
@@ -172,14 +211,14 @@ resp_set = ptb_response_set([defaults.valid_keys defaults.escape]); % response s
 %% Initialize Screen %%
 % screens                       = Screen('Screens'); % Get the screen numbers
 % p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
-% 
+%
 % try
 %     w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1, defaults.screenres); % setup screen
 % catch
 %     disp('Could not change to recommend screen resolution. Using current.');
 %     w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1);
 % end
-
+taskname                      = 'tomspunt'
 screens                       = Screen('Screens'); % Get the screen numbers
 p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
 p.ptb.white                   = WhiteIndex(p.ptb.screenNumber); % Define black and white
@@ -201,7 +240,7 @@ p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
 w.win = p.ptb.window;
 w.rect = p.ptb.rect;
-w.white = p.ptb.white;  
+w.white = p.ptb.white;
 w.black = p.ptb.black;
 HideCursor(p.ptb.screenNumber);
 %% Initialize Logfile (Trialwise Data Recording) %%
@@ -246,6 +285,14 @@ for q = 1:length(design.isicues)
     [isicues_xpos(q), isicues_ypos(q)] = ptb_center_position(design.isicues{q},w.win);
 end
 
+%% G. instructions _____________________________________________________
+instruct_filepath              = fullfile(main_dir, 'instructions');
+instruct_start_name            = ['task-', taskname, '_start.png'];
+instruct_end_name              = ['task-', taskname, '_end.png'];
+instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
+instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
+
+
 %==========================================================================
 %
 % START TASK PRESENTATION
@@ -253,13 +300,20 @@ end
 %==========================================================================
 
 %% Present Instruction Screen %%
-Screen('DrawTexture',w.win, instructTex); Screen('Flip',w.win);
+% Screen('DrawTexture',w.win, instructTex);
+start.texture = Screen('MakeTexture',w.win, imread(instruct_start_name));
+Screen('DrawTexture',w.win,,start.texture,[],[]);
+Screen('Flip',w.win,);
+
 
 %% Wait for Trigger to Begin %%
 DisableKeysForKbCheck([]);
-KbTriggerWait(KbName(defaults.start));
-secs=KbTriggerWait(trigger);%,inputDevice);
-anchor=secs;
+KbTriggerWait(KbName(defaults.start)); % press s
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+Screen('Flip', p.ptb.window);
+T.param_triggerOnset(:) = KbTriggerWait(trigger); % wait for scanner 5
+anchor = T.param_triggerOnset(1);
 WaitSecs(TR*6);
 
 try
@@ -272,7 +326,8 @@ try
     for b = 1:nBlocks
 
         %% Present Fixation Screen Until Question Onset %%
-        Screen('DrawTexture',w.win, fixTex); Screen('Flip',w.win);
+        Screen('DrawTexture',w.win, fixTex);
+        Screen('Flip',w.win);
 
         %% Get Data for This Block (While Waiting for Block Onset) %%
         tmpSeeker   = trialSeeker(trialSeeker(:,1)==b,:);
@@ -290,11 +345,11 @@ try
         DrawFormattedText(w.win, pbcue,'center','center', w.white, defaults.font.wrap);
 
         %% Present Question Screen and Prepare First ISI (Blank) Screen %%
-        WaitSecs('UntilTime',anchor + blockSeeker(b,3)); Screen('Flip', w.win);
+        WaitSecs('UntilTime',anchor + blockSeeker(b,3)); Screen('Flip', w.win); % p2_question_cue
         Screen('FillRect', w.win, w.black);
 
         %% Present Blank Screen Prior to First Trial %%
-        WaitSecs('UntilTime',anchor + blockSeeker(b,3) + defaults.cueDur); Screen('Flip', w.win);
+        WaitSecs('UntilTime',anchor + blockSeeker(b,3) + defaults.cueDur); Screen('Flip', w.win); % p3_fixation_onset
 
         %==================================================================
         % BEGIN TRIAL LOOP
@@ -307,7 +362,7 @@ try
             else WaitSecs('UntilTime',anchor + offset_dur + defaults.ISI); end
 
             %% Present Screen for Current Trial & Prepare ISI Screen %%
-            Screen('Flip',w.win);
+            T.p1_trial_onset(b*8+t) = Screen('Flip',w.win);
             onset = GetSecs; tmpSeeker(t,6) = onset - anchor;
             if t==nTrialsBlock % present fixation after last trial of block
                 Screen('DrawTexture', w.win, fixTex);
@@ -320,7 +375,7 @@ try
             offset_dur = GetSecs - anchor;
 
             %% Present ISI, and Look a Little Longer for a Response if None Was Registered %%
-            Screen('Flip', w.win);
+            T.p1_isi(b*8+t) = Screen('Flip', w.win);
             norespyet = isempty(resp);
             if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
             if ~isempty(resp)
@@ -333,7 +388,9 @@ try
                 tmpSeeker(t,7) = rt + (defaults.maxDur*norespyet);
             end
             tmpSeeker(t,9) = offset_dur;
-
+        T.p2_RT(b*8+t) = tmpSeeker(t,7);
+        T.p2_actual_response_key(b*8+t) = tmpSeeker(t,8);
+        T.p3_trialoffset(b*8+t) = offset_dur;
         end % END TRIAL LOOP
 
         %% Store Block Data & Print to Logfile %%
@@ -373,9 +430,29 @@ catch
 end
 
 %% End of Test Screen %%
-DrawFormattedText(w.win,'TEST COMPLETE\n\nPress any key to exit.','center','center',w.white,defaults.font.wrap);
-Screen('Flip', w.win);
-KbTriggerWait(KbName(defaults.end));
+% DrawFormattedText(w.win,'TEST COMPLETE\n\nPress any key to exit.','center','center',w.white,defaults.font.wrap);
+% Screen('Flip', w.win);
+% KbTriggerWait(KbName(defaults.end));
+% instruct_end_name
+%
+% start.texture = Screen('MakeTexture',w.win, imread(instruct_start_name));
+% Screen('DrawTexture',w.win,,start.texture,[],[]);
+% Screen('Flip',w.win,);
+%
+
+%% ______________________________ Instructions _________________________________
+end_texture = Screen('MakeTexture',w.win, imread(instruct_end));
+Screen('DrawTexture',w.win,end_texture,[],[]);
+T.param_end_instruct_onset(:) = Screen('Flip',w.win);
+KbTriggerWait(p.keys.end);
+
+T.param_experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
+
+
+
+saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub)), '_task-',taskname,'_beh.csv' ]);
+writetable(T,saveFileName);
+
 
 %% Exit %%
 ptb_exit;
