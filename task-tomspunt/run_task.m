@@ -301,7 +301,7 @@ instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 
 %% Present Instruction Screen %%
 % Screen('DrawTexture',w.win, instructTex);
-start.texture = Screen('MakeTexture',w.win, imread(instruct_start_name));
+start.texture = Screen('MakeTexture',w.win, imread(instruct_start));
 Screen('DrawTexture',w.win,,start.texture,[],[]);
 Screen('Flip',w.win,);
 
