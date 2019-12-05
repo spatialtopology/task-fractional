@@ -1,4 +1,4 @@
-function run_task(order, test_tag)
+function run_task(order, test_tag, sub_num)
 % ---------------------
 % debug mode % Initial
 % debug     = 1;   % PTB Debugging
@@ -57,7 +57,7 @@ PsychDefaultSetup(2);
 %     trialSeeker (stores trial-wise runtime data)
 %     1 - block #
 %     2 - trial # (within-block)
-%     2 - condition (1=WhyFace, 2=WhyHand, 3=HowFace, 4=HowHand)
+%     3 - condition (1=WhyFace, 2=WhyHand, 3=HowFace, 4=HowHand)
 %     4 - normative response (1=Yes, 2=No) [used to evaluate accuracy]
 %     5 - stimulus # (corresponds to qim & qdata from design.mat file)
 %     6 - (saved during runtime) actual trial onset (s)
@@ -105,11 +105,11 @@ addpath(defaults.path.utilities)
 %                                Parameters
 % ______________________________________________________________________________
 task_dir                        = pwd;
-% main_dir                        = fileparts(fileparts(task_dir));
+main_dir                        = pwd;
 taskname                        = 'tomspunt';
 
 
-sub_save_dir                    = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub)), 'beh' );
+sub_save_dir                    = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh' );
 if ~exist(sub_save_dir, 'dir')
     mkdir(sub_save_dir)
 end
@@ -117,7 +117,7 @@ end
 load([defaults.path.design filesep 'design.mat'])
 if order==0, randidx = randperm(4); order = randidx(1); end
 % design              = alldesign{order};
-design              = design;
+design              = alldesign{order};
 switch lower(defaults.language)
     case 'german'
         pbc_brief           = design.preblockcues;
@@ -153,23 +153,28 @@ totalTime           = defaults.TR*numTRs;
 
 
 %% D. making output table ________________________________________________________
+
+
 vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
                                 'param_block_num','param_trial_num',...
-                                'param_cond_type','param_normative_response',...
-                                'param_stimulus_no',...
+                                'param_cond_num','param_cond_type','param_normative_response',...
+                                'param_stimulus_no','param_filename',...
                                 'p1_trial_onset','p1_isi',...
                                 'p2_RT','p2_actual_response_key','p3_trialoffset',...
                                 'param_end_instruct_onset', 'param_experimentDuration'};
-T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
+T                              = array2table(zeros(length(design.trialSeeker),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
-T.p2_cue_type                  = cell(size(countBalMat,1),1);
-T.p2_cue_filename              = cell(size(countBalMat,1),1);
-
-T.param_block_num = trialSeeker:,1)
-T.param_trial_num = trialSeeker:,2)
-T.param_cond_type = trialSeeker:,3)
-T.param_normative_response = trialSeeker:,4)
-T.param_stimulus_no = trialSeeker:,5)
+T.param_cond_type              = cell(length(design.trialSeeker),1);
+% condition (1=WhyFace, 2=WhyHand, 3=HowFace, 4=HowHand)
+T.param_counterbalanceVer      = order;
+T.param_cond_type              = cell(length(design.qim),1);
+T.param_filename               = design.qim(:,2);
+T.param_block_num              = trialSeeker(:,1);
+T.param_trial_num              = trialSeeker(:,2);
+T.param_cond_num               = trialSeeker(:,3);
+% T.param_cond_type              = % condition (1=WhyFace, 2=WhyHand, 3=HowFace, 4=HowHand)
+T.param_normative_response     = trialSeeker(:,4);
+T.param_stimulus_no            = trialSeeker(:,5);
 %     trialSeeker (stores trial-wise runtime data)
 %     1 - block #
 %     2 - trial # (within-block)
@@ -218,7 +223,7 @@ resp_set = ptb_response_set([defaults.valid_keys defaults.escape]); % response s
 %     disp('Could not change to recommend screen resolution. Using current.');
 %     w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1);
 % end
-taskname                      = 'tomspunt'
+taskname                      = 'tomspunt';
 screens                       = Screen('Screens'); % Get the screen numbers
 p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
 p.ptb.white                   = WhiteIndex(p.ptb.screenNumber); % Define black and white
@@ -302,8 +307,8 @@ instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 %% Present Instruction Screen %%
 % Screen('DrawTexture',w.win, instructTex);
 start.texture = Screen('MakeTexture',w.win, imread(instruct_start));
-Screen('DrawTexture',w.win,,start.texture,[],[]);
-Screen('Flip',w.win,);
+Screen('DrawTexture',w.win,start.texture,[],[]);
+Screen('Flip',w.win);
 
 
 %% Wait for Trigger to Begin %%
@@ -362,7 +367,8 @@ try
             else WaitSecs('UntilTime',anchor + offset_dur + defaults.ISI); end
 
             %% Present Screen for Current Trial & Prepare ISI Screen %%
-            T.p1_trial_onset(b*8+t) = Screen('Flip',w.win);
+
+            T.p1_trial_onset(8*(b-1) + t) = Screen('Flip',w.win);
             onset = GetSecs; tmpSeeker(t,6) = onset - anchor;
             if t==nTrialsBlock % present fixation after last trial of block
                 Screen('DrawTexture', w.win, fixTex);
@@ -375,7 +381,7 @@ try
             offset_dur = GetSecs - anchor;
 
             %% Present ISI, and Look a Little Longer for a Response if None Was Registered %%
-            T.p1_isi(b*8+t) = Screen('Flip', w.win);
+            T.p1_isi(8*(b-1) + t) = Screen('Flip', w.win);
             norespyet = isempty(resp);
             if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
             if ~isempty(resp)
@@ -388,16 +394,16 @@ try
                 tmpSeeker(t,7) = rt + (defaults.maxDur*norespyet);
             end
             tmpSeeker(t,9) = offset_dur;
-        T.p2_RT(b*8+t) = tmpSeeker(t,7);
-        T.p2_actual_response_key(b*8+t) = tmpSeeker(t,8);
-        T.p3_trialoffset(b*8+t) = offset_dur;
+        T.p2_RT(8*(b-1) + t) = tmpSeeker(t,7);
+        T.p2_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
+        T.p3_trialoffset(8*(b-1) + t) = offset_dur;
         end % END TRIAL LOOP
 
         %% Store Block Data & Print to Logfile %%
         trialSeeker(trialSeeker(:,1)==b,:) = tmpSeeker;
         for t = 1:size(tmpSeeker,1), fprintf(fid,[repmat('%d\t',1,size(tmpSeeker,2)) '\n'],tmpSeeker(t,:)); end
-
-
+        tmpFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_TEMPbeh.csv' ]);
+        writetable(T,tmpFileName);
     end % END BLOCK LOOP
 
     %% Present Fixation Screen Until End of Scan %%
@@ -423,7 +429,7 @@ result.isicues      = design.isicues;
 d=clock;
 outfile=sprintf('whyhow_%s_order%d_%s_%02.0f-%02.0f.mat',subjectID,order,date,d(4),d(5));
 try
-    save([defaults.path.data filesep outfile], 'subjectID', 'result', 'slideName', 'defaults');
+    save([sub_save_dir filesep outfile], 'subjectID', 'result', 'slideName', 'defaults');
 catch
 	fprintf('couldn''t save %s\n saving to whyhow.mat\n', outfile);
 	save whyhow.mat
@@ -444,11 +450,11 @@ end
 end_texture = Screen('MakeTexture',w.win, imread(instruct_end));
 Screen('DrawTexture',w.win,end_texture,[],[]);
 T.param_end_instruct_onset(:) = Screen('Flip',w.win);
-KbTriggerWait(p.keys.end);
+KbTriggerWait(defaults.end);
 
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 
-saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub)), '_task-',taskname,'_beh.csv' ]);
+saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
 
 
