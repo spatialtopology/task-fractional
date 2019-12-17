@@ -1,14 +1,15 @@
-% To Do 
-% [ ] memory should run 4 times
-% [ ] there should be a task in between memory 2.5 min each
+% To Do
+% [x] memory should run 4 times
+% [x] there should be a task in between memory 2.5 min each
 % [x] time memory task : study 1 min, test 1.5 min
-% [ ] make sure tomsaxe runs smoothly
-% [ ]
+% [x] make sure tomsaxe runs smoothly
+% [x] randomize tomsaxe
+
 
 % 1. grab participant number ___________________________________________________
 clear all;
-prompt = 'session number : ';
-session = input(prompt);
+% prompt = 'session number : ';
+% session = input(prompt);
 prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
 subj_num = input(prompt);
 
@@ -27,34 +28,32 @@ task2 = string(countBalMat.task2{subj_num});
 disp(strcat('Today, sub-', num2str(subj_num) ,' will go through study 1)', task1 ,'  and 2) ', task2));
 
 switch task1
-    case 'tom'
+    case 'tomsaxe'
         chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-tomsaxe' ), ''')');
         t1 = fullfile(main_dir, 'task-tomsaxe', 'tom_localizer');
-    case 'whyhow'
+    case 'tomspunt'
         chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-tomspunt') , ''')');
-        t1 = fullfile(main_dir, 'task-tomspunt','run_task');
+        t1 = fullfile(main_dir, 'task-tomspunt','RUN_task');
     case 'posner'
         chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-posnerAR' ), ''')');
         t1 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'posner');
-    case 'mem'
+    case 'memory'
         chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
-        t1 = fullfile(main_dir, 'task-memory','memory_wrapper');
+        t1 = fullfile(main_dir, 'task-memory','memorizationTask');
 end
 switch task2
-    case 'tom'
+    case 'tomsaxe'
         chdir_t2 = strcat('cd(''', fullfile(main_dir, 'task-tomsaxe') , ''')');
         t2 = fullfile(main_dir, 'task-tomsaxe', 'tom_localizer');
-    case 'whyhow'
+    case 'tomspunt'
         chdir_t2 = strcat('cd(''',fullfile(main_dir, 'task-tomspunt') , ''')');
-        t2 = fullfile(main_dir, 'task-tomspunt','run_task');
+        t2 = fullfile(main_dir, 'task-tomspunt','RUN_task');
     case 'posner'
         chdir_t2 = strcat('cd(''', fullfile(main_dir,'task-posnerAR') , ''')');
         t2 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'posner');
-    case 'mem'
+    case 'memory'
         chdir_t2 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
-        t2 = fullfile(main_dir, 'task-memory','memory_wrapper');
-
-        
+        t2 = fullfile(main_dir, 'task-memory','memorizationTask');
 end
 
 run_task1 = strcat(t1, '(' ,num2str(subj_num), ')');
@@ -64,5 +63,3 @@ eval(chdir_t1);
 run(run_task1);
 eval(chdir_t2);
 run(run_task2);
-
-
