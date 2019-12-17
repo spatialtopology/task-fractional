@@ -18,8 +18,6 @@ p.ptb.black                    = BlackIndex(p.ptb.screenNumber);
 p.ptb.green                    = [0 1 0];
 [p.ptb.window, p.ptb.rect]     = PsychImaging('OpenWindow',p.ptb.screenNumber,p.ptb.black);
 [p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize',p.ptb.window);
-p.ptb.screenYpixels
-p.ptb.screenXpixels
 p.ptb.ifi                      = Screen('GetFlipInterval',p.ptb.window);
 Screen('BlendFunction', p.ptb.window,'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA'); % Set up alpha-blending for smooth (anti-aliased) lines
 Screen('TextFont', p.ptb.window, 'Arial');
@@ -137,7 +135,7 @@ for trl = 1:size(countBalMat,1)
     T.p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
     WaitSecs(jitter1);
     T.p1_fixation_offset(trl) = GetSecs;
-    T.p1_ptb_fixation_duration(trl) = fEnd1 - T.p1_fixation_onset(trl);
+    T.p1_ptb_fixation_duration(trl) = T.p1_fixation_offset(trl) - T.p1_fixation_onset(trl);
     T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
 
     %% ------------------------------------------------------------------------
