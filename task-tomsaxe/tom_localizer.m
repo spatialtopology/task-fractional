@@ -199,7 +199,7 @@ vnames                             = {'param_fmriSession', 'param_triggerOnset',
                                   'p1_fixation_onset',...
                                   'p2_filename', 'p2_filetype','p2_story_rawonset',...
                                   'p3_ques_onset',...
-                                  'p4_responseonset','p4_responsekey','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',...
+                                  'p4_responseonset','p4_responsekey','p4_RT',...
                                   'param_end_instruct_onset', 'experimentDuration'};
 
 T                                  = array2table(zeros(trialsPerRun,size(vnames,2)));
@@ -207,6 +207,18 @@ T.Properties.VariableNames         = vnames;
 T.p2_filetype                      = cell(20,1);
 T.p2_filename                      = cell(20,1);
 
+bl_ind = rem(sub_num,5);
+if bl_ind ==0
+random = [5,5, 2,2, 1,1, 9,9, 6,6, 10,10, 3,3, 7,7, 8,8, 4,4];
+elseif bl_ind ==1
+random = [2,2, 4,4, 1,1, 3,3, 10,10, 9,9, 6,6, 7,7, 8,8, 5,5];
+elseif bl_ind ==2
+random = [4,4, 1,1, 6,6, 3,3, 8,8, 7,7, 10,10, 9,9, 5,5, 2,2];
+elseif bl_ind ==3
+random = [5,5, 6,6, 9,9, 10,10, 4,4, 1,1, 8,8, 7,7, 3,3, 2,2];
+elseif bl_ind ==4
+random = [3,3, 10,10, 1,1, 7,7, 5,5, 4,4, 9,9, 8,8, 6,6, 2,2];
+end
 
 
 %% G. instructions _____________________________________________________
@@ -307,19 +319,21 @@ Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start)); % start image
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 Screen(p.ptb.window, 'Flip');
-DisableKeysForKbCheck([]);
+% DisableKeysForKbCheck([]);
 % KbTriggerWait(p.keys.start); % press s
 WaitKeyPress(p.keys.start)
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2); % will flip immediately
 Screen('Flip', p.ptb.window);
-
-T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
+WaitKeyPress(p.keys.trigger);
+T.param_triggerOnset(:) = GetSecs;
+% T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
 experimentStart = T.param_triggerOnset(1);
 WaitSecs(TR*6);
 % include fixation cross
 %% Main Experimental Loop
 counter				    = zeros(1,2)+(5*(run_num-1));
+
 % experimentStart		    = GetSecs;
 Screen(p.ptb.window, 'TextSize', 24);
 % try
@@ -334,7 +348,8 @@ Screen(p.ptb.window, 'TextSize', 24);
 
         %%%%%%%%% Determine stimuli filenames %%%%%%%%%
         trialT			= design(trial);							% trial type. 1 = false belief, 2 = false photograph
-        numbeT			= counter(1,trialT);						% the number of the stimuli
+        % numbeT			= counter(1,trialT);						% the number of the stimuli
+        numbeT      = random(trial);
         storyname		= fullfile(textdir, sprintf('%d%s_story.txt',numbeT,condPrefs{trialT}));
         questname		= fullfile(textdir, sprintf('%d%s_question.txt',numbeT,condPrefs{trialT}));
         items(trial,1)	= numbeT;
@@ -396,12 +411,16 @@ Screen(p.ptb.window, 'TextSize', 24);
                 return
             elseif keyCode(p.keys.right)
                 RT(trial,1)				= GetSecs - T.p3_ques_onset(trial); %responseStart;
-                key(trial,1)    	= 2;
-                T.p4_responsekey(trial)    = 2;
+                key(trial,1)    	= 4;
+                T.p4_responseonset(trial) = secs;
+                T.p4_responsekey(trial)    = 4;
+                T.p4_RT(trial)    = RT(trial,1);
             elseif keyCode(p.keys.left)
                 RT(trial,1)				= GetSecs - T.p3_ques_onset(trial); %responseStart;
                 key(trial,1)			= 1;
+                T.p4_responseonset(trial) = secs;
                 T.p4_responsekey(trial) = 1;
+                T.p4_RT(trial)    = RT(trial,1);
 
             end
         end
