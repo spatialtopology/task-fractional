@@ -1,4 +1,4 @@
-function memorizationTask(subNum)
+function memorizationTask(sub_num)
 % function memorizationTask(expName,subNum)
 
 
@@ -24,26 +24,12 @@ function memorizationTask(subNum)
 % check for Opengl compatibility, abort otherwise:
 % AssertOpenGL;
 global p
-% % =================================================== 8< ==================
-% % REMOVE THIS SECTION FOR MAIN EXPERIMENT
-% % debug mode % Initial
-% debug                          = 1;   % PTB Debugging
-% AssertOpenGL;
-% commandwindow;
-% ListenChar(2);
-% if debug
-%     ListenChar(0);
-%     PsychDebugWindowConfiguration;
-% end
-% % ========================= 8< ============================================
-
 Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(2);
 
 % Make sure keyboard mapping is the same on all supported operating systems
 % Apple MacOS/X, MS-Windows and GNU/Linux:
 KbName('UnifyKeyNames');
-
 % Reseed the random-number generator for each experiment:
 rng('shuffle');
 
@@ -80,9 +66,9 @@ if nargin == 0
     prompt = 'session number : ';
     session = input(prompt);
 
-    if isempty(subNum) || ~isnumeric(subNum) || mod(subNum,1) ~= 0 || subNum <= 0
+    if isempty(sub_num) || ~isnumeric(sub_num) || mod(sub_num,1) ~= 0 || sub_num <= 0
         prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
-        subNum = input(prompt);
+        sub_num = input(prompt);
         %         if isempty(str2double(subNum)) || ~isnumeric(str2double(subNum)) || mod(str2double(subNum),1) ~= 0 || str2double(subNum) <= 0
         h = errordlg('Subject number must be an integer (e.g., 9) and greater than zero. Try again.', 'Input Error');
         repeat = 1;
@@ -99,7 +85,7 @@ if nargin == 0
     %             repeat = 0;
     %         end
     %     end
-    
+
 % elseif nargin == 0
 %     % cannot proceed with one argument
 %     error('You provided 1 argument, but you need either zero or two! Must provide either no inputs (%s;) or provide experiment name (as a string) and subject number (as an integer).',mfilename,mfilename,expName);
@@ -109,11 +95,10 @@ end
 
 expParam = struct;
 cfg = struct;
+expParam.expName = 'canna';
 
 % store the experiment name
-% expParam.expName = 'canna';
-% expParam.subject = sprintf('%s%.3d',expParam.expName,subNum);
-expParam.subject = sprintf('%.4d',subNum);
+expParam.subject = sprintf('%.4d',sub_num);
 % set the current directory as the experiment directory
 cfg.files.expDir = pwd;
 
@@ -141,65 +126,26 @@ end
 % set name of the file for saving experiment parameters
 cfg.files.expParamFile = fullfile(cfg.files.subSaveDir,'experimentParams.mat');
 if exist(cfg.files.expParamFile,'file')
-    % if it exists that means this subject has already run a session
+%     % if it exists that means this subject has already run a session
     load(cfg.files.expParamFile);
-    
-    % Make sure there is a session left to run.
-    % session number is incremented after the run, so after the final
-    % session has been run it will be 1 greater than expParam.nSessions
-    if expParam.sessionNum <= expParam.nSessions
-        % make sure we want to start this session
-        startUnanswered = 1;
-        while startUnanswered
-            startSession = input(sprintf('Do you want to start %s session %d (%s)? (type 1 for yes or 0 for no and press enter). ',expParam.subject,expParam.sessionNum,expParam.sesTypes{expParam.sessionNum}));
-            if isnumeric(startSession) && (startSession == 1 || startSession == 0)
-                if startSession
-                    fprintf('Starting %s session %d (%s).\n',expParam.subject,expParam.sessionNum,expParam.sesTypes{expParam.sessionNum});
-                    startUnanswered = 0;
-                else
-                    fprintf('Not starting %s session %d (%s)! If you typed the wrong subject number, exit Matlab and try again.\n',expParam.subject,expParam.sessionNum,expParam.sesTypes{expParam.sessionNum});
-                    return
-                end
-            end
-        end
-    else
-        fprintf('All %s sessions for %s have already been run! Exiting...\n',expParam.nSessions,expParam.subject);
-        return
-    end
 else
-    % if it doesn't exist that means we're starting a new subject
     expParam.sessionNum = 1;
-    
-    % make sure we want to start this session
-    startUnanswered = 1;
-    while startUnanswered
-        startSession = input(sprintf('Do you want to start sub-%s as a new subject? (type 1 or 0 and press enter). ',expParam.subject));
-        if ~isempty(startSession) && isnumeric(startSession) && (startSession == 1 || startSession == 0)
-            if startSession
-                fprintf('Preparing sub-%s stimuli list.\n',expParam.subject);
-                startUnanswered = 0;
-            else
-                fprintf('Not starting sub-%s session %d! If you typed the wrong subject number, exit Matlab and try again.\n',expParam.subject,expParam.sessionNum);
-                return
-            end
-        end
-    end
-    
-    % Load the experiment's config file. Must create this for each experiment.
     if exist(fullfile(pwd,sprintf('config_canna.m')),'file')
         [cfg,expParam] = config_canna(cfg,expParam);
-%         [cfg,expParam] = eval(sprintf('config_%s(cfg,expParam);',expParam.expName));
+        [cfg,expParam] = eval(sprintf('config_%s(cfg,expParam);',expParam.expName));
         % save the experiment data
         save(cfg.files.expParamFile,'cfg','expParam');
     else
         error('Configuration file for %s experiment does not exist: %s',fullfile(pwd,sprintf('config_%s.m',expParam.expName)));
     end
-end
 
+end
+% expParam.sessionNum = 1;
 %% Make sure the session number is in order and directories/files exist
 
 % make sure session directory exists
-cfg.files.sesSaveDir = fullfile(cfg.files.subSaveDir,sprintf('session_%d',expParam.sessionNum));
+% cfg.files.sesSaveDir = fullfile(cfg.files.subSaveDir,sprintf('session_%d',expParam.sessionNum));
+cfg.files.sesSaveDir = fullfile(cfg.files.subSaveDir,'beh');
 if ~exist(cfg.files.sesSaveDir,'dir')
     [canSaveData,saveDataMsg,saveDataMsgID] = mkdir(cfg.files.sesSaveDir);
     if canSaveData == false
@@ -267,11 +213,12 @@ end
 % cfg.screen.bgColor = GrayIndex(screenNumber);
 
 
-screens                       = Screen('Screens'); % Get the screen numbers
-p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
-p.ptb.white                   = WhiteIndex(p.ptb.screenNumber); % Define black and white
-p.ptb.black                   = BlackIndex(p.ptb.screenNumber);
-[p.ptb.window, p.ptb.rect]    = PsychImaging('OpenWindow', p.ptb.screenNumber, p.ptb.black);
+screens                        = Screen('Screens'); % Get the screen numbers
+p.ptb.screenNumber             = max(screens); % Draw to the external screen if avaliable
+p.ptb.white                    = WhiteIndex(p.ptb.screenNumber); % Define black and white
+p.ptb.black                    = BlackIndex(p.ptb.screenNumber);
+% p.ptb.gray                    = GrayIndex(p.ptb.screenNumber);
+[p.ptb.window, p.ptb.rect]     = PsychImaging('OpenWindow', p.ptb.screenNumber, p.ptb.black);
 [p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize', p.ptb.window);
 p.ptb.ifi                      = Screen('GetFlipInterval', p.ptb.window);
 Screen('BlendFunction', p.ptb.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA'); % Set up alpha-blending for smooth (anti-aliased) lines
@@ -286,7 +233,8 @@ p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
 p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
 p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
-%% E. Keyboard information _____________________________________________________
+TR = 0.46;
+% %% E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
 p.keys.right                   = KbName('4$');
@@ -297,12 +245,18 @@ p.keys.trigger                 = KbName('5%');
 p.keys.start                   = KbName('s');
 p.keys.end                     = KbName('e');
 
+%% G. instructions _____________________________________________________
+instruct_filepath              = fullfile(cfg.files.expDir, 'instructions');
+taskname                       = 'memory';
+instruct_start_name            = [ taskname, '_main_start.png'];
+instruct_end_name              = [ taskname, '_main_end.png'];
+instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
+instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 
 screenNumber = p.ptb.screenNumber;
 Width = RectWidth(p.ptb.rect);
 Height = RectHeight(p.ptb.rect);
-% Hide the mouse cursor:
-HideCursor;
+
 
 % Set up the color value to be used as experiment background color
 if ~isfield(cfg.screen,'bgColor')
@@ -335,8 +289,8 @@ WaitSecs(0.1);
 GetSecs;
 
 % Set priority for script execution to realtime priority:
-priorityLevel = MaxPriority(p.ptb.window);
-Priority(priorityLevel);
+% priorityLevel = MaxPriority(p.ptb.window);
+% Priority(priorityLevel);
 
 %% Run through the experiment
 % find out what session this will be
@@ -347,20 +301,51 @@ expParam.session.(sesName).date = date;
 startTime = fix(clock);
 expParam.session.(sesName).startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),startTime(5),startTime(6));
 
+
+%% D. making output table ________________________________________________________
+vnames = {'param_fmriSession', 'param_triggerOnset',...
+                                'param_end_instruct_onset', 'param_experimentDuration'};
+T                              = array2table(zeros(1,size(vnames,2)));
+T.Properties.VariableNames         = vnames;
+T.param_fmriSession(:) = 4;
+
+
+%% ______________________________ Instructions _________________________________
+HideCursor;
+Screen('TextSize',p.ptb.window,72);
+start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
+Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
+Screen('Flip',p.ptb.window);
+
+%% _______________________ Wait for Trigger to Begin ___________________________
+% 1) wait for 's' key, once pressed, automatically flips to fixation
+% 2) wait for trigger '5'
+WaitKeyPress(p.keys.start); % press s
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter]);
+Screen('Flip', p.ptb.window);
+%
+%         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
+%         DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
+%         T.p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
+
+
+WaitKeyPress(p.keys.trigger);
+T.param_triggerOnset(:)          = GetSecs;
+WaitSecs(TR*6);
+
 %% -----------------------------------------------------------------------------
 %                              Main task
 % ______________________________________________________________________________
 
-[cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud1');
+[cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud1',sub_num);
 % insert distration task
-distraction(p, cfg, 'task1');
-[cfg,expParam] = mt_test(p, cfg,expParam,logFile, 'test1');
-[cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud2');
+distraction(p, cfg, 'task1', sub_num);
+[cfg,expParam, test1_accuracy] = mt_test(p,cfg,expParam,logFile, 'test1',sub_num);
+[cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud2',sub_num);
 % insert distraction task
-distraction(p, cfg,  'task2');
+distraction(p, cfg,  'task2',sub_num);
+[cfg,expParam, test2_accuracy] = mt_test(p, cfg,expParam,logFile, 'test2',sub_num);
 
-[cfg,expParam] = mt_test(p, cfg,expParam,logFile, 'test2');
-        
 
 
 %% Session is done
@@ -384,62 +369,84 @@ fclose(logFile);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%  Finish Message  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-message = sprintf('Thank you, this session is complete.\n\nPlease wait for the experimenter.');
-Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
-Screen('TextFont', p.ptb.window, cfg.text.basicFontName);
-Screen('TextStyle', p.ptb.window, cfg.text.basicFontStyle);
-% put the instructions on the screen
-DrawFormattedText(p.ptb.window, message, 'center', 'center', cfg.text.experimenterColor, cfg.text.instructCharWidth);
-Screen('Flip', p.ptb.window);
 
-% wait until g key is pressed
-RestrictKeysForKbCheck(KbName(cfg.keys.end));
-KbWait(-1,2);
-RestrictKeysForKbCheck([]);
-Screen('Flip', p.ptb.window);
-WaitSecs(1.000);
+%% _________________________ 7. End Instructions _______________________________
+end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
+Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
+T.param_end_instruct_onset(:)    = Screen('Flip',p.ptb.window);
+WaitKeyPress(p.keys.end); % press s
+T.param_experimentDuration(:) = T.param_end_instruct_onset(1) -T.param_triggerOnset(1);
+
+%
+%% _________________________ 8. save parameter _________________________________
+sub_save_dir = cfg.files.sesSaveDir;
+saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'main_beh.csv' ]);
+writetable(T,saveFileName);
+
+close all;
+sca;
+
+% KbWait(-1,2);
+% RestrictKeysForKbCheck([]);
+% Screen('Flip', p.ptb.window);
+% WaitSecs(1.000);
 
 % Cleanup at end of experiment - Close window, show mouse cursor, close
 % result file, switch Matlab/Octave back to priority 0 -- normal
 % priority:
-Screen('CloseAll');
-fclose('all');
-ShowCursor;
-ListenChar;
-Priority(0);
+% % Screen('CloseAll');
+% fclose('all');
+% ShowCursor;
+% ListenChar;
+% Priority(0);
 
-% End of experiment:
-%     return
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  payment  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+pettycashfile = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_pettycash.txt' ]);
+fid=fopen(pettycashfile,'w');
+total_acc = test1_accuracy + test2_accuracy;
+fprintf(fid,'*********************************\n*********************************\nThis is the end of the memory task.\n');
+fprintf(fid,'This participants total accuracy was %0.2f out of 40.\n',total_acc);
+fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((total_acc)*0.5));
+fprintf(fid,'*********************************\n*********************************\n');
+fclose(fid);true
+% print in command window
+fprintf('*********************************\n*********************************\nThis is the end of the memory task.\n')
+fprintf('This participants total accuracy was %0.2f out of 40.\n',total_acc)
+fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((total_acc)*0.5))
+fprintf('*********************************\n*********************************\n')
 
-% catch ME
-%     sesName = expParam.sesTypes{expParam.sessionNum};
-%     fprintf('\nError during %s session %d (%s). Exiting gracefully (saving experimentParams.mat). You should restart Matlab before continuing.\n',expParam.subject,expParam.sessionNum,sesName);
-%
-%     % record the error date and time for this session
-%     errorDate = date;
-%     errorTime = fix(clock);
-%     expParam.session.(sesName).errorDate = errorDate;
-%     expParam.session.(sesName).errorTime = sprintf('%.2d:%.2d:%.2d',errorTime(4),errorTime(5),errorTime(6));
-%
-%     fprintf(logFile,'!!! ERROR: Crash %s %s\n',errorDate,expParam.session.(sesName).errorTime);
-%
-%     % save the experiment info in its current state
-%     save(cfg.files.expParamFile,'cfg','expParam');
-%
-%     % close out the session log file
-%     fclose(logFile);
-%
-%     % save out the error information
-%     errorFile = fullfile(cfg.files.sesSaveDir,sprintf('error_%s_ses%d_%s_%.2d%.2d%.2d.mat',expParam.subject,expParam.sessionNum,errorDate,errorTime(4),errorTime(5),errorTime(6)));
-%     fprintf('Saving error file %s.\n',errorFile);
-%     save(errorFile,'ME');
-%     errorReport = ME.getReport;
-%     if ~isempty(errorReport)
-%         fprintf('The error probably occurred because:\n');
-%         fprintf('%s',errorReport);
-%         fprintf('\n');
-%     end
-%     fprintf('To manually inspect the error, load the file with this command:\nload(''%s'');\n',errorFile);
-%     fprintf('\n\tType ME and look at the ''message'' field (i.e., ME.message) to see WHY the error occured.\n');
-%     fprintf('\tType ME.stack(1), ME.stack(2), etc. to see WHERE the error occurred.\n');
-% end
+% things to consider
+% [ ] non-answered items?
+% [ ] check if they answered the same thing over and over again
+
+% input(prompt);
+% input(prompt2);
+
+
+
+%% -----------------------------------------------------------------------------
+%                                Function
+% ______________________________________________________________________________
+function WaitKeyPress(kID)
+while KbCheck(-3); end  % Wait until all keys are released.
+
+while 1
+    % Check the state of the keyboard.
+    [ keyIsDown, ~, keyCode ] = KbCheck(-3);
+    % If the user is pressing a key, then display its code number and name.
+    if keyIsDown
+
+        if keyCode(p.keys.esc)
+            cleanup; break;
+        elseif keyCode(kID)
+            break;
+        end
+        % make sure key's released
+%         while KbCheck(-3); end
+    end
+end
+end
+
+end
