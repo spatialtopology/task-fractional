@@ -1,4 +1,6 @@
-function run_task(order, test_tag, sub_num)
+function RUN_task( sub_num)
+order = 0;
+test_tag = 0;
 % ---------------------
 % debug mode % Initial
 % debug     = 1;   % PTB Debugging
@@ -104,7 +106,7 @@ addpath(defaults.path.utilities)
 %% -----------------------------------------------------------------------------
 %                                Parameters
 % ______________________________________________________________________________
-task_dir                        = pwd;
+% task_dir                        = pwd;
 main_dir                        = pwd;
 taskname                        = 'tomspunt';
 
@@ -166,7 +168,7 @@ T                              = array2table(zeros(length(design.trialSeeker),si
 T.Properties.VariableNames     = vnames;
 T.param_cond_type              = cell(length(design.trialSeeker),1);
 % condition (1=WhyFace, 2=WhyHand, 3=HowFace, 4=HowHand)
-T.param_counterbalanceVer      = order;
+T.param_counterbalanceVer(:)      = order;
 T.param_cond_type              = cell(length(design.qim),1);
 T.param_filename               = design.qim(:,2);
 T.param_block_num              = trialSeeker(:,1);
@@ -450,7 +452,7 @@ end
 end_texture = Screen('MakeTexture',w.win, imread(instruct_end));
 Screen('DrawTexture',w.win,end_texture,[],[]);
 T.param_end_instruct_onset(:) = Screen('Flip',w.win);
-KbTriggerWait(defaults.end);
+KbTriggerWait(KbName(defaults.end));
 
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 
