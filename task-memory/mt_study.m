@@ -1,6 +1,5 @@
 function [cfg,expParam] = mt_study(p,cfg,expParam,logFile,sesName, sub_num)
-% function [cfg,expParam] = mt_studylist(p.ptb.window,cfg,expParam,logFile,sesName)
-%
+
 % Description:
 %  This function runs the study task. There are no blocks.
 
@@ -135,7 +134,7 @@ for trl = 1 : length(stimList)
             [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip', p.ptb.window);
             T.p2_stimuli_onset(trl) = StimulusOnsetTime;
             WaitSecs(sessionCfg.stim);
-            type = 99;
+            type = NaN;
             if isStim(trl)
                 type = 1;
             else
@@ -179,7 +178,7 @@ for trl = 1 : length(stimList)
     end
 
     % isi
-    Screen('FillRect', p.ptb.window, cfg.screen.bgColor);
+    Screen('FillRect', p.ptb.window, cfg.screen.bgColor)
     Screen('Flip', p.ptb.window);
     WaitSecs(sessionCfg.isi);
 
@@ -188,6 +187,7 @@ for trl = 1 : length(stimList)
 %             Screen('Close', imageTexture);
             clear stimImg
     end
+    
 end
 
 T.param_end_instruct_onset(:) = GetSecs;
