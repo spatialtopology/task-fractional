@@ -1,4 +1,4 @@
-function [cfg,expParam, T, accuracy_freq] = mt_test(p,cfg,expParam,logFile,sesName,sub_num)
+function [cfg,expParam, accuracy_freq] = mt_test(p,cfg,expParam,logFile,sesName,sub_num)
 % Description:
 %  This function runs the test task. There are no blocks.
 task_duration = 2;
@@ -53,14 +53,15 @@ vnames = {'param_fmriSession','param_experiment_start','param_memory_session_nam
 T                              = array2table(zeros(size(stimList,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 T.p2_image_filename            = cell(size(stimList,1),1);
+T.param_memory_session_name    = cell(size(stimList,1),1);
 
+T.param_memory_session_name(:) = {sesName};
+T.param_fmriSession(:)         = 4;
 %% G. instructions _____________________________________________________
 main_dir                       = pwd;
 instruct_filepath              = fullfile(main_dir, 'instructions');
 instruct_test_name             = 'memory_test.png';
-% instruct_end_name              = ['task-', taskname, '_end.png'];
 instruct_test                  = fullfile(instruct_filepath, instruct_test_name);
-% instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 
 %% record the starting date and time for this session ________________________________________________________
 %% set the starting date and time for this session
@@ -87,9 +88,6 @@ WaitSecs(5);
 
 % DisableKeysForKbCheck([]);
 KbName('UnifyKeyNames');
-% KbTriggerWait(p.keys.start);
-% KbTriggerWait(p.keys.trigger);
-
 thisGetSecs = GetSecs;
 fprintf(logFile,'%f\t%s\t%s\t%s\n',...
     T.param_experiment_start(1),...
@@ -181,6 +179,7 @@ for trl = 1 : length(stimList)
             RT = 99;
             % check the keyboard
             [keyIsDown,secs, keyCode] = KbCheck(-3);
+            FlushEvents('keyDown');
             if keyIsDown
                 if keyCode(KbName(cfg.keys.oldKey))
                     %             respToBeMade = false;
@@ -216,56 +215,9 @@ for trl = 1 : length(stimList)
 
         switch cfg.stim.studyType
             case('i') % images
-                %                 Screen('Close', imageTexture);
+%                 Screen('Close', imageTexture);
                 clear stimImg
         end
-
-        %         if respToBeMade && timeStim >= sessionCfg.stim %if not answer made after the presentation time of the stimuli, display a ?
-        %             % Question mark
-        %             Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
-        %             DrawFormattedText(p.ptb.window, cfg.text.respSymbol, 'center', 'center', cfg.text.basicTextColor);
-        %             Screen('Flip', p.ptb.window);
-        %
-        %             % Wait for answer
-        %             while respToBeMade
-        %                 % check the keyboard
-        %                 [keyIsDown,secs, keyCode] = KbCheck;
-        %                 if keyCode(KbName(cfg.keys.oldKey))
-        %                     respToBeMade = false;
-        %                     answer = '1';
-        %                     RT = secs-StimulusOnsetTime;
-        %                 elseif keyCode(KbName(cfg.keys.newKey))
-        %                     respToBeMade = false;
-        %                     answer = '0';
-        %                     RT = secs-StimulusOnsetTime;
-        %                 end
-        %             end
-
-        %
-        %     else % wait for the presentation time of the stimuli before getting the answer
-        %         WaitSecs(sessionCfg.stim);
-        %
-        %         % Question mark
-        %         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
-        %         DrawFormattedText(p.ptb.window, cfg.text.respSymbol, 'center', 'center', cfg.text.basicTextColor);
-        %         Screen('Flip', p.ptb.window);
-        %
-        %         % Wait for answer
-        %         respToBeMade = true;
-        % %         keyCode = zeros(1,256);
-        %         while respToBeMade
-        %             % check the keyboard
-        %             [keyIsDown,secs, keyCode] = KbCheck;
-        %             if keyCode(KbName(cfg.keys.oldKey))
-        %                 respToBeMade = false;
-        %                 answer = '1';
-        %                 RT = secs-StimulusOnsetTime;
-        %             elseif keyCode(KbName(cfg.keys.newKey))
-        %                 respToBeMade = false;
-        %                 answer = '0';
-        %                 RT = secs-StimulusOnsetTime;
-        %             end
-        %         end
 
     end
     thisGetSecs = GetSecs;
@@ -288,26 +240,34 @@ for trl = 1 : length(stimList)
 end
 T.param_end_instruct_onset(:) = GetSecs;
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);
-T.test_accuracy = T.p3_correct_response == T.p3_actual_responsekey
-accuracy_freq = sum(T.test_accuracy)
+T.test_accuracy = T.p3_correct_response == T.p3_actual_responsekey;
+accuracy_freq =  sum(T.test_accuracy);
 %% __________________________ save parameter ___________________________________
 sub_save_dir = cfg.files.sesSaveDir;
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-memory-',sesName, '_beh.csv' ]);
 writetable(T,saveFileName);
 
-    function WaitKeyPress(kID)
-        while KbCheck(-3); end
-        while 1
-            [keyIsDown, ~, keyCode ] = KbCheck(-3);
-            if keyIsDown
-                if keyCode(p.keys.esc)
-                    cleanup; break;
-                elseif keyCode(kID)
-                    break;
-                end
-                while KbCheck(-3); end
-            end
+%% -----------------------------------------------------------------------------
+%                                Function
+% ______________________________________________________________________________
+function WaitKeyPress(kID)
+while KbCheck(-3); end  % Wait until all keys are released.
+
+while 1
+    % Check the state of the keyboard.
+    [ keyIsDown, ~, keyCode ] = KbCheck(-3);
+    % If the user is pressing a key, then display its code number and name.
+    if keyIsDown
+
+        if keyCode(p.keys.esc)
+            cleanup; break;
+        elseif keyCode(kID)
+            break;
         end
+        % make sure key's released
+        while KbCheck(-3); end
     end
+end
+end
 
 end
