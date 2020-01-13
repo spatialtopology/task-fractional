@@ -31,7 +31,8 @@ if expParam.sessionNum == 1
 %     end
 
     %% Screen parameters
-    cfg.screen.bgColor = uint8((rgb('White') * 255) + 0.5);
+%     cfg.screen.bgColor = uint8((rgb('White') * 255) + 0.5);
+    cfg.screen.bgColor = uint8((rgb('Black') * 255) + 0.5);
     cfg.screen.blackbgColor = uint8((rgb('Black') * 255) + 0.5);
 
     %% Stimulus parameters
@@ -84,7 +85,7 @@ if expParam.sessionNum == 1
     % the experimenter's secret key to continue the experiment
     KbName('UnifyKeyNames');
     cfg.keys.start = 's';
-    cfg.keys.trigger = '5';
+    cfg.keys.trigger = '5%';
     cfg.keys.end = 'e';
     cfg.keys.expContinue = 'g';
     cfg.keys.keyRow = 'upper';
@@ -92,10 +93,10 @@ if expParam.sessionNum == 1
     % subordinate matching keys (counterbalanced based on subNum 1-5, 6-0)
     if expParam.isEven
         % upper row
-        cfg.keys.responseKeyNames = {'f','j'};
+        cfg.keys.responseKeyNames = {'1!','4$'};
     else
         % middle row
-        cfg.keys.responseKeyNames = {'f','j'};
+        cfg.keys.responseKeyNames = {'1!','4$'};
     end
 %     cfg.keys.responseKeyNames = {'f','j'};
     cfg.keys.oldKey = cfg.keys.responseKeyNames{1};
@@ -112,7 +113,7 @@ if expParam.sessionNum == 1
     %% Screen, text, and symbol configuration for size and color
 
     % Choose a color value (e.g., 210 for gray) to be used as experiment backdrop
-    cfg.screen.bgColor = uint8((rgb('White') * 255) + 0.5);
+    cfg.screen.bgColor = uint8((rgb('Grey') * 255) + 0.5);
 
     % font sizes
     % basic: small messages printed to the screen
@@ -134,10 +135,11 @@ if expParam.sessionNum == 1
 
     % text colors
     cfg.text.basicTextColor = uint8((rgb('Black') * 255) + 0.5);
-    cfg.text.whiteTextColor = uint8((rgb('Black') * 255) + 0.5);
+    cfg.text.GreenTextColor = uint8((rgb('Green') * 255) + 0.5);
+    cfg.text.whiteTextColor = uint8((rgb('White') * 255) + 0.5);
     cfg.text.instructColor = uint8((rgb('Black') * 255) + 0.5);
     % text color when experimenter's attention is needed
-    cfg.text.experimenterColor = uint8((rgb('Red') * 255) + 0.5);
+    cfg.text.experimenterColor = uint8((rgb('Lime') * 255) + 0.5);
 
     cfg.text.basicFontName = 'Courier New';
     cfg.text.basicFontStyle = 1;
