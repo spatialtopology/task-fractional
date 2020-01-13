@@ -373,7 +373,7 @@ fclose(logFile);
 %% _________________________ 7. End Instructions _______________________________
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
-T.param_end_instruct_onset(:)    = Screen('Flip',p.ptb.window);
+T.param_end_instruct_onset(:)  = Screen('Flip',p.ptb.window);
 WaitKeyPress(p.keys.end); % press s
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) -T.param_triggerOnset(1);
 

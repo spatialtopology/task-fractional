@@ -101,7 +101,7 @@ TR = 0.46;
 % T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
 
 
-addpath(defaults.path.utilities)
+addpath(defaults.path.utilities);
 
 %% -----------------------------------------------------------------------------
 %                                Parameters
@@ -315,11 +315,13 @@ Screen('Flip',w.win);
 
 %% Wait for Trigger to Begin %%
 DisableKeysForKbCheck([]);
-KbTriggerWait(KbName(defaults.start)); % press s
+% KbTriggerWait(KbName(defaults.start)); % press s
+WaitKeyPress(KbName(defaults.start));
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
-T.param_triggerOnset(:) = KbTriggerWait(trigger); % wait for scanner 5
+% T.param_triggerOnset(:) = KbTriggerWait(trigger); % wait for scanner 5
+T.param_triggerOnset(:) = WaitKeyPress(trigger);
 anchor = T.param_triggerOnset(1);
 WaitSecs(TR*6);
 
@@ -452,7 +454,7 @@ end
 end_texture = Screen('MakeTexture',w.win, imread(instruct_end));
 Screen('DrawTexture',w.win,end_texture,[],[]);
 T.param_end_instruct_onset(:) = Screen('Flip',w.win);
-KbTriggerWait(KbName(defaults.end));
+WaitKeyPress(KbName(defaults.end));
 
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 
@@ -463,5 +465,25 @@ writetable(T,saveFileName);
 %% Exit %%
 ptb_exit;
 rmpath(defaults.path.utilities);
+
+function WaitKeyPress(kID)
+while KbCheck(-3); end  % Wait until all keys are released.
+
+while 1
+    % Check the state of the keyboard.
+    [ keyIsDown, ~, keyCode ] = KbCheck(-3);
+    % If the user is pressing a key, then display its code number and name.
+    if keyIsDown
+
+        if keyCode(p.keys.esc)
+            cleanup; break;
+        elseif keyCode(kID)
+            break;
+        end
+        % make sure key's released
+        while KbCheck(-3); end
+    end
+end
+end
 
 end

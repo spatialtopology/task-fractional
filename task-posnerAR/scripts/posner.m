@@ -115,11 +115,13 @@ Screen('Flip',p.ptb.window);
 
 %% ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
-KbTriggerWait(p.keys.start);
+% KbTriggerWait(p.keys.start);
+WaitKeyPress(p.keys.start);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
-T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
+% T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
+T.param_triggerOnset(:) = WaitKeyPress(p.keys.trigger);
 WaitSecs(TR*6);
 
 %% __________________________ Experimental loop ___________________________
@@ -250,7 +252,7 @@ end
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
-KbTriggerWait(p.keys.end);
+WaitKeyPress(p.keys.end);
 
 T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 

@@ -450,8 +450,8 @@ WaitSecs(endDur);
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
-KbTriggerWait(p.keys.end);
-
+% KbTriggerWait(p.keys.end);
+WaitKeyPress(p.keys.end);
 
 T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 % while GetSecs - trials_end < fixDur; end
