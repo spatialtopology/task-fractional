@@ -82,7 +82,7 @@ KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
 % p.keys.right                   = KbName('j');
 % p.keys.left                    = KbName('f');
-p.keys.right                   = KbName('4$');
+p.keys.right                   = KbName('2@');
 p.keys.left                    = KbName('1!');
 p.keys.space                   = KbName('space');
 p.keys.esc                     = KbName('ESCAPE');
@@ -218,7 +218,7 @@ for trl = 1:size(countBalMat,1)
         elseif keyCode(p.keys.right)
           RT = secs - T.p3_target_onset(trl);
             T.p4_RT(trl) = secs - T.p3_target_onset(trl);
-            T.p4_responsekey(trl)  = 4; % right
+            T.p4_responsekey(trl)  = 2; % right
             % 4.2. calculated response remainder time _____________________________
             WaitSecs(0.5);
 
