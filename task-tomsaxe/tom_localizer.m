@@ -275,10 +275,8 @@ try
     %% E. Keyboard information _____________________________________________________
     KbName('UnifyKeyNames');
     p.keys.confirm                 = KbName('return');
-    p.keys.right                   = KbName('4$');
+    p.keys.right                   = KbName('2@');
     p.keys.left                    = KbName('1!');
-%     p.keys.right                   = KbName('2@');
-%     p.keys.left                    = KbName('1!');
     p.keys.space                   = KbName('space');
     p.keys.esc                     = KbName('ESCAPE');
     p.keys.trigger                 = KbName('5%');
