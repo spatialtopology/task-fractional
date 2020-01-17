@@ -17,9 +17,8 @@ function memorizationTask(sub_num)
 
 % Code provided by Tim Curran
 % Minimal changes maded by Heejung Jung
-%% preliminary
 % Clear Matlab window:
-%clc
+% clc
 
 % check for Opengl compatibility, abort otherwise:
 % AssertOpenGL;
@@ -39,7 +38,7 @@ if ~exist(fullfile(pwd,sprintf('%s.m','memorizationTask')),'file')
     error('Must be in the experiment directory to run the experiment.');
 end
 
-%% process experiment name and subject number
+% process experiment name and subject number ___________________________________
 
 % make sure there are somewhere betwen 0 and 2 arguments
 minArg = 0;
@@ -61,7 +60,7 @@ if nargin == 0
 %                 uiwait(h);
 %                 continue
 %             end
-    % 1. grab participant number ___________________________________________________
+% 1. grab participant number ___________________________________________________
     expName = 'canna';
     prompt = 'session number : ';
     session = input(prompt);
@@ -91,7 +90,7 @@ if nargin == 0
 %     error('You provided 1 argument, but you need either zero or two! Must provide either no inputs (%s;) or provide experiment name (as a string) and subject number (as an integer).',mfilename,mfilename,expName);
 end
 
-%% Experiment database struct preparation
+% Experiment database struct preparation _______________________________________
 
 expParam = struct;
 cfg = struct;
@@ -102,7 +101,7 @@ expParam.subject = sprintf('%.4d',sub_num);
 % set the current directory as the experiment directory
 cfg.files.expDir = pwd;
 
-%% Set up the data directories and files
+% Set up the data directories and files ________________________________________
 
 % make sure the data directory exists, and that we can save data
 cfg.files.dataSaveDir = fullfile(cfg.files.expDir,'data');
@@ -141,7 +140,7 @@ else
 
 end
 % expParam.sessionNum = 1;
-%% Make sure the session number is in order and directories/files exist
+% Make sure the session number is in order and directories/files exist
 
 % make sure session directory exists
 % cfg.files.sesSaveDir = fullfile(cfg.files.subSaveDir,sprintf('session_%d',expParam.sessionNum));
@@ -173,10 +172,10 @@ if exist(cfg.files.sesLogFile,'file')
     end
 end
 
-%% Save the current experiment data
+% Save the current experiment data _____________________________________________
 save(cfg.files.expParamFile,'cfg','expParam');
 
-%% Run the experiment
+% Run the experiment ___________________________________________________________
 % fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,expParam.subject,expParam.sessionNum);
 fprintf('Running experiment: subject %s, session %d...\n',expParam.subject,expParam.sessionNum);
 
@@ -184,7 +183,7 @@ fprintf('Running experiment: subject %s, session %d...\n',expParam.subject,expPa
 % Open data file
 logFile = fopen(cfg.files.sesLogFile,'at');
 
-%% Begin PTB display setup
+% Begin PTB display setup ______________________________________________________
 % set some font display options; must be set before opening w with Screen
 DefaultFontName = 'Courier New';
 DefaultFontStyle = 1;
@@ -234,7 +233,7 @@ p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
 p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
 TR = 0.46;
-% %% E. Keyboard information _____________________________________________________
+% E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
 p.keys.right                   = KbName('4$');
@@ -245,7 +244,7 @@ p.keys.trigger                 = KbName('5%');
 p.keys.start                   = KbName('s');
 p.keys.end                     = KbName('e');
 
-%% G. instructions _____________________________________________________
+% G. instructions _____________________________________________________
 instruct_filepath              = fullfile(cfg.files.expDir, 'instructions');
 taskname                       = 'memory';
 instruct_start_name            = [ taskname, '_main_start.png'];
@@ -292,7 +291,7 @@ GetSecs;
 % priorityLevel = MaxPriority(p.ptb.window);
 % Priority(priorityLevel);
 
-%% Run through the experiment
+% Run through the experiment ___________________________________________________
 % find out what session this will be
 sesName = expParam.sesTypes{expParam.sessionNum};
 
@@ -302,7 +301,7 @@ startTime = fix(clock);
 expParam.session.(sesName).startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),startTime(5),startTime(6));
 
 
-%% D. making output table ________________________________________________________
+% D. making output table ________________________________________________________
 vnames = {'param_fmriSession', 'param_triggerOnset',...
                                 'param_end_instruct_onset', 'param_experimentDuration'};
 T                              = array2table(zeros(1,size(vnames,2)));
@@ -310,14 +309,14 @@ T.Properties.VariableNames         = vnames;
 T.param_fmriSession(:) = 4;
 
 
-%% ______________________________ Instructions _________________________________
+% ______________________________ Instructions __________________________________
 HideCursor;
 Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 Screen('Flip',p.ptb.window);
 
-%% _______________________ Wait for Trigger to Begin ___________________________
+% ________________________ Wait for Trigger to Begin ___________________________
 % 1) wait for 's' key, once pressed, automatically flips to fixation
 % 2) wait for trigger '5'
 WaitKeyPress(p.keys.start); % press s
@@ -333,9 +332,9 @@ WaitKeyPress(p.keys.trigger);
 T.param_triggerOnset(:)          = GetSecs;
 WaitSecs(TR*6);
 
-%% -----------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
 %                              Main task
-% ______________________________________________________________________________
+% ------------------------------------------------------------------------------
 
 [cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud1',sub_num);
 % insert distration task
@@ -348,7 +347,7 @@ distraction(p, cfg,  'task2',sub_num);
 
 
 
-%% Session is done
+% Session is done
 
 fprintf('Done with %s session %d (%s).\n',expParam.subject,expParam.sessionNum,sesName);
 
@@ -365,12 +364,12 @@ save(cfg.files.expParamFile,'cfg','expParam');
 % close out the log file
 fclose(logFile);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Finish Message  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% ------------------------------------------------------------------------------
+%                                Finish Message
+% ------------------------------------------------------------------------------
 
-%% _________________________ 7. End Instructions _______________________________
+% _________________________ 7. End Instructions _______________________________
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.param_end_instruct_onset(:)  = Screen('Flip',p.ptb.window);
@@ -378,7 +377,7 @@ WaitKeyPress(p.keys.end); % press s
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) -T.param_triggerOnset(1);
 
 %
-%% _________________________ 8. save parameter _________________________________
+% _________________________ 8. save parameter _________________________________
 sub_save_dir = cfg.files.sesSaveDir;
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'main_beh.csv' ]);
 writetable(T,saveFileName);
@@ -400,9 +399,10 @@ sca;
 % ListenChar;
 % Priority(0);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  payment  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ------------------------------------------------------------------------------
+%                                payment
+% ------------------------------------------------------------------------------
 pettycashfile = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_pettycash.txt' ]);
 fid=fopen(pettycashfile,'w');
 total_acc = test1_accuracy + test2_accuracy;
@@ -426,9 +426,9 @@ fprintf('*********************************\n*********************************\n'
 
 
 
-%% -----------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
 %                                Function
-% ______________________________________________________________________________
+% ------------------------------------------------------------------------------
 function WaitKeyPress(kID)
 while KbCheck(-3); end  % Wait until all keys are released.
 
