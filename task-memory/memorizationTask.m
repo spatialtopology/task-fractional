@@ -236,7 +236,7 @@ TR = 0.46;
 % E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
-p.keys.right                   = KbName('4$');
+p.keys.right                   = KbName('2@');
 p.keys.left                    = KbName('1!');
 p.keys.space                   = KbName('space');
 p.keys.esc                     = KbName('ESCAPE');
@@ -395,7 +395,7 @@ sca;
 % priority:
 % % Screen('CloseAll');
 % fclose('all');
-% ShowCursor;
+ShowCursor;
 % ListenChar;
 % Priority(0);
 
