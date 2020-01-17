@@ -318,6 +318,7 @@ Screen('Flip',w.win);
 % DisableKeysForKbCheck([]);
 % KbTriggerWait(KbName(defaults.start)); % press s
 % WaitKeyPress(KbName(defaults.start));
+
 WaitKeyPress(KbName('s'));
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
@@ -469,6 +470,7 @@ T.param_experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerO
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
 
+ShowCursor;
 
 % Exit ____________________________________________________________________
 ptb_exit;
