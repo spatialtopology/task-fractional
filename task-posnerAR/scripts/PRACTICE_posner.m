@@ -1,4 +1,4 @@
-function posner(sub_num)
+function PRACTICE_posner(sub_num)
 
 % created by Heejung Jung
 % 2019.11.15
@@ -82,7 +82,7 @@ KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
 % p.keys.right                   = KbName('j');
 % p.keys.left                    = KbName('f');
-p.keys.right                   = KbName('4$');
+p.keys.right                   = KbName('2@');
 p.keys.left                    = KbName('1!');
 p.keys.space                   = KbName('space');
 p.keys.esc                     = KbName('ESCAPE');
