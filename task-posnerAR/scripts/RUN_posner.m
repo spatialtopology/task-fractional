@@ -115,6 +115,7 @@ Screen('Flip',p.ptb.window);
 
 % ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
+HideCursor;
 % KbTriggerWait(p.keys.start);
 WaitKeyPress(p.keys.start);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
@@ -265,6 +266,8 @@ writetable(T,saveFileName);
 
 psychtoolbox_saveFileName = fullfile(sub_save_dir, [strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_psychtoolbox_params.mat' ]);
 save(psychtoolbox_saveFileName, 'p');
+
+ShowCursor;
 
 
     function WaitKeyPress(kID)
