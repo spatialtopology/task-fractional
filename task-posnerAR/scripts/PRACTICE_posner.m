@@ -93,10 +93,6 @@ p.keys.end                     = KbName('e');
 %% F. fmri Parameters __________________________________________________________
 TR                             = 0.46;
 
-% %% G. Instructions _____________________________________________________________
-% instruct_start                 = 'The cueing task is about to start. \n Please wait for the experimenter';
-% instruct_end                   = 'This is the end of the experiment. \n Please wait for the experimenter';
-%
 %% G. instructions _____________________________________________________
 instruct_filepath              = fullfile(main_dir, 'design', 'instructions');
 instruct_start_name            = ['task-', taskname, '_start.png'];
@@ -115,7 +111,8 @@ Screen('Flip',p.ptb.window);
 
 %% ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
-KbTriggerWait(p.keys.start);
+HideCursor;
+WaitKeyPress(p.keys.start);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
@@ -250,7 +247,7 @@ end
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
-KbTriggerWait(p.keys.end);
+WaitKeyPress(p.keys.end);
 
 T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 

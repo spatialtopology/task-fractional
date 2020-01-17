@@ -403,11 +403,11 @@ try
             end
             tmpSeeker(t,9) = offset_dur;
         T.p2_RT(8*(b-1) + t) = tmpSeeker(t,7);
-        if tmpSeeker(t,8) == 2
-            T.p2_actual_response_key(8*(b-1) + t) = 4;
-        else
-            T.p2_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
-        end
+%         if tmpSeeker(t,8) == 2
+%             T.p2_actual_response_key(8*(b-1) + t) = 4;
+%         else
+        T.p2_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
+%         end
         T.p3_trialoffset(8*(b-1) + t) = offset_dur;
         end % END TRIAL LOOP
 
