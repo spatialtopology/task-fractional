@@ -5,13 +5,12 @@ function [cfg,expParam] = mt_study(p,cfg,expParam,logFile,sesName, sub_num)
 
 fprintf('Running %s (study)...\n',sesName);
 
-%% set the starting date and time for this session
+% set the starting date and time for this session ______________________________
 thisDate = date;
 startTime = fix(clock);
 startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),startTime(5),startTime(6));
 
-%% record the starting date and time for this session
-
+% record the starting date and time for this session 
 expParam.session.(sesName).date = thisDate;
 expParam.session.(sesName).startTime = startTime;
 
@@ -25,11 +24,11 @@ fprintf(logFile,'%f\t%s\t%s\t%s\n',...
     sesName,...
     'STUDY_START');
 
-%% preparation
+% preparation __________________________________________________________________
 sessionCfg = cfg.stim.(sesName);
 stimDir = cfg.files.stimDir;
 
-% defauls is to show images
+% defauls is to show images ____________________________________________________
 if ~isfield(cfg.stim,'studyType')
     cfg.stim.studyType = 'i';
 end
@@ -52,7 +51,7 @@ if ~isfield(sessionCfg,'fixDuringStim')
     sessionCfg.fixDuringStim = false;
 end
 
-%% prepared stimuli list for presentation
+% prepared stimuli list for presentation _______________________________________
 % load stimuli list
 fileToLoad = sessionCfg.stimListFile;
 stimListAll = importdata(fileToLoad);
@@ -88,7 +87,7 @@ else
 end
 
 
-%% D. making output table ________________________________________________________
+% D. making output table ________________________________________________________
 vnames                         = {'param_fmriSession','param_experiment_start','param_memory_session_name'...
                                   'p1_fixation_onset','p1_fixation_duration',...
                                   'p2_stimuli_onset','p2_dummy_stimuli','p2_stimuli_filename',...
@@ -99,20 +98,20 @@ T.param_memory_session_name    = cell(size(stimList,1),1);
 T.param_memory_session_name(:) = {sesName};
 T.p2_stimuli_filename          = cell(size(stimList,1),1);
 
-%% G. instructions _____________________________________________________
+% G. instructions _____________________________________________________
 main_dir                       = pwd;
 instruct_filepath              = fullfile(main_dir, 'instructions');
 instruct_study_name            = 'memory_study.png';
 instruct_study                 = fullfile(instruct_filepath, instruct_study_name);
 
-%% ______________________________ Instructions _________________________________
+% ______________________________ Instructions _________________________________
 Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_study));
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 T.param_experiment_start(:) = Screen('Flip', p.ptb.window);
 WaitSecs(5);
 
-%% display stimuli
+% display stimuli
 for trl = 1 : length(stimList)
     if sessionCfg.isFix
         % fixation cross
@@ -187,13 +186,13 @@ for trl = 1 : length(stimList)
 %             Screen('Close', imageTexture);
             clear stimImg
     end
-    
+
 end
 
 T.param_end_instruct_onset(:) = GetSecs;
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);
 
-%% __________________________ save parameter ___________________________________
+% __________________________ save parameter ____________________________________
 sub_save_dir = cfg.files.sesSaveDir;
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-memory-',sesName, '_beh.csv' ]);
 writetable(T,saveFileName);

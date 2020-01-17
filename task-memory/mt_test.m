@@ -4,7 +4,7 @@ function [cfg,expParam, accuracy_freq] = mt_test(p,cfg,expParam,logFile,sesName,
 task_duration = 2;
 fprintf('Running %s (testing)...\n',sesName);
 
-%% preparation
+% preparation
 sessionCfg = cfg.stim.(sesName);
 stimDir = cfg.files.stimDir;
 
@@ -31,7 +31,7 @@ if ~isfield(sessionCfg,'fixDuringStim')
     sessionCfg.fixDuringStim = false;
 end
 
-%% prepared stimuli list for presentation ________________________________________________________
+% prepared stimuli list for presentation ________________________________________________________
 % load stimuli list
 fileToLoad = sessionCfg.stimListFile;
 stimList = importdata(fileToLoad);
@@ -44,7 +44,7 @@ if cfg.stim.shuffle
     oldNew = oldNew(orderStimTest);
 end
 
-%% D. making output table ________________________________________________________
+% D. making output table ________________________________________________________
 vnames = {'param_fmriSession','param_experiment_start','param_memory_session_name'...
                                 'p1_fixation_onset','p1_fixation_duration',...
                                 'p2_image_onset','p2_image_filename',...
@@ -57,14 +57,14 @@ T.param_memory_session_name    = cell(size(stimList,1),1);
 
 T.param_memory_session_name(:) = {sesName};
 T.param_fmriSession(:)         = 4;
-%% G. instructions _____________________________________________________
+% G. instructions _____________________________________________________
 main_dir                       = pwd;
 instruct_filepath              = fullfile(main_dir, 'instructions');
 instruct_test_name             = 'memory_test.png';
 instruct_test                  = fullfile(instruct_filepath, instruct_test_name);
 
-%% record the starting date and time for this session ________________________________________________________
-%% set the starting date and time for this session
+% record the starting date and time for this session ________________________________________________________
+% set the starting date and time for this session
 thisDate = date;
 startTime = fix(clock);
 startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),startTime(5),startTime(6));
@@ -79,7 +79,7 @@ Screen('TextFont', p.ptb.window, cfg.text.basicFontName);
 Screen('TextStyle', p.ptb.window, cfg.text.basicFontStyle);
 % DrawFormattedText(p.ptb.window, cfg.text.(sesName).instructionsMessage, 'center', 'center');%, cfg.text.whiteTextColor);
 
-%% ______________________________ Instructions _________________________________
+% ______________________________ Instructions _________________________________
 Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_test));
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
@@ -96,13 +96,13 @@ fprintf(logFile,'%f\t%s\t%s\t%s\n',...
     'TEST_START');
 
 %     thisGetSecs,...
-%% ___________________________ 0. Experimental loop ____________________________
-%% display stimuli
+% ___________________________ 0. Experimental loop ____________________________
+% display stimuli
 for trl = 1 : length(stimList)
     correctAnswer = oldNew(trl);
     if sessionCfg.isFix
-        % fixation crossqq1
-        %% _________________________ 1. Fixtion Jitter mean 1 sec _________________________
+
+% _________________________ 1. Fixtion Jitter mean 1 sec _______________________
 
         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
         DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
@@ -119,15 +119,14 @@ for trl = 1 : length(stimList)
             stimImg = uint8(stimImg);
             imageTexture = Screen('MakeTexture', p.ptb.window, stimImg);
             Screen('DrawTexture', p.ptb.window, imageTexture, [],[],0,0);
-            %                         % 5-2. present scale lines _____________________________________________________
+% 5-2. present scale lines _____________________________________________________
             Yc = 300; % Y coord
             cDist = 20; % vertical line depth
             lXc = -200; % left X coord
             rXc = 200; % right X coord
             lineCoords = [lXc lXc lXc rXc rXc rXc; Yc-cDist Yc+cDist Yc Yc Yc-cDist Yc+cDist];
             %             Screen('DrawLines', p.ptb.window, lineCoords,p.fix.lineWidthPix, p.ptb.black);% [p.ptb.xCenter p.ptb.yCenter], 2);
-            %
-            % 5-3. present same diff text __________________________________________________
+% 5-3. present same diff text __________________________________________________
             textOld = 'old';
             textNew = 'new';
             textYc = p.ptb.yCenter + (RectHeight(p.ptb.rect)/2)*.30;
@@ -184,6 +183,7 @@ for trl = 1 : length(stimList)
                 if keyCode(KbName(cfg.keys.oldKey))
                     %             respToBeMade = false;
                     answer = 1;
+                    actual_key = 1;
                     RT = secs-StimulusOnsetTime;
                     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.experimenterColor); % Text output of mouse position draw in the centre of the screen
                     DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
@@ -197,6 +197,7 @@ for trl = 1 : length(stimList)
                 elseif keyCode(KbName(cfg.keys.newKey))
                     %             respToBeMade = false;
                     answer = 0;
+                    actual_key = 4;
                     RT = secs-StimulusOnsetTime;
                     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
                     DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.experimenterColor); % Text output of mouse position draw in the centre of the screen
@@ -229,7 +230,8 @@ for trl = 1 : length(stimList)
         num2str(correctAnswer),num2str(answer),RT);
 
     T.p3_correct_response(trl) = correctAnswer;
-    T.p3_actual_responsekey(trl) = answer;
+    T.p3_actual_buttonbox(trl) = actual_key;
+    T.p3_responsekey(trl) = answer;
     T.p3_actual_RT(trl) = RT;
 
 
@@ -242,14 +244,14 @@ T.param_end_instruct_onset(:) = GetSecs;
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);
 T.test_accuracy = T.p3_correct_response == T.p3_actual_responsekey;
 accuracy_freq =  sum(T.test_accuracy);
-%% __________________________ save parameter ___________________________________
+% __________________________ save parameter ____________________________________
 sub_save_dir = cfg.files.sesSaveDir;
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-memory-',sesName, '_beh.csv' ]);
 writetable(T,saveFileName);
 
-%% -----------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
 %                                Function
-% ______________________________________________________________________________
+% ------------------------------------------------------------------------------
 function WaitKeyPress(kID)
 while KbCheck(-3); end  % Wait until all keys are released.
 

@@ -6,7 +6,7 @@ function posner(sub_num)
 %                          Experiment parameters
 %--------------------------------------------------------------------------
 
-%% A. psychtoolbox parameters _____________________________________________
+% A. psychtoolbox parameters _____________________________________________
 global p
 
 Screen('Preference', 'SkipSyncTests', 1);
@@ -48,7 +48,7 @@ p.target.rightXpos             = p.ptb.screenXpixels * 0.70;
 p.rect.LcenteredRect           = CenterRectOnPointd(p.rect.baseRect, -100, p.ptb.yCenter);
 p.rect.RcenteredRect           = CenterRectOnPointd(p.rect.baseRect, 100, p.ptb.yCenter);
 
-%% B. Directories _________________________________________________________
+% B. Directories _________________________________________________________
 task_dir                       = pwd;
 main_dir                       = fileparts(task_dir);
 taskname                       = 'posner';
@@ -60,13 +60,13 @@ if ~exist(sub_save_dir, 'dir')
     mkdir(sub_save_dir)
 end
 
-%% C. experiment parameters _______________________________________________
+% C. experiment parameters _______________________________________________
 trial_duration                 = 2.000;
 cue_duration                   = 0.200;
 % cue to target duration: 200ms
 % response: give 2s
 
-%% D. making output table _________________________________________________
+% D. making output table _________________________________________________
 vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
     'param_jitter', 'param_AR_invalid_sequence', 'param_valid_type', 'param_cue', 'param_target',...
     'p1_fixation_onset', 'p1_fixation_duration','p1_fixation_offset','p1_ptb_fixation_duration',...
@@ -77,7 +77,7 @@ vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',..
 T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 
-%% E. Keyboard information _____________________________________________________
+% E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
 % p.keys.right                   = KbName('j');
@@ -90,30 +90,30 @@ p.keys.trigger                 = KbName('5%');
 p.keys.start                   = KbName('s');
 p.keys.end                     = KbName('e');
 
-%% F. fmri Parameters __________________________________________________________
+% F. fmri Parameters __________________________________________________________
 TR                             = 0.46;
 
-% %% G. Instructions _____________________________________________________________
+% G. Instructions _____________________________________________________________
 % instruct_start                 = 'The cueing task is about to start. \n Please wait for the experimenter';
 % instruct_end                   = 'This is the end of the experiment. \n Please wait for the experimenter';
 %
-%% G. instructions _____________________________________________________
+% G. instructions _____________________________________________________
 instruct_filepath              = fullfile(main_dir, 'design', 'instructions');
 instruct_start_name            = ['task-', taskname, '_start.png'];
 instruct_end_name              = ['task-', taskname, '_end.png'];
 instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
 instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
-%% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
 %                             Start Experiment
 % -------------------------------------------------------------------------
 
-%% ______________________________ Instructions _________________________________
+% ______________________________ Instructions _________________________________
 Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 Screen('Flip',p.ptb.window);
 
-%% ____________________ 1. Wait for Trigger to Begin ______________________
+% ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
 % KbTriggerWait(p.keys.start);
 WaitKeyPress(p.keys.start);
@@ -124,10 +124,10 @@ Screen('Flip', p.ptb.window);
 T.param_triggerOnset(:) = WaitKeyPress(p.keys.trigger);
 WaitSecs(TR*6);
 
-%% __________________________ Experimental loop ___________________________
+% __________________________ Experimental loop ___________________________
 for trl = 1:size(countBalMat,1)
 
-    %% ------------------------------------------------------------------------
+    % ------------------------------------------------------------------------
     %                        1. Fixtion Jitter 300 / 120 = 2.5 sec
     % -------------------------------------------------------------------------
     jitter1 = countBalMat.jitter(trl);
@@ -140,7 +140,7 @@ for trl = 1:size(countBalMat,1)
     T.p1_ptb_fixation_duration(trl) = T.p1_fixation_offset(trl) - T.p1_fixation_onset(trl);
     T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
 
-    %% ------------------------------------------------------------------------
+    % ------------------------------------------------------------------------
     %                               2. cue 0.2 s
     % -------------------------------------------------------------------------
     if string(countBalMat.cue{trl}) == "left"
@@ -168,7 +168,7 @@ for trl = 1:size(countBalMat,1)
     T.p2_cue_type(trl) = string(countBalMat.cue(trl));
 
 
-    %% ------------------------------------------------------------------------
+    % ------------------------------------------------------------------------
     %                              3. target 2 s
     % -------------------------------------------------------------------------
     if string(countBalMat.target{trl}) == "left"
@@ -185,7 +185,7 @@ for trl = 1:size(countBalMat,1)
         T.p3_target_onset(trl) = Screen('Flip', p.ptb.window);
     end
 
-    %% ------------------------------------------------------------------------
+    % ------------------------------------------------------------------------
     %                            4. button press within 2s
     % -------------------------------------------------------------------------
     % 4.1. record key press _______________________________________________
@@ -217,7 +217,7 @@ for trl = 1:size(countBalMat,1)
         elseif keyCode(p.keys.right)
           RT = secs - T.p3_target_onset(trl);
             T.p4_RT(trl) = secs - T.p3_target_onset(trl);
-            T.p4_responsekey(trl)  = 2;
+            T.p4_responsekey(trl)  = 4; % right
             % 4.2. calculated response remainder time _____________________________
             WaitSecs(0.5);
 
@@ -248,7 +248,7 @@ end
 
 
 
-%% _________________________ End Instructions _____________________________
+% _________________________ End Instructions _____________________________
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
@@ -256,7 +256,7 @@ WaitKeyPress(p.keys.end);
 
 T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 
-%% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
 %                              save parameter
 % -------------------------------------------------------------------------
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);

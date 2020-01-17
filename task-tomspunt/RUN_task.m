@@ -1,4 +1,4 @@
-function RUN_task( sub_num)
+function RUN_task(sub_num)
 order = 0;
 test_tag = 0;
 % ---------------------
@@ -12,6 +12,7 @@ test_tag = 0;
 %     ListenChar(0);
 %     PsychDebugWindowConfiguration;
 % end
+
 global p
 Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(2);
@@ -79,7 +80,7 @@ if nargin<1, order = 0; end
 if nargin<2, test_tag = 0; end
 if isempty(order), order = 0; end
 
-%% Check for Psychtoolbox %%
+% Check for Psychtoolbox ________________________________________________
 % try
 %     ptbVersion = PsychtoolboxVersion;
 % catch
@@ -88,11 +89,11 @@ if isempty(order), order = 0; end
 %     return
 % end
 % PsychDefaultSetup(2);
-%% Print Title %%
-script_name='----------- Photo Judgment Test -----------'; boxTop(1:length(script_name))='=';
+% Print Title ________________________________________________
+script_name='----------- Images Test -----------'; boxTop(1:length(script_name))='=';
 fprintf('\n%s\n%s\n%s\n',boxTop,script_name,boxTop)
 
-%% DEFAULTS %%
+% DEFAULTS ________________________________________________
 defaults = task_defaults;
 KbName('UnifyKeyNames');
 trigger = KbName(defaults.trigger);
@@ -103,9 +104,9 @@ TR = 0.46;
 
 addpath(defaults.path.utilities);
 
-%% -----------------------------------------------------------------------------
+% -------------------------------------------------------------------------
 %                                Parameters
-% ______________________________________________________________________________
+% _________________________________________________________________________
 % task_dir                        = pwd;
 main_dir                        = pwd;
 taskname                        = 'tomspunt';
@@ -115,8 +116,8 @@ sub_save_dir                    = fullfile(main_dir, 'data', strcat('sub-', spri
 if ~exist(sub_save_dir, 'dir')
     mkdir(sub_save_dir)
 end
-%% Load Design and Setup Seeker Variable %%
-load([defaults.path.design filesep 'design.mat'])
+% Load Design and Setup Seeker Variable ________________________________________________
+load([defaults.path.design filesep 'design.mat']);
 if order==0, randidx = randperm(4); order = randidx(1); end
 % design              = alldesign{order};
 design              = alldesign{order};
@@ -154,7 +155,7 @@ numTRs              = ceil(eventTimes(end)/defaults.TR);
 totalTime           = defaults.TR*numTRs;
 
 
-%% D. making output table ________________________________________________________
+% D. making output table ________________________________________________________
 
 
 vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
@@ -185,14 +186,14 @@ T.param_stimulus_no            = trialSeeker(:,5);
 %     5 - stimulus # (corresponds to qim & qdata from design.mat file)
 
 
-%% Print Defaults %%
+% Print Defaults ________________________________________________
 fprintf('Test Duration:         %d secs (%d TRs)', totalTime, numTRs);
 fprintf('\nTrigger Key:           %s', defaults.trigger);
 fprintf(['\nValid Response Keys:   %s' repmat(', %s', 1, length(defaults.valid_keys)-1)], defaults.valid_keys{:});
 fprintf('\nForce Quit Key:        %s\n', defaults.escape);
 fprintf('%s\n', repmat('-', 1, length(script_name)));
 
-%% Get Subject ID %%
+% Get Subject ID ________________________________________________
 if ~test_tag
     subjectID = ptb_get_input_string('\nEnter Subject ID: ');
 else
@@ -213,9 +214,9 @@ switch upper(computer)
     % Do nothing - return empty chosen_device
     inputDevice = [];
 end
-resp_set = ptb_response_set([defaults.valid_keys defaults.escape]); % response set
-
-%% Initialize Screen %%
+resp_set = ptb_response_set([defaults.valid_keys defaults.start defaults.trigger defaults.end defaults.escape]); % response set
+%
+% Initialize Screen ________________________________________________
 % screens                       = Screen('Screens'); % Get the screen numbers
 % p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
 %
@@ -250,7 +251,7 @@ w.rect = p.ptb.rect;
 w.white = p.ptb.white;
 w.black = p.ptb.black;
 HideCursor(p.ptb.screenNumber);
-%% Initialize Logfile (Trialwise Data Recording) %%
+% Initialize Logfile (Trialwise Data Recording) ________________________________________________
 d=clock;
 
 
@@ -268,7 +269,7 @@ if fid<1
 end
 fprintf(fid,'Started: %s %2.0f:%02.0f\n',date,d(4),d(5));
 
-%% Make Images Into Textures %%
+% Make Images Into Textures ________________________________________________
 DrawFormattedText(w.win,sprintf('LOADING\n\n0%% complete'),'center','center',w.white,defaults.font.wrap);
 Screen('Flip',w.win);
 slideName = cell(length(design.qim));
@@ -285,14 +286,14 @@ instructTex = Screen('MakeTexture', w.win, imread([defaults.path.stim filesep 'i
 fixTex = Screen('MakeTexture', w.win, imread([defaults.path.stim filesep 'fixation.jpg']));
 line1       = strcat('Is the person', repmat('\n', 1, defaults.font.linesep));
 
-%% Get Coordinates for Centering ISI Cues
+% Get Coordinates for Centering ISI Cues ________________________________________________
 isicues_xpos = zeros(length(design.isicues),1);
 isicues_ypos = isicues_xpos;
 for q = 1:length(design.isicues)
     [isicues_xpos(q), isicues_ypos(q)] = ptb_center_position(design.isicues{q},w.win);
 end
 
-%% G. instructions _____________________________________________________
+% G. instructions _____________________________________________________
 instruct_filepath              = fullfile(main_dir, 'instructions');
 instruct_start_name            = ['task-', taskname, '_start.png'];
 instruct_end_name              = ['task-', taskname, '_end.png'];
@@ -306,7 +307,7 @@ instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 %
 %==========================================================================
 
-%% Present Instruction Screen %%
+% Present Instruction Screen ________________________________________________
 % Screen('DrawTexture',w.win, instructTex);
 start.texture = Screen('MakeTexture',w.win, imread(instruct_start));
 Screen('DrawTexture',w.win,start.texture,[],[]);
@@ -314,14 +315,16 @@ Screen('Flip',w.win);
 
 
 %% Wait for Trigger to Begin %%
-DisableKeysForKbCheck([]);
+% DisableKeysForKbCheck([]);
 % KbTriggerWait(KbName(defaults.start)); % press s
-WaitKeyPress(KbName(defaults.start));
+% WaitKeyPress(KbName(defaults.start));
+WaitKeyPress(KbName('s'));
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
 % T.param_triggerOnset(:) = KbTriggerWait(trigger); % wait for scanner 5
-T.param_triggerOnset(:) = WaitKeyPress(trigger);
+WaitKeyPress(KbName('5%'));
+T.param_triggerOnset(:) = GetSecs;
 anchor = T.param_triggerOnset(1);
 WaitSecs(TR*6);
 
@@ -334,18 +337,18 @@ try
     %======================================================================
     for b = 1:nBlocks
 
-        %% Present Fixation Screen Until Question Onset %%
+        % Present Fixation Screen Until Question Onset ________________________________________________
         Screen('DrawTexture',w.win, fixTex);
         Screen('Flip',w.win);
 
-        %% Get Data for This Block (While Waiting for Block Onset) %%
+        % Get Data for This Block (While Waiting for Block Onset) ________________________________________________
         tmpSeeker   = trialSeeker(trialSeeker(:,1)==b,:);
         pbcue       = pbc_brief{blockSeeker(b,4)};  % question cue
         isicue      = design.isicues{blockSeeker(b,4)};  % isi cue
         isicue_x    = isicues_xpos(blockSeeker(b,4));  % isi cue x position
         isicue_y    = isicues_ypos(blockSeeker(b,4));  % isi cue y position
 
-        %% Prepare Question Cue Screen (Still Waiting) %%
+        % Prepare Question Cue Screen (Still Waiting)________________________________________________
         if ~strcmpi(defaults.language, 'german')
             Screen('TextSize',w.win, defaults.font.size1); Screen('TextStyle', w.win, 0);
             DrawFormattedText(w.win,line1,'center','center',w.white, defaults.font.wrap);
@@ -353,11 +356,11 @@ try
         end
         DrawFormattedText(w.win, pbcue,'center','center', w.white, defaults.font.wrap);
 
-        %% Present Question Screen and Prepare First ISI (Blank) Screen %%
+        % Present Question Screen and Prepare First ISI (Blank) Screen ________________________________________________
         WaitSecs('UntilTime',anchor + blockSeeker(b,3)); Screen('Flip', w.win); % p2_question_cue
         Screen('FillRect', w.win, w.black);
 
-        %% Present Blank Screen Prior to First Trial %%
+        % Present Blank Screen Prior to First Trial ________________________________________________
         WaitSecs('UntilTime',anchor + blockSeeker(b,3) + defaults.cueDur); Screen('Flip', w.win); % p3_fixation_onset
 
         %==================================================================
@@ -367,10 +370,10 @@ try
 
             %% Prepare Screen for Current Trial %%
             Screen('DrawTexture',w.win,slideTex{tmpSeeker(t,5)})
-            if t==1, WaitSecs('UntilTime',anchor + blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
+            if t==1 , WaitSecs('UntilTime',anchor + blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
             else WaitSecs('UntilTime',anchor + offset_dur + defaults.ISI); end
 
-            %% Present Screen for Current Trial & Prepare ISI Screen %%
+            % Present Screen for Current Trial & Prepare ISI Screen ________________________________________________
 
             T.p1_trial_onset(8*(b-1) + t) = Screen('Flip',w.win);
             onset = GetSecs; tmpSeeker(t,6) = onset - anchor;
@@ -380,11 +383,11 @@ try
                 Screen('DrawText', w.win, isicue, isicue_x, isicue_y);
             end
 
-            %% Look for Button Press %%
+            % Look for Button Press ________________________________________________
             [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
             offset_dur = GetSecs - anchor;
 
-            %% Present ISI, and Look a Little Longer for a Response if None Was Registered %%
+            % Present ISI, and Look a Little Longer for a Response if None Was Registered ________________________________________________
             T.p1_isi(8*(b-1) + t) = Screen('Flip', w.win);
             norespyet = isempty(resp);
             if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
@@ -395,22 +398,27 @@ try
                 end
                 tmpSeeker(t,8) = find(strcmpi(KbName(resp_set), resp));
 %                 tmpSeeker(t,8) = str2num(resp(1));
+%                 tmpSeeker(t,8) = resp;
                 tmpSeeker(t,7) = rt + (defaults.maxDur*norespyet);
             end
             tmpSeeker(t,9) = offset_dur;
         T.p2_RT(8*(b-1) + t) = tmpSeeker(t,7);
-        T.p2_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
+        if tmpSeeker(t,8) == 2
+            T.p2_actual_response_key(8*(b-1) + t) = 4;
+        else
+            T.p2_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
+        end
         T.p3_trialoffset(8*(b-1) + t) = offset_dur;
         end % END TRIAL LOOP
 
-        %% Store Block Data & Print to Logfile %%
+        % Store Block Data & Print to Logfile ________________________________________________
         trialSeeker(trialSeeker(:,1)==b,:) = tmpSeeker;
         for t = 1:size(tmpSeeker,1), fprintf(fid,[repmat('%d\t',1,size(tmpSeeker,2)) '\n'],tmpSeeker(t,:)); end
         tmpFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_TEMPbeh.csv' ]);
         writetable(T,tmpFileName);
     end % END BLOCK LOOP
 
-    %% Present Fixation Screen Until End of Scan %%
+    % Present Fixation Screen Until End of Scan ________________________________________________
 %     WaitSecs('UntilTime', anchor + totalTime);
 
 catch
@@ -421,7 +429,7 @@ catch
 
 end
 
-%% Create Results Structure %%
+% Create Results Structure ________________________________________________
 result.blockSeeker  = blockSeeker;
 result.trialSeeker  = trialSeeker;
 result.qim          = design.qim;
@@ -429,7 +437,7 @@ result.qdata        = design.qdata;
 result.preblockcues = design.preblockcues;
 result.isicues      = design.isicues;
 
-%% Save Data to Matlab Variable %%
+% Save Data to Matlab Variable ____________________________________________
 d=clock;
 outfile=sprintf('whyhow_%s_order%d_%s_%02.0f-%02.0f.mat',subjectID,order,date,d(4),d(5));
 try
@@ -439,7 +447,7 @@ catch
 	save whyhow.mat
 end
 
-%% End of Test Screen %%
+% End of Test Screen ________________________________________________
 % DrawFormattedText(w.win,'TEST COMPLETE\n\nPress any key to exit.','center','center',w.white,defaults.font.wrap);
 % Screen('Flip', w.win);
 % KbTriggerWait(KbName(defaults.end));
@@ -450,11 +458,11 @@ end
 % Screen('Flip',w.win,);
 %
 
-%% ______________________________ Instructions _________________________________
+% __________________________ End Instructions _____________________________
 end_texture = Screen('MakeTexture',w.win, imread(instruct_end));
 Screen('DrawTexture',w.win,end_texture,[],[]);
 T.param_end_instruct_onset(:) = Screen('Flip',w.win);
-WaitKeyPress(KbName(defaults.end));
+WaitKeyPress(KbName('e'));
 
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
 
@@ -462,7 +470,7 @@ saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), 
 writetable(T,saveFileName);
 
 
-%% Exit %%
+% Exit ____________________________________________________________________
 ptb_exit;
 rmpath(defaults.path.utilities);
 
@@ -475,7 +483,7 @@ while 1
     % If the user is pressing a key, then display its code number and name.
     if keyIsDown
 
-        if keyCode(p.keys.esc)
+        if keyCode(KbName('ESCAPE'))
             cleanup; break;
         elseif keyCode(kID)
             break;
