@@ -1,3 +1,4 @@
+function PRACTICE_memory(sub_num)
 
 global p
 Screen('Preference', 'SkipSyncTests', 1);
@@ -257,10 +258,11 @@ KbWait();
 % _________________________ 7. End Instructions _______________________________
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
-T.param_end_instruct_onset(:)  = Screen('Flip',p.ptb.window);
+Screen('Flip',p.ptb.window);
 WaitSecs(2);
 KbWait();
 
+closeall
 sca;
 
 % 7.end of task
@@ -278,4 +280,6 @@ function WaitKeyPress(kID)
             while KbCheck(-3); end
         end
     end
+end
+
 end
