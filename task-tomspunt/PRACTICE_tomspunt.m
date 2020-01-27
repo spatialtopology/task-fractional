@@ -8,7 +8,7 @@ function PRACTICE_tomspunt(sub_num)
 %_______________________________________________________________________
 % % Copyright (C) 2014  Bob Spunt, Ph.D.
 test_tag = 0;
-Screen('Preference', 'SkipSyncTests', 0);
+Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(2);
 %
 % %% Check for Psychtoolbox %%

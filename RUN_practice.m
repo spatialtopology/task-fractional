@@ -36,7 +36,7 @@ switch task1
         t1 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'PRACTICE_posner');
     case 'memory'
         chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
-        t1 = fullfile(main_dir, 'task-memory','PRACETICE_memory');
+        t1 = fullfile(main_dir, 'task-memory','PRACTICE_memory');
 end
 switch task2
     case 'tomsaxe'
@@ -50,7 +50,7 @@ switch task2
         t2 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'PRACTICE_posner');
     case 'memory'
         chdir_t2 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
-        t2 = fullfile(main_dir, 'task-memory','PRACETICE_memory');
+        t2 = fullfile(main_dir, 'task-memory','PRACTICE_memory');
 end
 
 run_task1 = strcat(t1, '(' ,num2str(sub_num), ')');
