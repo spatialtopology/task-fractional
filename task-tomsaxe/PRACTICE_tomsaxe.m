@@ -98,7 +98,7 @@ WaitKeyPress(p.keys.start)
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2); % will flip immediately
 Screen('Flip', p.ptb.window);
-WaitKeyPress(p.keys.trigger);
+% WaitKeyPress(p.keys.trigger);
 
 WaitSecs(TR*6);
 
