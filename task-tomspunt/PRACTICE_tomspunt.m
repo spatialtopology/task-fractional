@@ -1,4 +1,4 @@
-function PRACTICE_tomspunt
+function PRACTICE_tomspunt(sub_num)
 % RUN_PRACTICE  Run Practice for Why/How Localizer Task
 %
 %   USAGE: run_practice
@@ -8,7 +8,7 @@ function PRACTICE_tomspunt
 %_______________________________________________________________________
 % % Copyright (C) 2014  Bob Spunt, Ph.D.
 test_tag = 0;
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 PsychDefaultSetup(2);
 %
 % %% Check for Psychtoolbox %%
