@@ -32,7 +32,7 @@ if expParam.sessionNum == 1
 
     %% Screen parameters
 %     cfg.screen.bgColor = uint8((rgb('White') * 255) + 0.5);
-    cfg.screen.bgColor = uint8((rgb('Black') * 255) + 0.5);
+%     cfg.screen.bgColor = uint8((rgb('Black') * 255) + 0.5);
     cfg.screen.blackbgColor = uint8((rgb('Black') * 255) + 0.5);
 
     %% Stimulus parameters
