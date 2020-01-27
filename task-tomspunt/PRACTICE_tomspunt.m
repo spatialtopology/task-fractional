@@ -1,4 +1,4 @@
-function run_practice
+function PRACTICE_tomspunt
 % RUN_PRACTICE  Run Practice for Why/How Localizer Task
 %
 %   USAGE: run_practice
@@ -6,17 +6,19 @@ function run_practice
 %   This code uses Psychophysics Toolbox Version 3 (PTB-3) running in
 %   MATLAB (The Mathworks, Inc.). To learn more: http://psychtoolbox.org
 %_______________________________________________________________________
-% Copyright (C) 2014  Bob Spunt, Ph.D.
+% % Copyright (C) 2014  Bob Spunt, Ph.D.
 test_tag = 0;
-
-%% Check for Psychtoolbox %%
-try
-    ptbVersion = PsychtoolboxVersion;
-catch
-    url = 'https://psychtoolbox.org/PsychtoolboxDownload';
-    fprintf('\n\t!!! WARNING !!!\n\tPsychophysics Toolbox does not appear to on your search path!\n\tSee: %s\n\n', url);
-    return
-end
+Screen('Preference', 'SkipSyncTests', 1);
+PsychDefaultSetup(2);
+%
+% %% Check for Psychtoolbox %%
+% try
+%     ptbVersion = PsychtoolboxVersion;
+% catch
+%     url = 'https://psychtoolbox.org/PsychtoolboxDownload';
+%     fprintf('\n\t!!! WARNING !!!\n\tPsychophysics Toolbox does not appear to on your search path!\n\tSee: %s\n\n', url);
+%     return
+% end
 
 
 %% Print Title %%
@@ -84,16 +86,42 @@ switch upper(computer)
     % Do nothing - return empty chosen_device
     inputDevice = [];
 end
-resp_set = ptb_response_set([defaults.valid_keys defaults.escape]); % response set
+
+resp_set = ptb_response_set([defaults.valid_keys defaults.start defaults.trigger defaults.end defaults.escape]); % response set
+
 
 %% Initialize Screen %%
-try
-    w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1, defaults.screenres); % setup screen
-catch
-    disp('Could not change to recommend screen resolution. Using current.');
-    w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1);
-end
+% try
+%     w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1, defaults.screenres); % setup screen
+% catch
+%     disp('Could not change to recommend screen resolution. Using current.');
+%     w = ptb_setup_screen(0,250,defaults.font.name,defaults.font.size1);
+% end
 
+screens                       = Screen('Screens'); % Get the screen numbers
+p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
+p.ptb.white                   = WhiteIndex(p.ptb.screenNumber); % Define black and white
+p.ptb.black                   = BlackIndex(p.ptb.screenNumber);
+[p.ptb.window, p.ptb.rect]    = PsychImaging('OpenWindow', p.ptb.screenNumber, p.ptb.black);
+[p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize', p.ptb.window);
+p.ptb.ifi                      = Screen('GetFlipInterval', p.ptb.window);
+Screen('BlendFunction', p.ptb.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA'); % Set up alpha-blending for smooth (anti-aliased) lines
+Screen('TextFont', p.ptb.window, 'Arial');
+Screen('TextSize', p.ptb.window, 36);
+[p.ptb.xCenter, p.ptb.yCenter] = RectCenter(p.ptb.rect);
+p.fix.sizePix                  = 40; % size of the arms of our fixation cross
+p.fix.lineWidthPix             = 4; % Set the line width for our fixation cross
+% Now we set the coordinates (these are all relative to zero we will let
+% the drawing routine center the cross in the center of our monitor for us)
+p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
+p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
+p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
+
+w.win = p.ptb.window;
+w.rect = p.ptb.rect;
+w.white = p.ptb.white;
+w.black = p.ptb.black;
+HideCursor;
 %% Make Images Into Textures %%
 DrawFormattedText(w.win,sprintf('LOADING\n\n0%% complete'),'center','center',w.white,defaults.font.wrap);
 Screen('Flip',w.win);
@@ -106,7 +134,7 @@ for i = 1:nStim
     slideTex{i} = Screen('MakeTexture',w.win,tmp2);
     DrawFormattedText(w.win,sprintf('LOADING\n\n%d%% complete', ceil(100*i/nStim)),'center','center',w.white,defaults.font.wrap);
     Screen('Flip',w.win);
-end;
+end
 instructTex = Screen('MakeTexture', w.win, imread([defaults.path.stimpractice filesep 'instruction.jpg']));
 fixTex      = Screen('MakeTexture', w.win, imread([defaults.path.stimpractice filesep 'fixation.jpg']));
 line1       = strcat('Is the person', repmat('\n', 1, defaults.font.linesep));
