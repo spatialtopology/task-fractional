@@ -194,11 +194,11 @@ fprintf('\nForce Quit Key:        %s\n', defaults.escape);
 fprintf('%s\n', repmat('-', 1, length(script_name)));
 
 % Get Subject ID ________________________________________________
-if ~test_tag
-    subjectID = ptb_get_input_string('\nEnter Subject ID: ');
-else
-    subjectID = 'TEST';
-end
+% if ~test_tag
+%     subjectID = ptb_get_input_string('\nEnter Subject ID: ');
+% else
+%     subjectID = 'TEST';
+% end
 
 % Setup Input Device(s) %%
 switch upper(computer)
@@ -261,7 +261,7 @@ if ~exist(defaults.path.data,'dir')
         error(saveDataMsgID,'Cannot write in directory %s due to the following error: %s',pwd,saveDataMsg);
     end
 end
-logfile=fullfile(defaults.path.data, sprintf('LOG_whyhow_sub%s.txt', subjectID));
+logfile=fullfile(defaults.path.data, sprintf('LOG_whyhow_sub%s.txt', sub_num));
 fprintf('\nA running log of this session will be saved to %s\n',logfile);
 fid=fopen(logfile,'a');
 if fid<1
@@ -358,11 +358,11 @@ try
         DrawFormattedText(w.win, pbcue,'center','center', w.white, defaults.font.wrap);
 
         % Present Question Screen and Prepare First ISI (Blank) Screen ________________________________________________
-        WaitSecs('UntilTime',anchor + blockSeeker(b,3)); Screen('Flip', w.win); % p2_question_cue
+        WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3)); Screen('Flip', w.win); % p2_question_cue
         Screen('FillRect', w.win, w.black);
 
         % Present Blank Screen Prior to First Trial ________________________________________________
-        WaitSecs('UntilTime',anchor + blockSeeker(b,3) + defaults.cueDur); Screen('Flip', w.win); % p3_fixation_onset
+        WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur); Screen('Flip', w.win); % p3_fixation_onset
 
         %==================================================================
         % BEGIN TRIAL LOOP
@@ -371,7 +371,7 @@ try
 
             %% Prepare Screen for Current Trial %%
             Screen('DrawTexture',w.win,slideTex{tmpSeeker(t,5)})
-            if t==1 , WaitSecs('UntilTime',anchor + blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
+            if t==1 , WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
             else WaitSecs('UntilTime',anchor + offset_dur + defaults.ISI); end
 
             % Present Screen for Current Trial & Prepare ISI Screen ________________________________________________
@@ -440,9 +440,9 @@ result.isicues      = design.isicues;
 
 % Save Data to Matlab Variable ____________________________________________
 d=clock;
-outfile=sprintf('whyhow_%s_order%d_%s_%02.0f-%02.0f.mat',subjectID,order,date,d(4),d(5));
+outfile=sprintf('whyhow_%s_order%d_%s_%02.0f-%02.0f.mat',sub_num,order,date,d(4),d(5));
 try
-    save([sub_save_dir filesep outfile], 'subjectID', 'result', 'slideName', 'defaults');
+    save([sub_save_dir filesep outfile], 'sub_num', 'result', 'slideName', 'defaults');
 catch
 	fprintf('couldn''t save %s\n saving to whyhow.mat\n', outfile);
 	save whyhow.mat
