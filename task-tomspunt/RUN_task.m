@@ -178,6 +178,7 @@ T.param_cond_num               = trialSeeker(:,3);
 % T.param_cond_type              = % condition (1=WhyFace, 2=WhyHand, 3=HowFace, 4=HowHand)
 T.param_normative_response     = trialSeeker(:,4);
 T.param_stimulus_no            = trialSeeker(:,5);
+T.param_fmriSession            = 4;
 %     trialSeeker (stores trial-wise runtime data)
 %     1 - block #
 %     2 - trial # (within-block)
@@ -410,6 +411,7 @@ try
         T.p2_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
 %         end
         T.p3_trialoffset(8*(b-1) + t) = offset_dur;
+        T.param_cond_type(8*(b-1) + t) = pbcue;
         end % END TRIAL LOOP
 
         % Store Block Data & Print to Logfile ________________________________________________
