@@ -36,7 +36,7 @@ switch task1
         t1 = fullfile(main_dir, 'task-tomspunt','RUN_task');
     case 'posner'
         chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-posnerAR' ), ''')');
-        t1 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'posner');
+        t1 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'RUN_posner');
     case 'memory'
         chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
         t1 = fullfile(main_dir, 'task-memory','memorizationTask');
@@ -50,7 +50,7 @@ switch task2
         t2 = fullfile(main_dir, 'task-tomspunt','RUN_task');
     case 'posner'
         chdir_t2 = strcat('cd(''', fullfile(main_dir,'task-posnerAR') , ''')');
-        t2 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'posner');
+        t2 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'RUN_posner');
     case 'memory'
         chdir_t2 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
         t2 = fullfile(main_dir, 'task-memory','memorizationTask');
