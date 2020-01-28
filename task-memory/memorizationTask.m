@@ -320,7 +320,7 @@ Screen('Flip',p.ptb.window);
 % 1) wait for 's' key, once pressed, automatically flips to fixation
 % 2) wait for trigger '5'
 WaitKeyPress(p.keys.start); % press s
-Screen('DrawLines', p.ptb.window, p.fix.allCoords,p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter]);
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
 Screen('Flip', p.ptb.window);
 %
 %         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
@@ -337,12 +337,11 @@ WaitSecs(TR*6);
 % ------------------------------------------------------------------------------
 
 [cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud1',sub_num);
-% insert distration task
-distraction(p, cfg, 'task1', sub_num);
+calculation(p, cfg, sub_num, 1);
 [cfg,expParam, test1_accuracy] = mt_test(p,cfg,expParam,logFile, 'test1',sub_num);
+% -------------------------------------------------------------------------
 [cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud2',sub_num);
-% insert distraction task
-distraction(p, cfg,  'task2',sub_num);
+calculation(p, cfg, sub_num, 2);
 [cfg,expParam, test2_accuracy] = mt_test(p, cfg,expParam,logFile, 'test2',sub_num);
 
 

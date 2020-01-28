@@ -89,14 +89,14 @@ filelength = numel(dir([practice_path '/*.png']));
 for int = 1:filelength
     intro_name                   = ['memory_practice_slides.0', sprintf('%02d',int),'.png'];
     intro_filename               = fullfile(practice_path, intro_name);
-    
+
     Screen('TextSize',p.ptb.window,72);
     start.texture = Screen('MakeTexture',p.ptb.window, imread(intro_filename));
     Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
     Screen('Flip',p.ptb.window);
     WaitSecs(0.2);
     KbWait();
-    
+
 end
 
 WaitSecs(0.2);
@@ -136,11 +136,11 @@ for i = 1:length(study_list)
     % study_list(i)
     intro_name                   = ['memory_image_', sprintf('%02d',study_list(i)),'.png'];
     study_filename               = fullfile(image_path, intro_name);
-    
+
     start.texture = Screen('MakeTexture',p.ptb.window, imread(study_filename));
     Screen('DrawTexture',p.ptb.window,start.texture);
     Screen('Flip',p.ptb.window);
-    
+
     WaitSecs(1);
 end
 % 3.present 5 images
@@ -169,7 +169,7 @@ for i = 1:length(test_list)
     % study_list(i)
     test_name                   = ['memory_image_', sprintf('%02d',test_list(i)),'.png'];
     test_filename               = fullfile(image_path, test_name);
-    
+
     Screen('TextSize',p.ptb.window,36);
     imageTexture = Screen('MakeTexture',p.ptb.window, imread(test_filename));
     Screen('DrawTexture',p.ptb.window,imageTexture,[],[]);
@@ -189,14 +189,15 @@ for i = 1:length(test_list)
     textLXc = p.ptb.xCenter - rXc; % p.ptb.xCenter-250-60,
     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
     DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
-    
+
     [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip',p.ptb.window);
-    
+
     keyCode = zeros(1,256);
-    
+
     while (GetSecs - StimulusOnsetTime) < task_duration
         answer = 99;
         RT = 99;
+        actual_key = 99;
         % check the keyboard
         [keyIsDown,secs, keyCode] = KbCheck(-3);
 
@@ -254,7 +255,7 @@ line4 = ('\n*********************************\n*********************************
 DrawFormattedText(p.ptb.window, [line1 line2 line3 line4], 'center','center', cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
 Screen('Flip',p.ptb.window);
 KbWait();
-                      
+
 % _________________________ 7. End Instructions _______________________________
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);

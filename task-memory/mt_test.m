@@ -54,6 +54,7 @@ T                              = array2table(zeros(size(stimList,1),size(vnames,
 T.Properties.VariableNames     = vnames;
 T.p2_image_filename            = cell(size(stimList,1),1);
 T.param_memory_session_name    = cell(size(stimList,1),1);
+T.p3_responsekeyname           = cell(size(stimList,1),1);
 
 T.param_memory_session_name(:) = {sesName};
 T.param_fmriSession(:)         = 4;
@@ -105,7 +106,7 @@ for trl = 1 : length(stimList)
 % _________________________ 1. Fixtion Jitter mean 1 sec _______________________
 
         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
-        DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
+        DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.whiteTextColor);
         T.p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
         timeFix = sessionCfg.preStim(1) + ((sessionCfg.preStim(2) - sessionCfg.preStim(1)).*rand(1,1));
         T.p1_fixation_duration(trl) = timeFix;
@@ -133,8 +134,8 @@ for trl = 1 : length(stimList)
             %             textYc = p.ptb.yCenter + Yc + cDist*4;
             textRXc = p.ptb.xCenter + rXc; % p.ptb.xCenter+120,
             textLXc = p.ptb.xCenter - rXc; % p.ptb.xCenter-250-60,
-            DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
-            DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
+            DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
+            DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
 
             [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip', p.ptb.window);
 
@@ -153,7 +154,7 @@ for trl = 1 : length(stimList)
         case('w') % show words
             currentWord = stimList{trl}(7:end-4);
             Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
-            DrawFormattedText(p.ptb.window, currentWord, 'center', 'center', cfg.text.basicTextColor);
+            DrawFormattedText(p.ptb.window, currentWord, 'center', 'center', cfg.text.whiteTextColor);
             [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip', p.ptb.window);
 
             thisGetSecs = GetSecs;
@@ -176,36 +177,42 @@ for trl = 1 : length(stimList)
         while (GetSecs - StimulusOnsetTime) < task_duration
             answer = 99;
             RT = 99;
+            actual_key = 99;
+            responsekeyname = 'nan';
             % check the keyboard
             [keyIsDown,secs, keyCode] = KbCheck(-3);
             FlushEvents('keyDown');
             if keyIsDown
-                if keyCode(KbName(cfg.keys.oldKey))
+                % if keyCode(KbName(cfg.keys.oldKey))
+                if keyCode(KbName('1!'))
                     %             respToBeMade = false;
                     answer = 1;
                     actual_key = 1;
+                    responsekeyname = 'left';
                     RT = secs-StimulusOnsetTime;
                     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.experimenterColor); % Text output of mouse position draw in the centre of the screen
-                    DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
+                    DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
                     Screen('DrawTexture', p.ptb.window, imageTexture, [],[],0);
                     Screen('Flip', p.ptb.window);
                     WaitSecs(0.5);
                     remainder_time = task_duration-0.5-RT;
-                    DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
+                    DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.whiteTextColor);
                     Screen('Flip', p.ptb.window);
                     WaitSecs(remainder_time);
-                elseif keyCode(KbName(cfg.keys.newKey))
+                % elseif keyCode(KbName(cfg.keys.newKey))
+              elseif keyCode(KbName('2@'))
                     %             respToBeMade = false;
                     answer = 0;
-                    actual_key = 4;
+                    actual_key = 2;
+                    responsekeyname = 'right';
                     RT = secs-StimulusOnsetTime;
-                    DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
+                    DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
                     DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.experimenterColor); % Text output of mouse position draw in the centre of the screen
                     Screen('DrawTexture', p.ptb.window, imageTexture, [],[],0);
                     Screen('Flip', p.ptb.window);
                     WaitSecs(0.5);
                     remainder_time = task_duration-0.5-RT;
-                    DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
+                    DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.whiteTextColor);
                     Screen('Flip', p.ptb.window);
                     WaitSecs(remainder_time);
                 end
@@ -233,6 +240,7 @@ for trl = 1 : length(stimList)
     T.p3_actual_buttonbox(trl) = actual_key;
     T.p3_responsekey(trl) = answer;
     T.p3_actual_RT(trl) = RT;
+    T.p3_responsekeyname{trl} = responsekeyname;
 
 
     % isi
@@ -242,7 +250,7 @@ for trl = 1 : length(stimList)
 end
 T.param_end_instruct_onset(:) = GetSecs;
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);
-T.test_accuracy = T.p3_correct_response == T.p3_actual_responsekey;
+T.test_accuracy = T.p3_correct_response == T.p3_responsekey;
 accuracy_freq =  sum(T.test_accuracy);
 % __________________________ save parameter ____________________________________
 sub_save_dir = cfg.files.sesSaveDir;

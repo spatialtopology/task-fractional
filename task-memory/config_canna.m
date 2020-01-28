@@ -93,15 +93,15 @@ if expParam.sessionNum == 1
     % subordinate matching keys (counterbalanced based on subNum 1-5, 6-0)
     if expParam.isEven
         % upper row
-        cfg.keys.responseKeyNames = {'1!','4$'};
+        cfg.keys.responseKeyNames = {'1!','2@'};
     else
         % middle row
-        cfg.keys.responseKeyNames = {'1!','4$'};
+        cfg.keys.responseKeyNames = {'1!','2@'};
     end
 %     cfg.keys.responseKeyNames = {'f','j'};
     cfg.keys.oldKey = cfg.keys.responseKeyNames{1};
     cfg.keys.newKey = cfg.keys.responseKeyNames{2};
-% 
+%
 %     if expParam.is15
 %         cfg.keys.oldKey = cfg.keys.responseKeyNames{1};
 %         cfg.keys.newKey = cfg.keys.responseKeyNames{2};
