@@ -96,7 +96,7 @@ TR                             = 0.46;
 
 
 % A. practice __________________________________________________________________
-
+HideCursor;
 practice_path                  = fullfile(main_dir, 'practice', 'introduction');
 filelength = numel(dir([practice_path '/*.png']));
 for int = 1:filelength
@@ -134,7 +134,7 @@ Screen('Flip',p.ptb.window);
 
 %% ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
-HideCursor;
+
 WaitKeyPress(p.keys.start);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
