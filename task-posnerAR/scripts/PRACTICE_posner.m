@@ -52,7 +52,7 @@ p.rect.RcenteredRect           = CenterRectOnPointd(p.rect.baseRect, 100, p.ptb.
 task_dir                       = pwd;
 main_dir                       = fileparts(task_dir);
 taskname                       = 'posner';
-counterbalancefile             = fullfile(main_dir,'design', 's04_counterbalance', 'sub-0001_task-posner_counterbalance.csv']);
+counterbalancefile             = fullfile(main_dir,'design', 's04_counterbalance', 'sub-0001_task-posner_counterbalance.csv');
 countBalMat                    = readtable(counterbalancefile);
 % sub_save_dir                   = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh' );
 % if ~exist(sub_save_dir, 'dir')
