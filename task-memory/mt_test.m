@@ -48,7 +48,8 @@ end
 vnames = {'param_fmriSession','param_experiment_start','param_memory_session_name'...
                                 'p1_fixation_onset','p1_fixation_duration',...
                                 'p2_image_onset','p2_image_filename',...
-                                'p3_correct_response','p3_actual_responsekey','p3_actual_responseonset','p3_actual_RT',...
+                                'p3_correct_response','p3_actual_buttonbox','p3_responsekey','p3_responsekeyname',...
+                                'p3_actual_responseonset','p3_actual_RT',...
                                 'p4_fixation_onset','p4_fixation_duration',...
                                 'param_end_instruct_onset', 'param_experimentDuration', 'test_accuracy'};
 T                              = array2table(zeros(size(stimList,1),size(vnames,2)));
@@ -180,6 +181,7 @@ for trl = 1 : length(stimList)
             RT = 99;
             actual_key = 99;
             responsekeyname = 'nan';
+            secs = 99;
             % check the keyboard
             [keyIsDown,secs, keyCode] = KbCheck(-3);
             FlushEvents('keyDown');
@@ -242,6 +244,7 @@ for trl = 1 : length(stimList)
     T.p3_responsekey(trl) = answer;
     T.p3_actual_RT(trl) = RT;
     T.p3_responsekeyname{trl} = responsekeyname;
+    T.p3_actual_responseonset(trl) = secs;
 
 
     % isi
