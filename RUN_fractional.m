@@ -8,8 +8,6 @@
 
 % 1. grab participant number ___________________________________________________
 clear all;
-% prompt = 'session number : ';
-% session = input(prompt);
 prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
 sub_num = input(prompt);
 
@@ -25,7 +23,11 @@ countBalMat                     = readtable(counterbalancefile);
 task1 = string(countBalMat.task1{sub_num});
 task2 = string(countBalMat.task2{sub_num});
 
-fprintf(strcat('\nToday, sub-', sprintf('%04d', sub_num) ,' will go through tasks: \n 1)', task1 ,'   \n 2) ', task2 , '\n\n'))
+line = strcat('Today, sub-', sprintf('%04d', sub_num) ,' will go through tasks:');
+task1_line = strcat(' .    1)  ', task1 );
+task2_line = strcat(' .    2)  ', task2 );
+boxTop(1:length(line))='=';
+fprintf('\n%s\n\n %s\n %s\n %s\n \n%s\n',boxTop,line,task1_line,task2_line,boxTop)
 
 switch task1
     case 'tomsaxe'
