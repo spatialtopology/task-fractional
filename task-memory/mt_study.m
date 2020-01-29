@@ -98,7 +98,7 @@ T.Properties.VariableNames     = vnames;
 T.param_memory_session_name    = cell(size(stimList,1),1);
 T.param_memory_session_name(:) = {sesName};
 T.p2_stimuli_filename          = cell(size(stimList,1),1);
-T.param_fmriSession            = 4;
+T.param_fmriSession(:)            = 4;
 
 % G. instructions _____________________________________________________
 main_dir                       = pwd;
