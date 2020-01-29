@@ -10,7 +10,7 @@ function PRACTICE_tomspunt(sub_num)
 test_tag = 0;
 Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(2);
-%
+HideCursor;
 % %% Check for Psychtoolbox %%
 % try
 %     ptbVersion = PsychtoolboxVersion;
@@ -87,7 +87,7 @@ switch upper(computer)
     inputDevice = [];
 end
 
-resp_set = ptb_response_set([defaults.valid_keys defaults.start defaults.trigger defaults.end defaults.escape]); % response set
+resp_set = ptb_response_set([defaults.practice_keys  defaults.start defaults.trigger defaults.end defaults.escape]); % response set
 
 
 %% Initialize Screen %%
@@ -121,7 +121,7 @@ w.win = p.ptb.window;
 w.rect = p.ptb.rect;
 w.white = p.ptb.white;
 w.black = p.ptb.black;
-HideCursor;
+
 %% Make Images Into Textures %%
 DrawFormattedText(w.win,sprintf('LOADING\n\n0%% complete'),'center','center',w.white,defaults.font.wrap);
 Screen('Flip',w.win);
