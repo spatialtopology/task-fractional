@@ -246,7 +246,9 @@ line1 = '*********************************\n*********************************\n\
 line2 = strcat('\nThe total accuracy was - ', num2str(total_acc), ' - out of 10.');
 line3 = strcat('\nPlease pay - ', num2str(total_acc*2), ' - dollars.\nThank you !!\n');
 line4 = ('\n*********************************\n*********************************\n');
-DrawFormattedText(p.ptb.window, [line1 line2 line3 line4], 'center','center', cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
+lineend = ('\n\n\nPress Space to move on');
+
+DrawFormattedText(p.ptb.window, [line1 line2 line3 line4 lineend], 'center','center', cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
 Screen('Flip',p.ptb.window);
 KbWait();
 
@@ -256,7 +258,7 @@ KbWait();
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 Screen('Flip',p.ptb.window);
-WaitSecs(2);
+WaitSecs(0.2);
 KbWait();
 
 
