@@ -81,7 +81,9 @@ vnames = {'param_fmriSession', 'param_counterbalanceVer','RAW_param_triggerOnset
     'RAW_p2_cue_onset','RAW_p2_cue_offset',...
     'RAW_p3_target_onset',...
     'RAW_p4_responseonset','RAW_p4_fixation_fillin',...
-    'RAW_p5_fixation_onset'};
+    'RAW_p5_fixation_onset',...
+    'RAW_param_end_instruct_onset', 'experimentDuration'};
+
 T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 T.param_fmriSession(:)         = 4;
@@ -263,10 +265,8 @@ end
 % _________________________ End Instructions _____________________________
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
-T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
-WaitKeyPress(p.keys.end);
-
-T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
+T.RAW_param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
+T.experimentDuration(:) = T.RAW_param_end_instruct_onset(1) - T.RAW_param_triggerOnset(1);
 
 % ------------------------------------------------------------------------
 %                              save parameter
@@ -286,8 +286,11 @@ writetable(T,saveFileName);
 psychtoolbox_saveFileName = fullfile(sub_save_dir, [strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_psychtoolbox_params.mat' ]);
 save(psychtoolbox_saveFileName, 'p');
 
+WaitKeyPress(p.keys.end);
+WaitSecs(0.2);
 ShowCursor;
-
+close all;
+sca;
 
     function WaitKeyPress(kID)
         while KbCheck(-3); end
@@ -303,7 +306,6 @@ ShowCursor;
             end
         end
     end
-close all;
-sca;
+
 
 end
