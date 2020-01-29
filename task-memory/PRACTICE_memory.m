@@ -7,8 +7,6 @@ function PRACTICE_memory(sub_num)
 
 global p
 Screen('Preference', 'SkipSyncTests', 1);
-Screen( p.ptb.window, 'TextFont', 'Helvetica');
-Screen( p.ptb.window, 'TextSize', 30);
 HideCursor;
 main_dir = pwd;
 PsychDefaultSetup(2);
@@ -37,6 +35,9 @@ Screen('BlendFunction', p.ptb.window,'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA'); %
 
 Width = RectWidth(p.ptb.rect);
 Height = RectHeight(p.ptb.rect);
+
+Screen( p.ptb.window, 'TextFont', 'Helvetica');
+Screen( p.ptb.window, 'TextSize', 30);
 
 %% E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
