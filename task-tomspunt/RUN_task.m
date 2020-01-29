@@ -90,7 +90,8 @@ if isempty(order), order = 0; end
 % end
 % PsychDefaultSetup(2);
 % Print Title ________________________________________________
-script_name='----------- Images Test -----------'; boxTop(1:length(script_name))='=';
+script_name='----------- Images Test -----------';
+boxTop(1:length(script_name))='=';
 fprintf('\n%s\n%s\n%s\n',boxTop,script_name,boxTop)
 
 % DEFAULTS ________________________________________________
@@ -158,17 +159,22 @@ totalTime           = defaults.TR*numTRs;
 %     4 - normative response (1=Yes, 2=No) [used to evaluate accuracy]
 %     5 - stimulus # (corresponds to qim & qdata from design.mat file)
 
-vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
+vnames = {'param_fmriSession', 'param_counterbalanceVer',...
     'param_block_num','param_trial_num',...
     'param_cond_type_num','param_cond_type_string',...
     'param_normative_response',...
     'param_ques_type_string',...
     'param_image_num','param_image_filename',...
-    'p1_block_question','p1_block_isi'...
-    'p2_trial_onset','p2_isi',...
+    'p1_block_fix','p1_block_fix_dur','p1_block_question_onset','p1_block_isi_blackscreen','p1_question_duration',...
+    'p2_image_onset','p2_image_duration',...
     'p3_RT','p3_actual_response_key',...
-    'p4_trialoffset',...
-    'param_end_instruct_onset', 'param_experimentDuration'};
+    'p4_short_question_onset',...
+    'param_end_instruct_onset','param_experimentDuration',...
+    'RAW_param_triggerOnset',...
+    'RAW_p1_block_fix','RAW_p1_block_question_onset','RAW_p1_block_isi_blackscreen',...
+    'RAW_p2_image_onset',...
+    'RAW_p4_short_question_onset',...
+    'RAW_param_end_instruct_onset'};
 T                              = array2table(zeros(length(design.trialSeeker),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 
@@ -178,12 +184,11 @@ T.param_block_num              = trialSeeker(:,1);
 T.param_trial_num              = trialSeeker(:,2);
 list_condition                 = {'c1_WhyFace', 'c2_WhyHand', 'c3_HowFace', 'c4_HowHand'};
 T.param_cond_type_num          = trialSeeker(:,3);
-T.param_cond_type_string       = {list_condition{alldesign{1,1}.trialSeeker(:,3)}}';
+T.param_cond_type_string       = {list_condition{design.trialSeeker(:,3)}}';
 T.param_normative_response     = trialSeeker(:,4);
 T.param_ques_type_string       = design.qim(:,1);
 T.param_image_num              = trialSeeker(:,5);
 T.param_image_filename         = design.qim(:,2);
-
 
 
 % D. Print Defaults ________________________________________________
@@ -236,6 +241,7 @@ w.white = p.ptb.white;
 w.black = p.ptb.black;
 HideCursor(p.ptb.screenNumber);
 
+
 % G. Initialize Logfile (Trialwise Data Recording) _____________________________
 d=clock;
 
@@ -245,8 +251,7 @@ if ~exist(defaults.path.data,'dir')
         error(saveDataMsgID,'Cannot write in directory %s due to the following error: %s',pwd,saveDataMsg);
     end
 end
-logfile = fullfile(sub_save_dir, sprintf('LOG_whyhow_sub-%04d.txt', sub_num));
-
+logfile = fullfile(sub_save_dir, sprintf('LOG_sub-%04d_task-tomspunt_order-%02d_time-%s_%02.0f-%02.0f.txt', sub_num, order,date,d(4),d(5)));
 
 fprintf('\nA running log of this session will be saved to %s\n',logfile);
 fid=fopen(logfile,'a');
@@ -259,7 +264,7 @@ fprintf(fid,'Started: %s %2.0f:%02.0f\n',date,d(4),d(5));
 % H. Make Images Into Textures ________________________________________________
 DrawFormattedText(w.win,sprintf('LOADING\n\n0%% complete'),'center','center',w.white,defaults.font.wrap);
 Screen('Flip',w.win);
-slideName = cell(length(design.qim));
+slideName = cell(length(design.qim),1);
 slideTex = slideName;
 for i = 1:length(design.qim)
     slideName{i} = design.qim{i,2};
@@ -270,7 +275,7 @@ for i = 1:length(design.qim)
     Screen('Flip',w.win);
 end
 instructTex = Screen('MakeTexture', w.win, imread([defaults.path.stim filesep 'instruction.jpg']));
-fixTex = Screen('MakeTexture', w.win, imread([defaults.path.stim filesep 'fixation.jpg']));
+fixTex      = Screen('MakeTexture', w.win, imread([defaults.path.stim filesep 'fixation.jpg']));
 line1       = strcat('Is the person', repmat('\n', 1, defaults.font.linesep));
 
 
@@ -294,142 +299,139 @@ instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 %                              START EXPERIMENT
 % ------------------------------------------------------------------------------
 
-%% _____ 1. Present Instruction Screen __________________________________________
-% Screen('DrawTexture',w.win, instructTex);
+% ------------------------------------------------------------------------------
+%                       1. Present Instruction Screen
+% ------------------------------------------------------------------------------
 start.texture = Screen('MakeTexture',w.win, imread(instruct_start));
 Screen('DrawTexture',w.win,start.texture,[],[]);
 Screen('Flip',w.win);
 
 
-%% _____ 2. Wait for trigger ____________________________________________________
+% ------------------------------------------------------------------------------
+%                           2. Wait for trigger
+% ------------------------------------------------------------------------------
 WaitKeyPress(KbName('s'));
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
 
 WaitKeyPress(KbName('5%'));
-T.param_triggerOnset(:) = GetSecs;
-anchor = T.param_triggerOnset(1);
+T.RAW_param_triggerOnset(:) = GetSecs;
+anchor = T.RAW_param_triggerOnset(1);
 WaitSecs(TR*6);
 
-try
 
-    if test_tag, nBlocks = 1; totalTime = round(totalTime*.075); % for test run
-    else nBlocks = length(blockSeeker); end
+nBlocks = length(blockSeeker);
 
-%% _____ 3. Block look start ___________________________________________________
-    for b = 1:nBlocks
+% ------------------------------------------------------------------------------
+% .                          3. Block look start
+% ------------------------------------------------------------------------------
+for b = 1:nBlocks
 
-        % __ 3-1) Present Fixation Screen Until Question Onset _________________
-        Screen('DrawTexture',w.win, fixTex);
-        T.p1_block_fix(8*(b-1)+1:8*b) = Screen('Flip',w.win);
+    % 3-1) Present Fixation Screen Until Question Onset ________________________
+    Screen('DrawTexture',w.win, fixTex);
+    T.RAW_p1_block_fix(8*(b-1)+1:8*b) = Screen('Flip',w.win);
 
-        % __ 3-2) Get Data for This Block (While Waiting for Block Onset) ______
-        tmpSeeker   = trialSeeker(trialSeeker(:,1)==b,:);
-        pbcue       = pbc_brief{blockSeeker(b,4)};  % question cue
-        isicue      = design.isicues{blockSeeker(b,4)};  % isi cue
-        isicue_x    = isicues_xpos(blockSeeker(b,4));  % isi cue x position
-        isicue_y    = isicues_ypos(blockSeeker(b,4));  % isi cue y position
+    % 3-2) Get Data for This Block (While Waiting for Block Onset) _____________
+    tmpSeeker   = trialSeeker(trialSeeker(:,1)==b,:);
+    pbcue       = pbc_brief{blockSeeker(b,4)};  % question cue
+    isicue      = design.isicues{blockSeeker(b,4)};  % isi cue
+    isicue_x    = isicues_xpos(blockSeeker(b,4));  % isi cue x position
+    isicue_y    = isicues_ypos(blockSeeker(b,4));  % isi cue y position
 
-        % __ 3-3) Prepare Question Cue Screen (Still Waiting)___________________
-        if ~strcmpi(defaults.language, 'german')
-            Screen('TextSize',w.win, defaults.font.size1); Screen('TextStyle', w.win, 0);
-            DrawFormattedText(w.win,line1,'center','center',w.white, defaults.font.wrap);
-            Screen('TextStyle',w.win, 1); Screen('TextSize', w.win, defaults.font.size2);
+    % 3-3) Prepare Question Cue Screen (Still Waiting)__________________________
+    if ~strcmpi(defaults.language, 'german')
+        Screen('TextSize',w.win, defaults.font.size1); Screen('TextStyle', w.win, 0);
+        DrawFormattedText(w.win,line1,'center','center',w.white, defaults.font.wrap);
+        Screen('TextStyle',w.win, 1); Screen('TextSize', w.win, defaults.font.size2);
+    end
+    DrawFormattedText(w.win, pbcue,'center','center', w.white, defaults.font.wrap);
+
+    % 3-4) Present Question Screen and Prepare First ISI (Blank) Screen ________
+    WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3)); % duration of fixation
+    T.p1_block_fix_dur(8*(b-1)+1:8*b) = GetSecs - T.RAW_p1_block_fix(8*(b-1)+1);
+    T.RAW_p1_block_question_onset(8*(b-1)+1:8*b) = Screen('Flip', w.win); % p2_question_cue
+    Screen('FillRect', w.win, w.black);
+
+    % 3-5) Present Blank Screen Prior to First Trial ___________________________
+    WaitSecs('UntilTime', anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur);
+    T.RAW_p1_block_isi_blackscreen(8*(b-1)+1:8*b) = Screen('Flip', w.win); % p3_fixation_onset
+
+% ------------------------------------------------------------------------------
+%                             4. Trial loop start
+% ------------------------------------------------------------------------------
+    for t = 1:nTrialsBlock
+
+        % 4-1) Prepare Screen for Current Trial ________________________________
+        Screen('DrawTexture',w.win,slideTex{tmpSeeker(t,5)})
+        if t==1
+            WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
+            T.p1_question_duration(8*(b-1) + t) = T.RAW_p1_block_isi_blackscreen(8*(b-1)+1) - T.RAW_p1_block_question_onset(8*(b-1)+1);
+        else
+            WaitSecs('UntilTime',offset_dur + defaults.ISI);
+            T.p1_question_duration(8*(b-1) + t) = defaults.ISI;
         end
-        DrawFormattedText(w.win, pbcue,'center','center', w.white, defaults.font.wrap);
 
-        % __ 3-4) Present Question Screen and Prepare First ISI (Blank) Screen
-        WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3));
-        %% DEBUG RECORD
-        T.p1_block_question(8*(b-1)+1:8*b) = Screen('Flip', w.win); % p2_question_cue
-        Screen('FillRect', w.win, w.black);
+        % 4-2) Present Screen for Current Trial & Prepare ISI Screen ___________
+        T.RAW_p2_image_onset(8*(b-1) + t) = Screen('Flip',w.win); % IMAGE WITH OPTIONS
+        tmpSeeker(t,6) = T.RAW_p2_image_onset(8*(b-1) + t) - (anchor + TR*6);
+        if t==nTrialsBlock % present fixation after last trial of block
+            Screen('DrawTexture', w.win, fixTex);
+        else % present question reminder screen between every block trial
+            Screen('DrawText', w.win, isicue, isicue_x, isicue_y);
+        end
 
-        % __ 3-5) Present Blank Screen Prior to First Trial ____________________
-        WaitSecs('UntilTime', anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur);
-        %% DEBUG RECORD
-        T.p1_block_isi(8*(b-1)+1:8*b) = Screen('Flip', w.win); % p3_fixation_onset
+        % 4-3) Look for Button Press ___________________________________________
+        [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
+        offset_dur = Screen('Flip', w.win); % QUESTION CUE
 
-
-%% _____ 4. Trial loop start ___________________________________________________
-
-        for t = 1:nTrialsBlock
-
-            % __ 4-1) Prepare Screen for Current Trial %%
-            Screen('DrawTexture',w.win,slideTex{tmpSeeker(t,5)})
-            if t==1 , WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
-            % else WaitSecs('UntilTime',anchor +TR*6+ offset_dur + defaults.ISI); end
-          else WaitSecs('UntilTime',offset_dur + defaults.ISI);end
-            % else WaitSecs('UntilTime',offset_dur + defaults.ISI); end
-            % __ 4-2) Present Screen for Current Trial & Prepare ISI Screen ____
-            T.p2_trial_onset(8*(b-1) + t) = Screen('Flip',w.win);
-
-
-            % onset = GetSecs;
-            tmpSeeker(t,6) = T.p2_trial_onset(8*(b-1) + t) - anchor;
-            if t==nTrialsBlock % present fixation after last trial of block
-                Screen('DrawTexture', w.win, fixTex);
-            else % present question reminder screen between every block trial
-                Screen('DrawText', w.win, isicue, isicue_x, isicue_y);
+        % 4-4) Present ISI, ____________________________________________________
+        % and Look a Little Longer for a Response if None Was Registered _______
+        T.p2_image_duration(8*(b-1) + t) = offset_dur - T.RAW_p2_image_onset(8*(b-1) + t);
+        norespyet = isempty(resp);
+        if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
+        if ~isempty(resp)
+            if strcmpi(resp, defaults.escape)
+                sca; rmpath(defaults.path.utilities)
+                fprintf('\nESCAPE KEY DETECTED\n'); return
             end
+            tmpSeeker(t,8) = find(strcmpi(KbName(resp_set), resp));
+            tmpSeeker(t,7) = rt + (defaults.maxDur*norespyet);
+        end
+        tmpSeeker(t,9) = offset_dur;
+        T.p3_RT(8*(b-1) + t) = tmpSeeker(t,7);
+        T.p3_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
+        T.RAW_p4_short_question_onset(8*(b-1) + t) = offset_dur;
+    end % END TRIAL LOOP
 
-            % __ 4-3) Look for Button Press ____________________________________
-            [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
-            % offset_dur = GetSecs - anchor - TR*6;
-            offset_dur = GetSecs;
-            % __ 4-4) Present ISI, _____________________________________________
-            % and Look a Little Longer for a Response if None Was Registered ___
-            %% DEBUG RECORD
-            % T. p2_question_cue
-            T.p2_isi(8*(b-1) + t) = Screen('Flip', w.win);
-            norespyet = isempty(resp);
-            if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
-            if ~isempty(resp)
-                if strcmpi(resp, defaults.escape)
-                    sca; rmpath(defaults.path.utilities)
-                    fprintf('\nESCAPE KEY DETECTED\n'); return
-                end
-                tmpSeeker(t,8) = find(strcmpi(KbName(resp_set), resp));
-                %                 tmpSeeker(t,8) = str2num(resp(1));
-                %                 tmpSeeker(t,8) = resp;
-                tmpSeeker(t,7) = rt + (defaults.maxDur*norespyet);
-            end
-            tmpSeeker(t,9) = offset_dur;
-            T.p3_RT(8*(b-1) + t) = tmpSeeker(t,7);
-            T.p3_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
-            T.p4_trialoffset(8*(b-1) + t) = offset_dur;
-        end % END TRIAL LOOP
 
-%% ____ 5. Store Block Data & Print to Logfile ________________________________________________
-        trialSeeker(trialSeeker(:,1)==b,:) = tmpSeeker;
-        for t = 1:size(tmpSeeker,1), fprintf(fid,[repmat('%d\t',1,size(tmpSeeker,2)) '\n'],tmpSeeker(t,:)); end
-        tmpFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_TEMPbeh.csv' ]);
-        writetable(T,tmpFileName);
+% ------------------------------------------------------------------------------
+%               5. Store Block Data & Print to Logfile
+% ------------------------------------------------------------------------------
+    trialSeeker(trialSeeker(:,1)==b,:) = tmpSeeker;
+    for t = 1:size(tmpSeeker,1), fprintf(fid,[repmat('%d\t',1,size(tmpSeeker,2)) '\n'],tmpSeeker(t,:)); end
+    tmpFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_TEMPbeh.csv' ]);
+    writetable(T,tmpFileName);
 
-    end % END BLOCK LOOP
+end % END BLOCK LOOP
 
-%% ____ 6. Present Fixation Screen Until End of Scan ________________________________________________
-    WaitSecs('UntilTime', anchor + totalTime + 6*TR);
 
-catch
-
-    ptb_exit;
-    rmpath(defaults.path.utilities);
-    psychrethrow(psychlasterror);
-
-end
+% ------------------------------------------------------------------------------
+%             6. Present Fixation Screen Until End of Scan
+% ------------------------------------------------------------------------------
+WaitSecs('UntilTime', anchor + totalTime + 6*TR);
 
 % Create Results Structure ________________________________________________
 result.blockSeeker  = blockSeeker;
-result.trialSeeker  = trialSeeker;
-result.qim          = design.qim;
+result.trialSeeker  = trialSeeker; % check
+result.qim          = design.qim; % check
 result.qdata        = design.qdata;
 result.preblockcues = design.preblockcues;
 result.isicues      = design.isicues;
 
 % Save Data to Matlab Variable ____________________________________________
 d=clock;
-outfile = sprintf('sub-%04d_task-tomspunt_order-%01d_beh', sub_num, order);
+outfile = sprintf('sub-%04d_task-tomspunt_order-%02d_beh', sub_num, order);
 % outfile=sprintf('whyhow_sub-%04d_order%d_%s_%02.0f-%02.0f.mat',sub_num,order,date,d(4),d(5));
 try
     save([sub_save_dir filesep outfile], 'sub_num', 'result', 'slideName', 'defaults');
@@ -444,14 +446,20 @@ end
 % ------------------------------------------------------------------------------
 end_texture = Screen('MakeTexture',w.win, imread(instruct_end));
 Screen('DrawTexture',w.win,end_texture,[],[]);
-T.param_end_instruct_onset(:) = Screen('Flip',w.win);
-WaitKeyPress(KbName('e'));
+T.RAW_param_end_instruct_onset(:) = Screen('Flip',w.win);
 
-T.param_experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
+% convert variables
+T.p1_block_fix(:) = T.RAW_p1_block_fix(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p1_block_question_onset(:) = T.RAW_p1_block_question_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p1_block_isi_blackscreen(:) = T.RAW_p1_block_isi_blackscreen(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p2_image_onset(:) = T.RAW_p2_image_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p4_short_question_onset = T.RAW_p4_short_question_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.param_end_instruct_onset(:) = T.RAW_param_end_instruct_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.total_param_experimentDuration(:) = T.RAW_param_end_instruct_onset(:) - T.RAW_param_triggerOnset(:);
 
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
-
+WaitKeyPress(KbName('e'));
 ShowCursor;
 
 % Exit ____________________________________________________________________
