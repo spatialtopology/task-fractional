@@ -151,7 +151,7 @@ blockSeeker(:,3)    = eventTimes(1:end-1);
 numTRs              = ceil(eventTimes(end)/defaults.TR);
 totalTime           = defaults.TR*numTRs;
 
-% C. making output table ________________________________________________________
+% C. output table variables ________________________________________________________
 %     trialSeeker (stores trial-wise runtime data)
 %     1 - block #
 %     2 - trial # (within-block)
@@ -300,7 +300,7 @@ instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 % ------------------------------------------------------------------------------
 
 % ------------------------------------------------------------------------------
-%                       1. Present Instruction Screen
+%                       0. Present Instruction Screen
 % ------------------------------------------------------------------------------
 start.texture = Screen('MakeTexture',w.win, imread(instruct_start));
 Screen('DrawTexture',w.win,start.texture,[],[]);
@@ -308,7 +308,7 @@ Screen('Flip',w.win);
 
 
 % ------------------------------------------------------------------------------
-%                           2. Wait for trigger
+%                           1. Wait for trigger
 % ------------------------------------------------------------------------------
 WaitKeyPress(KbName('s'));
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
@@ -328,18 +328,18 @@ nBlocks = length(blockSeeker);
 % ------------------------------------------------------------------------------
 for b = 1:nBlocks
 
-    % 3-1) Present Fixation Screen Until Question Onset ________________________
+    % ________ 3-1. Present Fixation Screen Until Question Onset ________________________
     Screen('DrawTexture',w.win, fixTex);
     T.RAW_p1_block_fix(8*(b-1)+1:8*b) = Screen('Flip',w.win);
 
-    % 3-2) Get Data for This Block (While Waiting for Block Onset) _____________
+    % ________ 3-2. Get Data for This Block (While Waiting for Block Onset) _____________
     tmpSeeker   = trialSeeker(trialSeeker(:,1)==b,:);
     pbcue       = pbc_brief{blockSeeker(b,4)};  % question cue
     isicue      = design.isicues{blockSeeker(b,4)};  % isi cue
     isicue_x    = isicues_xpos(blockSeeker(b,4));  % isi cue x position
     isicue_y    = isicues_ypos(blockSeeker(b,4));  % isi cue y position
 
-    % 3-3) Prepare Question Cue Screen (Still Waiting)__________________________
+    % ________ 3-3. Prepare Question Cue Screen (Still Waiting)__________________________
     if ~strcmpi(defaults.language, 'german')
         Screen('TextSize',w.win, defaults.font.size1); Screen('TextStyle', w.win, 0);
         DrawFormattedText(w.win,line1,'center','center',w.white, defaults.font.wrap);
@@ -347,22 +347,22 @@ for b = 1:nBlocks
     end
     DrawFormattedText(w.win, pbcue,'center','center', w.white, defaults.font.wrap);
 
-    % 3-4) Present Question Screen and Prepare First ISI (Blank) Screen ________
+    % ________ 3-4. Present Question Screen and Prepare First ISI (Blank) Screen ________
     WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3)); % duration of fixation
     T.p1_block_fix_dur(8*(b-1)+1:8*b) = GetSecs - T.RAW_p1_block_fix(8*(b-1)+1);
     T.RAW_p1_block_question_onset(8*(b-1)+1:8*b) = Screen('Flip', w.win); % p2_question_cue
     Screen('FillRect', w.win, w.black);
 
-    % 3-5) Present Blank Screen Prior to First Trial ___________________________
+    % ________ 3-5. Present Blank Screen Prior to First Trial ___________________________
     WaitSecs('UntilTime', anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur);
     T.RAW_p1_block_isi_blackscreen(8*(b-1)+1:8*b) = Screen('Flip', w.win); % p3_fixation_onset
 
 % ------------------------------------------------------------------------------
 %                             4. Trial loop start
 % ------------------------------------------------------------------------------
-    for t = 1:nTrialsBlock
 
-        % 4-1) Prepare Screen for Current Trial ________________________________
+    for t = 1:nTrialsBlock
+        % ________ 4-1. Prepare Screen for Current Trial ________________________________
         Screen('DrawTexture',w.win,slideTex{tmpSeeker(t,5)})
         if t==1
             WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
@@ -372,7 +372,7 @@ for b = 1:nBlocks
             T.p1_question_duration(8*(b-1) + t) = defaults.ISI;
         end
 
-        % 4-2) Present Screen for Current Trial & Prepare ISI Screen ___________
+        % ________ 4-2. Present Screen for Current Trial & Prepare ISI Screen ___________
         T.RAW_p2_image_onset(8*(b-1) + t) = Screen('Flip',w.win); % IMAGE WITH OPTIONS
         tmpSeeker(t,6) = T.RAW_p2_image_onset(8*(b-1) + t) - (anchor + TR*6);
         if t==nTrialsBlock % present fixation after last trial of block
@@ -381,12 +381,12 @@ for b = 1:nBlocks
             Screen('DrawText', w.win, isicue, isicue_x, isicue_y);
         end
 
-        % 4-3) Look for Button Press ___________________________________________
+        % ________ 4-3. Look for Button Press ___________________________________________
         [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
         offset_dur = Screen('Flip', w.win); % QUESTION CUE
 
-        % 4-4) Present ISI, ____________________________________________________
-        % and Look a Little Longer for a Response if None Was Registered _______
+        % ________ 4-4. Present ISI, ____________________________________________________
+        % and Look a Little Longer for a Response if None Was Registered ________________
         T.p2_image_duration(8*(b-1) + t) = offset_dur - T.RAW_p2_image_onset(8*(b-1) + t);
         norespyet = isempty(resp);
         if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
