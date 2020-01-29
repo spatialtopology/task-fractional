@@ -1,7 +1,14 @@
 function PRACTICE_memory(sub_num)
 
+
+% ------------------------------------------------------------------------------
+%                                Parameters
+% ------------------------------------------------------------------------------
+
 global p
 Screen('Preference', 'SkipSyncTests', 1);
+Screen( p.ptb.window, 'TextFont', 'Helvetica');
+Screen( p.ptb.window, 'TextSize', 30);
 HideCursor;
 main_dir = pwd;
 PsychDefaultSetup(2);
@@ -22,8 +29,7 @@ cfg.screen.bgColor             = uint8((rgb('Grey') * 255) + 0.5);
 cfg.screen.blackbgColor        = uint8((rgb('Black') * 255) + 0.5);
 cfg.text.experimenterColor     = uint8((rgb('Lime') * 255) + 0.5);
 [p.ptb.window, p.ptb.rect]     = PsychImaging('OpenWindow',p.ptb.screenNumber,p.ptb.gray );
-% 	[w, wRect]  = Screen('OpenWindow',displays(1),0);
-% 	scrnRes     = Screen('Resolution',displays(1));               % Get Screen resolution
+
 [p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize',p.ptb.window);
 [p.ptb.xCenter, p.ptb.yCenter] = RectCenter(p.ptb.rect);
 p.ptb.ifi                      = Screen('GetFlipInterval',p.ptb.window);
@@ -32,8 +38,6 @@ Screen('BlendFunction', p.ptb.window,'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA'); %
 Width = RectWidth(p.ptb.rect);
 Height = RectHeight(p.ptb.rect);
 
-
-% 	[x0 y0]		= RectCenter([0 0 scrnRes.width scrnRes.height]);   % Screen center.
 %% E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
@@ -50,40 +54,24 @@ p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
 p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
 p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
-
-
-Screen( 'Preference', 'SkipSyncTests', 0);
-Screen( p.ptb.window, 'TextFont', 'Helvetica');
-Screen( p.ptb.window, 'TextSize', 30);
-
-% task                           = sprintf('True or False');
-% instr_1                    	   = sprintf('Press left button (1) for "True"');
-% instr_2                        = sprintf('Press right button (2) for "False"');
+% % position of old and new key __________________________________________________
+% Yc = 300; % Y coord
+% cDist = 20; % vertical line depth
+% lXc = -200; % left X coord
+% rXc = 200; % right X coord
+% lineCoords = [lXc lXc lXc rXc rXc rXc; Yc-cDist Yc+cDist Yc Yc Yc-cDist Yc+cDist];
+% %             Screen('DrawLines', p.ptb.window, lineCoords,p.fix.lineWidthPix, p.ptb.black);% [p.ptb.xCenter p.ptb.yCenter], 2);
 %
-% Screen(p.ptb.window, 'DrawText', task, p.ptb.xCenter-125, p.ptb.yCenter-60, [255]);
-% Screen(p.ptb.window, 'DrawText', instr_1, p.ptb.xCenter-300, p.ptb.yCenter, [255]);
-% Screen(p.ptb.window, 'DrawText', instr_2,p.ptb.xCenter-300, p.ptb.yCenter+60, [255]);
-%                                        Instructional screen is presented.
+% % 5-3. present same diff text __________________________________________________
+% textOld = 'old';
+% textNew = 'new';
+% textYc = p.ptb.yCenter + (RectHeight(p.ptb.rect)/2)*.30;
+% textRXc = p.ptb.xCenter + rXc; % p.ptb.xCenter+120,
+% textLXc = p.ptb.xCenter - rXc; % p.ptb.xCenter-250-60,
 
-
-% include images in the begining
-% press button
-% 5-2. present scale lines _____________________________________________________
-Yc = 300; % Y coord
-cDist = 20; % vertical line depth
-lXc = -200; % left X coord
-rXc = 200; % right X coord
-lineCoords = [lXc lXc lXc rXc rXc rXc; Yc-cDist Yc+cDist Yc Yc Yc-cDist Yc+cDist];
-%             Screen('DrawLines', p.ptb.window, lineCoords,p.fix.lineWidthPix, p.ptb.black);% [p.ptb.xCenter p.ptb.yCenter], 2);
-% 5-3. present same diff text __________________________________________________
-textOld = 'old';
-textNew = 'new';
-textYc = p.ptb.yCenter + (RectHeight(p.ptb.rect)/2)*.30;
-%             textYc = p.ptb.yCenter + Yc + cDist*4;
-textRXc = p.ptb.xCenter + rXc; % p.ptb.xCenter+120,
-textLXc = p.ptb.xCenter - rXc; % p.ptb.xCenter-250-60,
-% A. practice __________________________________________________________________
-
+% ------------------------------------------------------------------------------
+%                           1. Practice instructions
+% ------------------------------------------------------------------------------
 practice_path                  = fullfile(main_dir, 'practice', 'introduction');
 filelength = numel(dir([practice_path '/*.png']));
 for int = 1:filelength
@@ -101,7 +89,11 @@ end
 
 WaitSecs(0.2);
 KbWait();
-% G. instructions ______________________________________________________________
+
+% ------------------------------------------------------------------------------
+%                          2. Memory main instructions
+% ------------------------------------------------------------------------------
+% 2-1. ready for filepath ______________________________________________________
 taskname = 'memory';
 instruct_filepath              = fullfile(main_dir,  'instructions');
 instruct_start_name            = 'memory_main_start.png';
@@ -109,7 +101,7 @@ instruct_end_name              = 'memory_main_end.png'                     ;
 instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
 instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 
-% ______________________________ Instructions _________________________________
+% 2-2. show image ______________________________________________________________
 Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
@@ -117,8 +109,11 @@ Screen('Flip',p.ptb.window);
 WaitSecs(0.2);
 KbWait();
 
-% mimic the same structure
-% 1.instruction image ___________________________________________________
+
+% ------------------------------------------------------------------------------
+%                           3. memory study
+% ------------------------------------------------------------------------------
+% 3-1. study instruction _______________________________________________________
 taskname = 'memory';
 instruct_filepath              = fullfile(main_dir,  'instructions');
 instruct_study                 = fullfile(instruct_filepath, 'memory_study.png');
@@ -126,10 +121,9 @@ Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_study));
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 Screen('Flip',p.ptb.window);
-WaitSecs(0.2);
-KbWait();
+WaitSecs(5);
 
-% 2.study image ________________________________________________________________
+% 3-2. present study image _____________________________________________________
 study_list = [1, 3, 5, 7, 8];
 image_path                     = fullfile(main_dir, 'practice', 'study_items');
 for i = 1:length(study_list)
@@ -143,9 +137,12 @@ for i = 1:length(study_list)
 
     WaitSecs(1);
 end
-% 3.present 5 images
-% 4.distraction task
-% 5.test image ___________________________________________________
+
+
+% ------------------------------------------------------------------------------
+%                           4. memory test
+% ------------------------------------------------------------------------------
+% 4-1. test instruction ________________________________________________________
 taskname = 'memory';
 instruct_filepath              = fullfile(main_dir,  'instructions');
 instruct_study                 = fullfile(instruct_filepath, 'memory_test.png');
@@ -155,8 +152,7 @@ Screen('DrawTexture',p.ptb.window,start.texture);
 Screen('Flip',p.ptb.window);
 WaitSecs(2);
 
-% 5.test image _________________________________________________________________
-% 6.present 10 images with old, new
+% 4-2. present 10 images with old, new _________________________________________
 task_duration = 3;
 image_path                     = fullfile(main_dir, 'practice', 'study_items');
 test_list = [9,6,7,3,2,1,4,5,8,10];
@@ -166,7 +162,6 @@ p3_actual_buttonbox = [];
 p3_responsekey =[];
 
 for i = 1:length(test_list)
-    % study_list(i)
     test_name                   = ['memory_image_', sprintf('%02d',test_list(i)),'.png'];
     test_filename               = fullfile(image_path, test_name);
 
@@ -179,12 +174,10 @@ for i = 1:length(test_list)
     lXc = -200; % left X coord
     rXc = 200; % right X coord
     lineCoords = [lXc lXc lXc rXc rXc rXc; Yc-cDist Yc+cDist Yc Yc Yc-cDist Yc+cDist];
-    %             Screen('DrawLines', p.ptb.window, lineCoords,p.fix.lineWidthPix, p.ptb.black);% [p.ptb.xCenter p.ptb.yCenter], 2);
     % 5-3. present same diff text __________________________________________________
     textOld = 'old';
     textNew = 'new';
     textYc = p.ptb.yCenter + (RectHeight(p.ptb.rect)/2)*.30;
-    %             textYc = p.ptb.yCenter + Yc + cDist*4;
     textRXc = p.ptb.xCenter + rXc; % p.ptb.xCenter+120,
     textLXc = p.ptb.xCenter - rXc; % p.ptb.xCenter-250-60,
     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
@@ -203,7 +196,6 @@ for i = 1:length(test_list)
 
         if keyIsDown
             if keyCode(KbName('f')) % old
-                %             respToBeMade = false;
                 answer = 1;
                 actual_key = 1;
                 RT = secs-StimulusOnsetTime;
@@ -219,7 +211,6 @@ for i = 1:length(test_list)
                 Screen('Flip', p.ptb.window);
                 WaitSecs(remainder_time);
             elseif keyCode(KbName('j')) % new
-                %             respToBeMade = false;
                 answer = 0;
                 actual_key = 4;
                 RT = secs-StimulusOnsetTime;
@@ -236,7 +227,6 @@ for i = 1:length(test_list)
                 WaitSecs(remainder_time);
             end
         end
-        %         timeStim = GetSecs - thisGetSecs;
         timeStim = GetSecs - StimulusOnsetTime;
     end
     p3_correct_response(i) = correct_answer(i);
@@ -245,29 +235,35 @@ for i = 1:length(test_list)
 
 end
 
+% ------------------------------------------------------------------------------
+%                           5. calculated accuracy
+% ------------------------------------------------------------------------------
 test_accuracy = p3_correct_response == p3_responsekey;
 total_acc = sum(test_accuracy);
 
 line1 = '*********************************\n*********************************\n\nThis is the end of the memory task.';
-line2 = strcat('\nThe total accuracy was   ', num2str(total_acc), ' out of 10.');
-line3 = strcat('\nPlease pay   ', num2str(total_acc*2), ' dollars.\nThank you !!\n');
+line2 = strcat('\nThe total accuracy was - ', num2str(total_acc), ' - out of 10.');
+line3 = strcat('\nPlease pay - ', num2str(total_acc*2), ' - dollars.\nThank you !!\n');
 line4 = ('\n*********************************\n*********************************\n');
 DrawFormattedText(p.ptb.window, [line1 line2 line3 line4], 'center','center', cfg.text.basicTextColor); % Text output of mouse position draw in the centre of the screen
 Screen('Flip',p.ptb.window);
 KbWait();
 
-% _________________________ 7. End Instructions _______________________________
+% ------------------------------------------------------------------------------
+%                           6. end instructions
+% ------------------------------------------------------------------------------
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 Screen('Flip',p.ptb.window);
 WaitSecs(2);
 KbWait();
 
-closeall
+
 sca;
 
-% 7.end of task
-
+% ------------------------------------------------------------------------------
+%                           function:
+% ------------------------------------------------------------------------------
 function WaitKeyPress(kID)
     while KbCheck(-3); end
     while 1
