@@ -70,19 +70,27 @@ cue_duration                   = 0.200;
 
 
 % D. making output table _________________________________________________
-vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
-    'param_AR_invalid_sequence', 'param_valid_type', %'param_cue', 'param_target',...
-    'p1_fixation_onset', 'param_jitter','p1_fixation_duration','p1_fixation_offset','p1_ptb_fixation_duration',...
+vnames = {'param_fmriSession', 'param_counterbalanceVer','RAW_param_triggerOnset',...
+    'param_AR_invalid_sequence', 'param_valid_type',... %'param_cue', 'param_target',...
+    'p1_fixation_onset', 'param_jitter','p1_fixation_offset','p1_ptb_fixation_duration',...
     'p2_cue_type','p2_cue_onset','p2_cue_offset','p2_cue_duration',...
     'p3_target_type','p3_target_onset',...
-    'p4_responseonset','p4_responsekey','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',...
-    'p5_fixation_onset'};
+    'p4_responseonset','p4_responsekey','p4_responsekeyname','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',...
+    'p5_fixation_onset',...
+    'RAW_p1_fixation_onset','RAW_p1_fixation_offset',...
+    'RAW_p2_cue_onset','RAW_p2_cue_offset',...
+    'RAW_p3_target_onset',...
+    'RAW_p4_responseonset','RAW_p4_fixation_fillin',...
+    'RAW_p5_fixation_onset'};
 T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 T.param_fmriSession(:)         = 4;
+T.p1_fixation_duration         = countBalMat.jitter;
+T.param_AR_invalid_sequence    = countBalMat.AR_invalid_sequence;
+T.param_valid_type             = countBalMat.valid_type;
 T.p2_cue_type                  = countBalMat.cue;
 T.p3_target_type               = countBalMat.target;
-T.param_AR_invalid_sequence = countBalMat.AR_invalid_sequence
+T.p4_responsekeyname           = cell(size(countBalMat,1),1);
 
 
 % E. Keyboard information _____________________________________________________
@@ -129,7 +137,7 @@ Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
 Screen('Flip', p.ptb.window);
 % T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
 WaitKeyPress(p.keys.trigger);
-T.param_triggerOnset(:) = GetSecs;
+T.RAW_param_triggerOnset(:) = GetSecs;
 WaitSecs(TR*6);
 
 % __________________________ Experimental loop ___________________________
@@ -142,10 +150,10 @@ for trl = 1:size(countBalMat,1)
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
     Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
-    T.p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
+    T.RAW_p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
     WaitSecs(jitter1);
-    T.p1_fixation_offset(trl) = GetSecs;
-    T.p1_ptb_fixation_duration(trl) = T.p1_fixation_offset(trl) - T.p1_fixation_onset(trl);
+    T.RAW_p1_fixation_offset(trl) = GetSecs;
+    T.p1_ptb_fixation_duration(trl) = T.p1_fixation_offset(trl) - T.RAW_p1_fixation_onset(trl);
     % T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
 
     % ------------------------------------------------------------------------
@@ -156,20 +164,20 @@ for trl = 1:size(countBalMat,1)
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.leftRects, p.rect.penWidthPixels);
-        T.p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
         WaitSecs(cue_duration);
-        T.p2_cue_offset(trl) = GetSecs;
-        T.p2_cue_duration(trl) = T.p2_cue_offset(trl)- T.p2_cue_onset(trl);
+        T.RAW_p2_cue_offset(trl) = GetSecs;
+        T.p2_cue_duration(trl) = T.RAW_p2_cue_offset(trl)- T.RAW_p2_cue_onset(trl);
 
     elseif string(countBalMat.cue{trl}) == "right"
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.rightRects, p.rect.penWidthPixels);
-        T.p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
         WaitSecs(cue_duration);
-        T.p2_cue_offset(trl) = GetSecs;
-        T.p2_cue_duration(trl) = T.p2_cue_offset(trl)- T.p2_cue_onset(trl);
+        T.RAW_p2_cue_offset(trl) = GetSecs;
+        T.p2_cue_duration(trl) = T.RAW_p2_cue_offset(trl)- T.RAW_p2_cue_onset(trl);
     else
         error('check!');
     end
@@ -184,13 +192,13 @@ for trl = 1:size(countBalMat,1)
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('DrawDots', p.ptb.window, [p.target.leftXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
-        T.p3_target_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_p3_target_onset(trl) = Screen('Flip', p.ptb.window);
     elseif string(countBalMat.target{trl}) == "right"
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('DrawDots', p.ptb.window, [p.target.rightXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
-        T.p3_target_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_p3_target_onset(trl) = Screen('Flip', p.ptb.window);
     end
 
     % ------------------------------------------------------------------------
@@ -198,8 +206,9 @@ for trl = 1:size(countBalMat,1)
     % -------------------------------------------------------------------------
     % 4.1. record key press _______________________________________________
     %     while respToBeMade && timeStim < trial_duration
-    while (GetSecs - T.p3_target_onset(trl)) < trial_duration
-        T.p4_responsekey(trl) = 0
+    while (GetSecs - T.RAW_p3_target_onset(trl)) < trial_duration
+        T.p4_responsekey(trl) = 0;
+        T.p4_responsekeyname{trl} = 'nan';
         RT = 99;
         [keyIsDown,secs, keyCode] = KbCheck;
 
@@ -208,47 +217,42 @@ for trl = 1:size(countBalMat,1)
             sca;
             return
         elseif keyCode(p.keys.left)
-            RT = secs - T.p3_target_onset(trl);
-            T.p4_RT(trl) = secs - T.p3_target_onset(trl);
+            RT = secs - T.RAW_p3_target_onset(trl);
+            T.p4_RT(trl) = secs - T.RAW_p3_target_onset(trl);
             T.p4_responsekey(trl)  = 1;
-            % 4.2. calculated response remainder time _____________________________
+            T.p4_responsekeyname{trl} = 'left';
             WaitSecs(0.5);
-
             remainder_time = trial_duration - 0.5 - RT;
             Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
                 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-            T.p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
+            T.RAW_p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
             WaitSecs(remainder_time);
             T.p4_fixation_duration(trl) = remainder_time;
 
 
         elseif keyCode(p.keys.right)
-          RT = secs - T.p3_target_onset(trl);
-            T.p4_RT(trl) = secs - T.p3_target_onset(trl);
+            RT = secs - T.RAW_p3_target_onset(trl);
+            T.p4_RT(trl) = secs - T.RAW_p3_target_onset(trl);
             T.p4_responsekey(trl)  = 2; % right
-            % 4.2. calculated response remainder time _____________________________
+            T.p4_responsekeyname{trl} = 'right';
             WaitSecs(0.5);
-
             remainder_time = trial_duration - 0.5 - RT;
             Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
                 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-            T.p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
+            T.RAW_p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
             WaitSecs(remainder_time);
             T.p4_fixation_duration(trl) = remainder_time;
 
         end
 
     end
-
-
-    % 4.3.record key press ________________________________________________
-    T.p4_responseonset(trl) = secs;
+    T.RAW_p4_responseonset(trl) = secs;
     % T.p4_responsekey(trl) = response;
     % T.p4_RT(trl) = RT;
 
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-    T.p5_fixation_onset(trl) = Screen('Flip', p.ptb.window);
+    T.RAW_p5_fixation_onset(trl) = Screen('Flip', p.ptb.window);
     WaitSecs(0.2)
 end
 
@@ -267,6 +271,15 @@ T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1
 % ------------------------------------------------------------------------
 %                              save parameter
 % -------------------------------------------------------------------------
+T.p1_fixation_onset(:) = T.RAW_p1_fixation_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p1_fixation_offset(:) = T.RAW_p1_fixation_offset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p2_cue_onset(:) = T.RAW_p2_cue_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p2_cue_offset(:) = T.RAW_p2_cue_offset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p3_target_onset(:) = T.RAW_p3_target_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p4_responseonset(:) = T.RAW_p4_responseonset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p4_fixation_fillin(:) = T.RAW_p4_fixation_fillin(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p5_fixation_onset(:) = T.RAW_p5_fixation_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
 
