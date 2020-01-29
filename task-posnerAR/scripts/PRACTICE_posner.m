@@ -52,8 +52,7 @@ p.rect.RcenteredRect           = CenterRectOnPointd(p.rect.baseRect, 100, p.ptb.
 task_dir                       = pwd;
 main_dir                       = fileparts(task_dir);
 taskname                       = 'posner';
-counterbalancefile             = fullfile(main_dir,'design', 's04_counterbalance', ...
-    [strcat('sub-', sprintf('%04d', sub_num)),'_task-', taskname '_counterbalance.csv']);
+counterbalancefile             = fullfile(main_dir,'design', 's04_counterbalance', 'sub-0001_task-posner_counterbalance.csv']);
 countBalMat                    = readtable(counterbalancefile);
 % sub_save_dir                   = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh' );
 % if ~exist(sub_save_dir, 'dir')
@@ -103,14 +102,14 @@ filelength = numel(dir([practice_path '/*.png']));
 for int = 1:filelength
     intro_name                   = ['posner_practice_slides.0', sprintf('%02d',int),'.png'];
     intro_filename               = fullfile(practice_path, intro_name);
-    
+
     Screen('TextSize',p.ptb.window,72);
     start.texture = Screen('MakeTexture',p.ptb.window, imread(intro_filename));
     Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
     Screen('Flip',p.ptb.window);
     WaitSecs(0.2);
     KbWait();
-    
+
 end
 
 WaitSecs(0.2);
