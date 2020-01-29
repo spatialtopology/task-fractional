@@ -10,7 +10,7 @@ thisDate = date;
 startTime = fix(clock);
 startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),startTime(5),startTime(6));
 
-% record the starting date and time for this session 
+% record the starting date and time for this session
 expParam.session.(sesName).date = thisDate;
 expParam.session.(sesName).startTime = startTime;
 
@@ -91,13 +91,14 @@ end
 vnames                         = {'param_fmriSession','param_experiment_start','param_memory_session_name'...
                                   'p1_fixation_onset','p1_fixation_duration',...
                                   'p2_stimuli_onset','p2_dummy_stimuli','p2_stimuli_filename',...
-                                  'p3_fixation_onset','p3_fixation_duration',...
+                                  'p3_isi_onset','p4_last_fixation','p4_fixation_duration',...
                                   'param_end_instruct_onset', 'param_experimentDuration'};
 T                              = array2table(zeros(size(stimList,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 T.param_memory_session_name    = cell(size(stimList,1),1);
 T.param_memory_session_name(:) = {sesName};
 T.p2_stimuli_filename          = cell(size(stimList,1),1);
+T.param_fmriSession            = 4;
 
 % G. instructions _____________________________________________________
 main_dir                       = pwd;
@@ -179,12 +180,11 @@ for trl = 1 : length(stimList)
 
     % isi
     Screen('FillRect', p.ptb.window, cfg.screen.bgColor)
-    Screen('Flip', p.ptb.window);
+    T.p3_isi_onset(trl) = Screen('Flip', p.ptb.window);
     WaitSecs(sessionCfg.isi);
 
     switch cfg.stim.studyType
         case('i') % images
-%             Screen('Close', imageTexture);
             clear stimImg
     end
 
@@ -192,10 +192,9 @@ end
 
 remaining_time = 60 - (GetSecs - T.param_experiment_start(1));
 Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
-T.p3_fixation_onset(:) = Screen('Flip', p.ptb.window);
+T.p4_last_fixation(:) = Screen('Flip', p.ptb.window);
 WaitSecs(remaining_time);
-T.p3_fixation_duration(:) = remaining_time;
-
+T.p4_fixation_duration(:) = remaining_time;
 
 T.param_end_instruct_onset(:) = GetSecs;
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);
