@@ -406,14 +406,14 @@ pettycashfile = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)),
 fid=fopen(pettycashfile,'w');
 total_acc = test1_accuracy + test2_accuracy;
 fprintf(fid,'*********************************\n*********************************\nThis is the end of the memory task.\n');
-fprintf(fid,'This participants total accuracy was %0.2f out of 40.\n',total_acc);
-fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((total_acc)*0.5));
+fprintf(fid,'This participants total accuracy was %0.2f out of 80.\n',total_acc);
+fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((total_acc)*0.25));
 fprintf(fid,'*********************************\n*********************************\n');
 fclose(fid);true
 % print in command window
 fprintf('*********************************\n*********************************\nThis is the end of the memory task.\n')
-fprintf('This participants total accuracy was %0.2f out of 40.\n',total_acc)
-fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((total_acc)*0.5))
+fprintf('This participants total accuracy was %0.2f out of 80.\n',total_acc)
+fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((total_acc)*0.25))
 fprintf('*********************************\n*********************************\n')
 
 % things to consider

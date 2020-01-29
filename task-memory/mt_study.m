@@ -91,6 +91,7 @@ end
 vnames                         = {'param_fmriSession','param_experiment_start','param_memory_session_name'...
                                   'p1_fixation_onset','p1_fixation_duration',...
                                   'p2_stimuli_onset','p2_dummy_stimuli','p2_stimuli_filename',...
+                                  'p3_fixation_onset','p3_fixation_duration',...
                                   'param_end_instruct_onset', 'param_experimentDuration'};
 T                              = array2table(zeros(size(stimList,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
@@ -188,6 +189,13 @@ for trl = 1 : length(stimList)
     end
 
 end
+
+remaining_time = 60 - (GetSecs - T.param_experiment_start(1));
+Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
+T.p3_fixation_onset(:) = Screen('Flip', p.ptb.window);
+WaitSecs(remaining_time);
+T.p3_fixation_duration(:) = remaining_time;
+
 
 T.param_end_instruct_onset(:) = GetSecs;
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);

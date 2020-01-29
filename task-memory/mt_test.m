@@ -49,6 +49,7 @@ vnames = {'param_fmriSession','param_experiment_start','param_memory_session_nam
                                 'p1_fixation_onset','p1_fixation_duration',...
                                 'p2_image_onset','p2_image_filename',...
                                 'p3_correct_response','p3_actual_responsekey','p3_actual_responseonset','p3_actual_RT',...
+                                'p4_fixation_onset','p4_fixation_duration',...
                                 'param_end_instruct_onset', 'param_experimentDuration', 'test_accuracy'};
 T                              = array2table(zeros(size(stimList,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
@@ -248,6 +249,14 @@ for trl = 1 : length(stimList)
 %     Screen('Flip', p.ptb.window);
 %     WaitSecs(sessionCfg.isi);
 end
+
+remaining_time = 120 - (GetSecs - T.param_experiment_start(1));
+Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
+T.p4_fixation_onset(:) = Screen('Flip', p.ptb.window);
+WaitSecs(remaining_time);
+T.p4_fixation_duration(:) = remaining_time;
+
+
 T.param_end_instruct_onset(:) = GetSecs;
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);
 T.test_accuracy = T.p3_correct_response == T.p3_responsekey;

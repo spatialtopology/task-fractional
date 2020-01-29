@@ -7,8 +7,8 @@ vnames = {'param_fmriSession',... %'param_counterbalanceVer','param_triggerOnset
 'p2_operation',...
 'p3_option',...
 'p4_responsekey','p4_responseRT','p4_responsekeyname','p4_correct_answer',...
+'p5_fixation_onset', 'p5_fixation_duration',...
 'calc_accuracy', 'calc_end', 'calc_duration'};
-
 
 T                              = array2table(zeros(4,size(vnames,2)));
 T.Properties.VariableNames     = vnames;
@@ -141,9 +141,16 @@ T.p3_option(trl) = StimulusOnsetTime;
 
 
 end
+remaining_time = 120 - (GetSecs - T.calc_start(1));
+Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
+T.p5_fixation_onset(:) = Screen('Flip', p.ptb.window);
+WaitSecs(remaining_time);
+T.p5_fixation_duration(:) = remaining_time;
+
 T.calc_end(:) = GetSecs;
 T.calc_accuracy(trl) = T.p4_correct_answer(trl) == T.p4_responsekey(trl);
 T.calc_duration(:) = T.calc_end(1)- T.calc_start(1);
+
 %% __________________________ save parameter ___________________________________
 sub_save_dir = cfg.files.sesSaveDir;
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-memory-distraction-',num2str(task_num), '_beh.csv' ]);
