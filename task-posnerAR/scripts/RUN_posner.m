@@ -2,6 +2,7 @@ function RUN_posner(sub_num)
 
 % created by Heejung Jung
 % 2019.11.15
+
 %--------------------------------------------------------------------------
 %                          Experiment parameters
 %--------------------------------------------------------------------------
@@ -29,7 +30,7 @@ p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
 p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
 p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
-% 2nd attempt
+% building shapes
 p.rect.baseRect                = [0 0 p.ptb.screenYpixels*2/9 p.ptb.screenYpixels*2/9];
 p.rect.squareXpos              = [p.ptb.screenXpixels * 0.30 p.ptb.screenXpixels * 0.70];
 numSquares                     = length(p.rect.squareXpos);
@@ -60,28 +61,33 @@ if ~exist(sub_save_dir, 'dir')
     mkdir(sub_save_dir)
 end
 
+
 % C. experiment parameters _______________________________________________
-trial_duration                 = 2.000;
-cue_duration                   = 0.200;
 % cue to target duration: 200ms
 % response: give 2s
+trial_duration                 = 2.000;
+cue_duration                   = 0.200;
+
 
 % D. making output table _________________________________________________
 vnames = {'param_fmriSession', 'param_counterbalanceVer','param_triggerOnset',...
-    'param_jitter', 'param_AR_invalid_sequence', 'param_valid_type', 'param_cue', 'param_target',...
-    'p1_fixation_onset', 'p1_fixation_duration','p1_fixation_offset','p1_ptb_fixation_duration',...
+    'param_AR_invalid_sequence', 'param_valid_type', %'param_cue', 'param_target',...
+    'p1_fixation_onset', 'param_jitter','p1_fixation_duration','p1_fixation_offset','p1_ptb_fixation_duration',...
     'p2_cue_type','p2_cue_onset','p2_cue_offset','p2_cue_duration',...
-    'p3_target_onset',...
+    'p3_target_type','p3_target_onset',...
     'p4_responseonset','p4_responsekey','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',...
     'p5_fixation_onset'};
 T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
+T.param_fmriSession(:)         = 4;
+T.p2_cue_type                  = countBalMat.cue;
+T.p3_target_type               = countBalMat.target;
+T.param_AR_invalid_sequence = countBalMat.AR_invalid_sequence
+
 
 % E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
-% p.keys.right                   = KbName('j');
-% p.keys.left                    = KbName('f');
 p.keys.right                   = KbName('2@');
 p.keys.left                    = KbName('1!');
 p.keys.space                   = KbName('space');
@@ -90,22 +96,22 @@ p.keys.trigger                 = KbName('5%');
 p.keys.start                   = KbName('s');
 p.keys.end                     = KbName('e');
 
+
 % F. fmri Parameters __________________________________________________________
 TR                             = 0.46;
 
-% G. Instructions _____________________________________________________________
-% instruct_start                 = 'The cueing task is about to start. \n Please wait for the experimenter';
-% instruct_end                   = 'This is the end of the experiment. \n Please wait for the experimenter';
-%
+
 % G. instructions _____________________________________________________
 instruct_filepath              = fullfile(main_dir, 'design', 'instructions');
 instruct_start_name            = ['task-', taskname, '_start.png'];
 instruct_end_name              = ['task-', taskname, '_end.png'];
 instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
 instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
-% ------------------------------------------------------------------------
-%                             Start Experiment
-% -------------------------------------------------------------------------
+
+
+%% -----------------------------------------------------------------------------
+%                              Start Experiment
+% ------------------------------------------------------------------------------
 
 % ______________________________ Instructions _________________________________
 Screen('TextSize',p.ptb.window,72);
@@ -140,7 +146,7 @@ for trl = 1:size(countBalMat,1)
     WaitSecs(jitter1);
     T.p1_fixation_offset(trl) = GetSecs;
     T.p1_ptb_fixation_duration(trl) = T.p1_fixation_offset(trl) - T.p1_fixation_onset(trl);
-    T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
+    % T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
 
     % ------------------------------------------------------------------------
     %                               2. cue 0.2 s
@@ -167,7 +173,7 @@ for trl = 1:size(countBalMat,1)
     else
         error('check!');
     end
-    T.p2_cue_type(trl) = string(countBalMat.cue(trl));
+    % T.p2_cue_type{trl} = string(countBalMat.cue(trl));
 
 
     % ------------------------------------------------------------------------
@@ -193,7 +199,7 @@ for trl = 1:size(countBalMat,1)
     % 4.1. record key press _______________________________________________
     %     while respToBeMade && timeStim < trial_duration
     while (GetSecs - T.p3_target_onset(trl)) < trial_duration
-        response = 99;
+        T.p4_responsekey(trl) = 0
         RT = 99;
         [keyIsDown,secs, keyCode] = KbCheck;
 
