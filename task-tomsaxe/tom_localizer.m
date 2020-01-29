@@ -1,10 +1,8 @@
-% function tom_localizer(sub_num, run_num)
-% [x] change instruction screen
-% [ ] think of a way to distinguish 12 fixsation and 6 trs
-% [x] hide cursor
 function tom_localizer(sub_num)
 run_num=1;
 %% Version: September 7, 2011
+% updated by Heejung Jung
+% Date: Jan 28, 2020
 %__________________________________________________________________________
 %
 % This script will localize theory-of-mind network areas by contrasting
@@ -133,20 +131,6 @@ run_num=1;
 %	working after 3 - 5 individuals.
 %__________________________________________________________________________
 %
-%					SPM Parameters
-%
-%	If using scripts to automate data analysis, these parameters are set in
-%	the SPM.mat file prior to modeling or design matrix configuration.
-%
-%	SPM.xGX.iGXcalc    = {'Scaling'}		global normalization: OPTIONS:'Scaling'|'None'
-%	SPM.xX.K.HParam    = filter_frequency   high-pass filter cutoff (secs) [Inf = no filtering]
-%	SPM.xVi.form       = 'none'             intrinsic autocorrelations: OPTIONS: 'none'|'AR(1) + w'
-%	SPM.xBF.name       = 'hrf'				Basis function name
-%	SPM.xBF.T0         = 1                 	reference time bin
-%	SPM.xBF.UNITS      = 'scans'			OPTIONS: 'scans'|'secs' for onsets
-%	SPM.xBF.Volterra   = 1					OPTIONS: 1|2 = order of convolution; 1 = no Volterra
-%__________________________________________________________________________
-%
 %	Created by Rebecca Saxe & David Dodell-Feder
 %	Modified by Nick Dufour (ndufour@mit.edu), December 2010
 %__________________________________________________________________________
@@ -159,13 +143,14 @@ run_num=1;
 %			   period.
 %__________________________________________________________________________
 %
-%% Variables unique to scanner / computer
-% [rootdir b c]		= fileparts(mfilename('fullpath'));			% path to the directory containing the behavioural / stimuli directories. If this script is not in that directory, this line must be changed.
 
-%% Set up necessary variables
-% rootdir             = '/Users/h/Documents/projects_local/fractional_factorials/task-tomsaxe/';
+
+% ------------------------------------------------------------------------------
+%                                Parameters
+% ------------------------------------------------------------------------------
+
+%% A. directory _____________________________________________________
 tomsaxe_dir			= pwd;
-% tomsaxe_dir   = fileparts(repo_dir); % task
 textdir				= fullfile(tomsaxe_dir, 'text_files');
 sub_save_dir			= fullfile(tomsaxe_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh');
 if ~exist(sub_save_dir, 'dir')
@@ -173,12 +158,7 @@ if ~exist(sub_save_dir, 'dir')
 end
 
 
-
-
-% designs				= [ 1 2 2 1 2 1 2 1 1 2 ;  2 1 2 1 1 2 2 1 2 1 ; ];
-% % changed by FRACTIONAL
-% design				= designs(run_num,:); % changed by FRACTIONAL
-
+%% B. design parameters _____________________________________________________
 design				                     = [ 1 2 2 1 2 1 2 1 1 2 2 1 2 1 1 2 2 1 2 1  ]; % changed by FRACTIONAL
 conds				                       = {'belief','photo'};
 condPrefs			                     = {'b','p'};								% stimuli textfile prefixes, used in loading stimuli content
@@ -195,33 +175,43 @@ ips					                       = ((trialsPerRun) * (fixDur + storyDur + questDur
 trial_type                         = {'false_belief', 'false_photo'};
 taskname                           = 'tomsaxe';
 TR                                 = 0.46;
-vnames                             = {'param_fmriSession', 'param_triggerOnset',...
+
+
+%% C. output table variables _____________________________________________________
+vnames = {'param_fmriSession', ,...
                                   'p1_fixation_onset',...
-                                  'p2_filename', 'p2_filetype','p2_story_rawonset',...
+                                  'p2_filename', 'p2_filetype','p2_story_onset',...
                                   'p3_ques_onset',...
                                   'p4_responseonset','p4_responsekey','p4_RT',...
-                                  'param_end_instruct_onset', 'experimentDuration'};
-
+                                  'param_end_instruct_onset', 'experimentDuration',...
+                                  'RAW_param_triggerOnset', 'RAW_p1_fixation_onset',...
+                                  'RAW_p2_story_onset', 'RAW_p3_ques_onset',...
+                                  'RAW_param_end_instruct_onset','RAW_param_final_fixation'};
 T                                  = array2table(zeros(trialsPerRun,size(vnames,2)));
 T.Properties.VariableNames         = vnames;
+
+T.param_fmriSession(:)             = 4;
 T.p2_filetype                      = cell(20,1);
 T.p2_filename                      = cell(20,1);
 
+
+%% D. randomize order _____________________________________________________
+% original localizer script did not have randomization
 bl_ind = rem(sub_num,5);
 if bl_ind ==0
-random = [5,5, 2,2, 1,1, 9,9, 6,6, 10,10, 3,3, 7,7, 8,8, 4,4];
+    random_seq = [5,5, 2,2, 1,1, 9,9, 6,6, 10,10, 3,3, 7,7, 8,8, 4,4];
 elseif bl_ind ==1
-random = [2,2, 4,4, 1,1, 3,3, 10,10, 9,9, 6,6, 7,7, 8,8, 5,5];
+    random_seq = [2,2, 4,4, 1,1, 3,3, 10,10, 9,9, 6,6, 7,7, 8,8, 5,5];
 elseif bl_ind ==2
-random = [4,4, 1,1, 6,6, 3,3, 8,8, 7,7, 10,10, 9,9, 5,5, 2,2];
+    random_seq = [4,4, 1,1, 6,6, 3,3, 8,8, 7,7, 10,10, 9,9, 5,5, 2,2];
 elseif bl_ind ==3
-random = [5,5, 6,6, 9,9, 10,10, 4,4, 1,1, 8,8, 7,7, 3,3, 2,2];
+    random_seq = [5,5, 6,6, 9,9, 10,10, 4,4, 1,1, 8,8, 7,7, 3,3, 2,2];
 elseif bl_ind ==4
-random = [3,3, 10,10, 1,1, 7,7, 5,5, 4,4, 9,9, 8,8, 6,6, 2,2];
+    random_seq = [3,3, 10,10, 1,1, 7,7, 5,5, 4,4, 9,9, 8,8, 6,6, 2,2];
 end
 
 
-%% G. instructions _____________________________________________________
+%% E. instructions _____________________________________________________________
 instruct_filepath                  = fullfile(tomsaxe_dir,  'instructions');
 instruct_start_name                = ['task-', taskname, '_start.png'];
 instruct_end_name                  = ['task-', taskname, '_end.png'];
@@ -229,7 +219,7 @@ instruct_start                     = fullfile(instruct_filepath, instruct_start_
 instruct_end                       = fullfile(instruct_filepath, instruct_end_name);
 
 
-%% Verify that all necessary files and folders are in place.
+%% F. Verify that all necessary files and folders are in place _________________
 if isempty(dir(textdir))
     uiwait(warndlg(sprintf('Your stimuli directory is missing! Please create directory %s and populate it with stimuli. When Directory is created, hit ''Okay''',textdir),'Missing Directory','modal'));
 end
@@ -248,11 +238,12 @@ if isempty(dir(sub_save_dir))
     end
 end
 
-%% Psychtoolbox
+
+%% G. Verify that all necessary files and folders are in place _________________
+
 %  Here, all necessary PsychToolBox functions are initiated and the
 %  instruction screens are set up.
 try
-    %     PsychJavaTrouble;
     cd(textdir);
     HideCursor;
 
@@ -264,15 +255,12 @@ try
     p.ptb.black                    = BlackIndex(p.ptb.screenNumber);
     p.ptb.green                    = [0 1 0];
     [p.ptb.window, p.ptb.rect]     = PsychImaging('OpenWindow',p.ptb.screenNumber,p.ptb.black);
-    % 	[w, wRect]  = Screen('OpenWindow',displays(1),0);
-    % 	scrnRes     = Screen('Resolution',displays(1));               % Get Screen resolution
     [p.ptb.screenXpixels, p.ptb.screenYpixels] = Screen('WindowSize',p.ptb.window);
     [p.ptb.xCenter, p.ptb.yCenter] = RectCenter(p.ptb.rect);
     p.ptb.ifi                      = Screen('GetFlipInterval',p.ptb.window);
-    Screen('BlendFunction', p.ptb.window,'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA'); % Set up alpha-blending for smooth (anti-aliased) lines
+    Screen('BlendFunction', p.ptb.window,'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA');
 
-    % 	[x0 y0]		= RectCenter([0 0 scrnRes.width scrnRes.height]);   % Screen center.
-    %% E. Keyboard information _____________________________________________________
+%% H. Keyboard information _____________________________________________________
     KbName('UnifyKeyNames');
     p.keys.confirm                 = KbName('return');
     p.keys.right                   = KbName('2@');
@@ -290,15 +278,6 @@ try
     Screen( 'Preference', 'SkipSyncTests', 0);
     Screen( p.ptb.window, 'TextFont', 'Helvetica');
     Screen( p.ptb.window, 'TextSize', 30);
-
-    % task                           = sprintf('True or False');
-    % instr_1                    	   = sprintf('Press left button (1) for "True"');
-    % instr_2                        = sprintf('Press right button (2) for "False"');
-    %
-    % Screen(p.ptb.window, 'DrawText', task, p.ptb.xCenter-125, p.ptb.yCenter-60, [255]);
-    % Screen(p.ptb.window, 'DrawText', instr_1, p.ptb.xCenter-300, p.ptb.yCenter, [255]);
-    % Screen(p.ptb.window, 'DrawText', instr_2,p.ptb.xCenter-300, p.ptb.yCenter+60, [255]);
-											% Instructional screen is presented.
 catch exception
     ShowCursor;
     sca;
@@ -306,161 +285,169 @@ catch exception
     return
 end
 
-%% Wait for the trigger.
-%  If your scanner does not use a '+' as a trigger pulse, change the value
-%  of triggerKey accordingly.
-%% _______________________ Wait for Trigger to Begin ___________________________
 
+%% -----------------------------------------------------------------------------
+%                              START EXPERIMENT
+% ------------------------------------------------------------------------------
 
-%% ______________________________ Instructions _________________________________
+% ------------------------------------------------------------------------------
+%                       0. Present Instruction Screen
+% ------------------------------------------------------------------------------
 Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start)); % start image
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
 Screen(p.ptb.window, 'Flip');
-% DisableKeysForKbCheck([]);
-% KbTriggerWait(p.keys.start); % press s
+
+% ------------------------------------------------------------------------------
+%                           1. Wait for trigger
+% ------------------------------------------------------------------------------
 WaitKeyPress(p.keys.start)
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2); % will flip immediately
 Screen('Flip', p.ptb.window);
+
 WaitKeyPress(p.keys.trigger);
-T.param_triggerOnset(:) = GetSecs;
-% T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
-experimentStart = T.param_triggerOnset(1);
+T.RAW_param_triggerOnset(:) = GetSecs;
+experimentStart = T.RAW_param_triggerOnset(1);
 WaitSecs(TR*6);
-% include fixation cross
-%% Main Experimental Loop
+
 counter				    = zeros(1,2)+(5*(run_num-1));
-
-% experimentStart		    = GetSecs;
 Screen(p.ptb.window, 'TextSize', 24);
-% try
-    for trial = 1:trialsPerRun
-        cd(textdir);
-        trialStart		= GetSecs;
-        empty_text		= ' ';
 
-        Screen(p.ptb.window, 'DrawText', empty_text,p.ptb.xCenter,p.ptb.yCenter);
-        Screen(p.ptb.window, 'Flip');
-        counter(1,design(trial)) = counter(1,design(trial)) + 1;
+% ------------------------------------------------------------------------------
+%                          2. trial loop
+% ------------------------------------------------------------------------------
+for trial = 1:trialsPerRun
+    cd(textdir);
+    trialStart		= GetSecs;
+    empty_text		= ' ';
 
-        %%%%%%%%% Determine stimuli filenames %%%%%%%%%
-        trialT			= design(trial);							% trial type. 1 = false belief, 2 = false photograph
-        % numbeT			= counter(1,trialT);						% the number of the stimuli
-        numbeT      = random(trial);
-        storyname		= fullfile(textdir, sprintf('%d%s_story.txt',numbeT,condPrefs{trialT}));
-        questname		= fullfile(textdir, sprintf('%d%s_question.txt',numbeT,condPrefs{trialT}));
-        items(trial,1)	= numbeT;
-        T.p2_filename{trial} = {sprintf('%d%s_story.txt',numbeT,condPrefs{trialT})};
-        T.p2_filetype{trial} = trial_type{trialT};
-        %%%%%%%%% Open Story %%%%%%%%%
-        textfid			= fopen(storyname, 'r');
-        lCounter		= 1;										% line counter
+    Screen(p.ptb.window, 'DrawText', empty_text,p.ptb.xCenter,p.ptb.yCenter);
+    Screen(p.ptb.window, 'Flip');
+    counter(1,design(trial)) = counter(1,design(trial)) + 1;
 
-        while GetSecs - trialStart < fixDur
-            Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-                p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-            Screen('Flip', p.ptb.window);
-        end					% wait for fixation period to elapse
+% ------------------------------------------------------------------------------
+%                          3. Determine stimuli filenames
+% ------------------------------------------------------------------------------
+    trialT			= design(trial);							% trial type. 1 = false belief, 2 = false photograph
+    % numbeT			= counter(1,trialT);						% the number of the stimuli
+    numbeT      = random_seq(trial);
+    storyname		= fullfile(textdir, sprintf('%d%s_story.txt',numbeT,condPrefs{trialT}));
+    questname		= fullfile(textdir, sprintf('%d%s_question.txt',numbeT,condPrefs{trialT}));
+    items(trial,1)	= numbeT;
+    T.p2_filename{trial} = {sprintf('%d%s_story.txt',numbeT,condPrefs{trialT})};
+    T.p2_filetype{trial} = trial_type{trialT};
 
-        %%%%%%%%% Display Story %%%%%%%%%
-        while 1
-            tline		= fgetl(textfid);							% read line from text file.
-            if ~ischar(tline), break, end
-            Screen(p.ptb.window, 'DrawText',tline,p.ptb.xCenter-380,p.ptb.yCenter-160+lCounter*45,[255]);
-            lCounter	= lCounter + 1;
-        end
-        fclose(textfid);
+% ------------------------------------------------------------------------------
+%                          4. Present story
+% ------------------------------------------------------------------------------
+    % ________ 4-1. Open Story _________________________________________________
+    textfid			= fopen(storyname, 'r');
+    lCounter		= 1;										% line counter
 
-        T.p2_story_rawonset(trial) = Screen(p.ptb.window, 'Flip');
+    while GetSecs - trialStart < fixDur
+        Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+            p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+        T.RAW_p1_fixation_onset(trial) = Screen('Flip', p.ptb.window);
+    end					% wait for fixation period to elapse
 
-        trialsOnsets(trial) = GetSecs-experimentStart;
-        %%%%%%%%% Open Question %%%%%%%%%
-        textfid			= fopen(questname);
-        lCounter		= 1;
-        while 1
-            tline		= fgetl(textfid);							% read line from text file.
-            if ~ischar(tline), break, end
-            Screen(p.ptb.window, 'DrawText',tline,p.ptb.xCenter-380,p.ptb.yCenter-160+lCounter*45,[255]);
-            lCounter	= lCounter + 1;
-        end
-
-        while GetSecs - trialStart < fixDur + storyDur; end			% wait for story presentation period
-
-        %%%%%%%%% Display Question %%%%%%%%%
-        T.p3_ques_onset(trial) = Screen(p.ptb.window, 'Flip');
-
-        responseStart	= GetSecs;
-
-        %%%%%%%%% Collect Response %%%%%%%%%
-        % while ( GetSecs - responseStart ) < questDur
-        while ( GetSecs - T.p3_ques_onset(trial) ) < questDur
-            [keyIsDown,secs,keyCode]	= KbCheck;					% check to see if a key is being pressed
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %--------------------------SEE NOTE 2-----------------------------%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %             button						= intersect([89:92], find(keyCode));
-            %             if(RT(trial,1) == 0) && keyIsDown == 1%~isempty(button)
-            %                 RT(trial,1)				= GetSecs - responseStart;
-            %                 key(trial,1)			= str2num(KbName(keyCode));
-            if keyCode(p.keys.esc)
-                ShowCursor;
-                sca;
-                return
-            elseif keyCode(p.keys.right)
-                RT(trial,1)				= GetSecs - T.p3_ques_onset(trial); %responseStart;
-                key(trial,1)    	= 4;
-                T.p4_responseonset(trial) = secs;
-                T.p4_responsekey(trial)    = 4;
-                T.p4_RT(trial)    = RT(trial,1);
-            elseif keyCode(p.keys.left)
-                RT(trial,1)				= GetSecs - T.p3_ques_onset(trial); %responseStart;
-                key(trial,1)			= 1;
-                T.p4_responseonset(trial) = secs;
-                T.p4_responsekey(trial) = 1;
-                T.p4_RT(trial)    = RT(trial,1);
-
-            end
-        end
-
-        %%%%%%%%% Save information in the event of a crash %%%%%%%%%
-%         cd(behavdir);
-        save_filename = [strcat('sub-', sprintf('%04d', sub_num)), '_ses-04_task-tomsaxe.mat'];
-        save_fullfile = fullfile(sub_save_dir, save_filename);
-        save(save_fullfile,'sub_num','run_num','design','items','key','RT','trialsOnsets');
+    % ________ 4-2. Display Story ______________________________________________
+    while 1
+        tline		= fgetl(textfid);							% read line from text file.
+        if ~ischar(tline), break, end
+        Screen(p.ptb.window, 'DrawText',tline,p.ptb.xCenter-380,p.ptb.yCenter-160+lCounter*45,[255]);
+        lCounter	= lCounter + 1;
     end
-% catch exception
-%     ShowCursor;
-%     sca
-%     warndlg(sprintf('The experiment has encountered the following error during the main experimental loop: %s',exception.message),'Error');
-%     return
-% end
+    fclose(textfid);
+    T.RAW_p2_story_onset(trial) = Screen(p.ptb.window, 'Flip');
+    trialsOnsets(trial) = GetSecs-experimentStart;
 
-%% Final fixation, save information
+% ------------------------------------------------------------------------------
+%                          5. Present Question
+% ------------------------------------------------------------------------------
+
+    % ________ 5-1. Open question ______________________________________________
+    textfid			= fopen(questname);
+    lCounter		= 1;
+    while 1
+        tline		= fgetl(textfid);			        		% read line from text file.
+        if ~ischar(tline), break, end
+        Screen(p.ptb.window, 'DrawText',tline,p.ptb.xCenter-380,p.ptb.yCenter-160+lCounter*45,[255]);
+        lCounter	= lCounter + 1;
+    end
+
+    while GetSecs - trialStart < fixDur + storyDur; end	% wait for story presentation period
+
+    % ________ 5-2. Display Question ___________________________________________
+    T.RAW_p3_ques_onset(trial) = Screen(p.ptb.window, 'Flip');
+
+    responseStart	= GetSecs;
+
+% ------------------------------------------------------------------------------
+%                          6. Get Response
+% ------------------------------------------------------------------------------
+    while ( GetSecs - T.RAW_p3_ques_onset(trial) ) < questDur
+        [keyIsDown,secs,keyCode]	= KbCheck; % check to see if a key is being pressed
+
+        if keyCode(p.keys.esc)
+            ShowCursor;
+            sca;
+            return
+        elseif keyCode(p.keys.right)
+            RT(trial,1)				= GetSecs - T.RAW_p3_ques_onset(trial); %responseStart;
+            key(trial,1)    	= 4;
+            T.p4_responseonset(trial) = secs;
+            T.p4_responsekey(trial)    = 4;
+            T.p4_RT(trial)    = RT(trial,1);
+        elseif keyCode(p.keys.left)
+            RT(trial,1)				= GetSecs - T.RAW_p3_ques_onset(trial); %responseStart;
+            key(trial,1)			= 1;
+            T.p4_responseonset(trial) = secs;
+            T.p4_responsekey(trial) = 1;
+            T.p4_RT(trial)    = RT(trial,1);
+
+        end
+    end
+
+% ------------------------------------------------------------------------------
+%                        7. Save information in the event of a crash
+% ------------------------------------------------------------------------------
+    save_filename = [strcat('sub-', sprintf('%04d', sub_num)), '_ses-04_task-tomsaxe.mat'];
+    save_fullfile = fullfile(sub_save_dir, save_filename);
+    save(save_fullfile,'sub_num','run_num','design','items','key','RT','trialsOnsets');
+end
+
+% Final fixation, save information
 trials_end			= GetSecs;
-% while GetSecs - trials_end < endDur;
-  Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-      p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-T.param_final_fixation(:) = Screen('Flip', p.ptb.window);
+Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+    p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+T.RAW_param_final_fixation(:) = Screen('Flip', p.ptb.window);
 
 WaitSecs(endDur);
-%% _________________________ End Instructions _____________________________
+
+% ------------------------------------------------------------------------------
+%                       END AND SAVE EXPERIMENT
+% ------------------------------------------------------------------------------
+% _________________________ End Instructions _____________________________
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
-T.param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
-% KbTriggerWait(p.keys.end);
-WaitKeyPress(p.keys.end);
+T.RAW_param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
 
-T.experimentDuration(:) = T.param_end_instruct_onset(1) - T.param_triggerOnset(1);
-% while GetSecs - trials_end < fixDur; end
 
+T.experimentDuration(:) = T.RAW_param_end_instruct_onset(1) - T.RAW_param_triggerOnset(1);
 experimentEnd		= GetSecs;
-experimentDuration	= experimentEnd - experimentStart;
+experimentDuration	= T.experimentDuration(1);
 numconds			= 2;
+
+% convert variables
+T.p1_fixation_onset(:) = T.RAW_p1_fixation_onset(:)- T.RAW_param_triggerOnset(:) - (TR*6);
+T.p2_story_onset(:) = T.RAW_p2_story_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p3_ques_onset(:) = T.RAW_p3_ques_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
 
 %% __________________________ save parameter ___________________________________
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
+WaitKeyPress(p.keys.end);
 
 try
     sca
@@ -468,7 +455,7 @@ try
 
     save(save_fullfile,'sub_num','run_num','design','items','key','RT','trialsOnsets','responses','experimentStart','experimentEnd','experimentDuration','ips');
     ShowCursor;
-%     cd(orig_dir);
+    %     cd(orig_dir);
 catch exception
     sca
     ShowCursor;
