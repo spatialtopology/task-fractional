@@ -72,7 +72,7 @@ cue_duration                   = 0.200;
 % D. making output table _________________________________________________
 vnames = {'param_fmriSession', 'param_counterbalanceVer','RAW_param_triggerOnset',...
     'param_AR_invalid_sequence', 'param_valid_type',... %'param_cue', 'param_target',...
-    'p1_fixation_onset', 'param_jitter','p1_fixation_offset','p1_ptb_fixation_duration',...
+    'p1_fixation_onset', 'p1_param_jitter','p1_fixation_offset','p1_ptb_fixation_duration',...
     'p2_cue_type','p2_cue_onset','p2_cue_offset','p2_cue_duration',...
     'p3_target_type','p3_target_onset',...
     'p4_responseonset','p4_responsekey','p4_responsekeyname','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',...
@@ -87,7 +87,7 @@ vnames = {'param_fmriSession', 'param_counterbalanceVer','RAW_param_triggerOnset
 T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 T.param_fmriSession(:)         = 4;
-T.p1_fixation_duration         = countBalMat.jitter;
+T.p1_param_jitter              = countBalMat.jitter;
 T.param_AR_invalid_sequence    = countBalMat.AR_invalid_sequence;
 T.param_valid_type             = countBalMat.valid_type;
 T.p2_cue_type                  = countBalMat.cue;
@@ -155,7 +155,7 @@ for trl = 1:size(countBalMat,1)
     T.RAW_p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
     WaitSecs(jitter1);
     T.RAW_p1_fixation_offset(trl) = GetSecs;
-    T.p1_ptb_fixation_duration(trl) = T.p1_fixation_offset(trl) - T.RAW_p1_fixation_onset(trl);
+    T.p1_ptb_fixation_duration(trl) = T.RAW_p1_fixation_offset(trl) - T.RAW_p1_fixation_onset(trl);
     % T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
 
     % ------------------------------------------------------------------------
@@ -257,9 +257,6 @@ for trl = 1:size(countBalMat,1)
     T.RAW_p5_fixation_onset(trl) = Screen('Flip', p.ptb.window);
     WaitSecs(0.2)
 end
-
-
-
 
 
 % _________________________ End Instructions _____________________________
