@@ -87,6 +87,7 @@ vnames = {'param_fmriSession', 'param_counterbalanceVer','RAW_param_triggerOnset
 T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 T.param_fmriSession(:)         = 4;
+T.param_counterbalanceVer(:)   = sub_num;
 T.p1_param_jitter              = countBalMat.jitter;
 T.param_AR_invalid_sequence    = countBalMat.AR_invalid_sequence;
 T.param_valid_type             = countBalMat.valid_type;
