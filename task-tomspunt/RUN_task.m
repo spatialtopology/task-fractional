@@ -408,12 +408,8 @@ for b = 1:nBlocks
         T.p3_keypress_key(8*(b-1) + t) = tmpSeeker(t,8);
         T.RAW_p4_short_question_onset(8*(b-1) + t) = offset_dur;
         T.param_ques_type_string{8*(b-1) + t} = isicue;
-
-
-        % T.param_ques_type_string       = design.qim(:,1);
-        slideName{tmpSeeker(t,5)}
         T.param_image_filename{8*(b-1) + t}       = slideName{tmpSeeker(t,5)};
-        % param_ques_type_string
+
     end % END TRIAL LOOP
 
 
