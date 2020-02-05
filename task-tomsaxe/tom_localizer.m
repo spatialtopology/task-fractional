@@ -186,6 +186,7 @@ vnames = {'param_fmriSession', ...
                                   'experimentDuration',...
                                   'RAW_param_triggerOnset', 'RAW_p1_fixation_onset',...
                                   'RAW_p2_story_onset', 'RAW_p3_ques_onset',...
+                                  'RAW_p4_responseonset',...
                                   'RAW_param_end_instruct_onset','RAW_param_final_fixation'};
                                   % 'param_end_instruct_onset',
 T                                  = array2table(zeros(trialsPerRun,size(vnames,2)));
@@ -397,13 +398,13 @@ for trial = 1:trialsPerRun
         elseif keyCode(p.keys.right)
             RT(trial,1)				= GetSecs - T.RAW_p3_ques_onset(trial); %responseStart;
             key(trial,1)    	= 2;
-            T.p4_responseonset(trial) = secs;
+            T.RAW_p4_responseonset(trial) = secs;
             T.p4_responsekey(trial)    = 2;
             T.p4_RT(trial)    = RT(trial,1);
         elseif keyCode(p.keys.left)
             RT(trial,1)				= GetSecs - T.RAW_p3_ques_onset(trial); %responseStart;
             key(trial,1)			= 1;
-            T.p4_responseonset(trial) = secs;
+            T.RAW_p4_responseonset(trial) = secs;
             T.p4_responsekey(trial) = 1;
             T.p4_RT(trial)    = RT(trial,1);
 
@@ -444,6 +445,7 @@ numconds			= 2;
 T.p1_fixation_onset(:) = T.RAW_p1_fixation_onset(:)- T.RAW_param_triggerOnset(:) - (TR*6);
 T.p2_story_onset(:) = T.RAW_p2_story_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
 T.p3_ques_onset(:) = T.RAW_p3_ques_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p4_responseonset(:) = T.RAW_p4_responseonset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
 
 %% __________________________ save parameter ___________________________________
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
