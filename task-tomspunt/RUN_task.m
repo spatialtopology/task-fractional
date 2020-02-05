@@ -167,12 +167,13 @@ vnames = {'param_fmriSession', 'param_counterbalanceVer',...
     'param_image_num','param_image_filename',...
     'p1_block_fix','p1_block_fix_dur','p1_block_question_onset','p1_block_isi_blackscreen','p1_question_duration',...
     'p2_image_onset','p2_image_duration',...
-    'p3_RT','p3_actual_response_key',...
+    'p3_keypress_RT','p3_keypress_key','p3_keypress_onset'...
     'p4_short_question_onset',...
     'param_end_instruct_onset','total_param_experimentDuration',...
     'RAW_param_triggerOnset',...
     'RAW_p1_block_fix','RAW_p1_block_question_onset','RAW_p1_block_isi_blackscreen',...
     'RAW_p2_image_onset',...
+    'RAW_p3_keypress_onset',...
     'RAW_p4_short_question_onset',...
     'RAW_param_end_instruct_onset'};
 T                              = array2table(zeros(length(design.trialSeeker),size(vnames,2)));
@@ -180,16 +181,15 @@ T.Properties.VariableNames     = vnames;
 
 T.param_fmriSession(:)         = 4;
 T.param_counterbalanceVer(:)   = order;
-T.param_block_num              = trialSeeker(:,1);
+T.param_block_num              = repelem(blockSeeker(:,1),8);
 T.param_trial_num              = trialSeeker(:,2);
 list_condition                 = {'c1_WhyFace', 'c2_WhyHand', 'c3_HowFace', 'c4_HowHand'};
 T.param_cond_type_num          = trialSeeker(:,3);
 T.param_cond_type_string       = {list_condition{design.trialSeeker(:,3)}}';
 T.param_normative_response     = trialSeeker(:,4);
-T.param_ques_type_string       = design.qim(:,1);
+T.param_ques_type_string       = cell(length(design.trialSeeker),1);
+T.param_image_filename          = cell(length(design.trialSeeker),1);
 T.param_image_num              = trialSeeker(:,5);
-T.param_image_filename         = design.qim(:,2);
-
 
 % D. Print Defaults ________________________________________________
 fprintf('Test Duration:         %d secs (%d TRs)', totalTime, numTRs);
@@ -363,6 +363,7 @@ for b = 1:nBlocks
 
     for t = 1:nTrialsBlock
         % ________ 4-1. Prepare Screen for Current Trial ________________________________
+
         Screen('DrawTexture',w.win,slideTex{tmpSeeker(t,5)})
         if t==1
             WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
@@ -384,24 +385,35 @@ for b = 1:nBlocks
         % ________ 4-3. Look for Button Press ___________________________________________
         [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
         offset_dur = Screen('Flip', w.win); % QUESTION CUE
+        T.p2_image_duration(8*(b-1) + t) = offset_dur - T.RAW_p2_image_onset(8*(b-1) + t);
 
         % ________ 4-4. Present ISI, ____________________________________________________
         % and Look a Little Longer for a Response if None Was Registered ________________
-        T.p2_image_duration(8*(b-1) + t) = offset_dur - T.RAW_p2_image_onset(8*(b-1) + t);
+
         norespyet = isempty(resp);
+
         if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
         if ~isempty(resp)
+            T.RAW_p3_keypress_onset(8*(b-1) + t) = GetSecs;
             if strcmpi(resp, defaults.escape)
-                sca; rmpath(defaults.path.utilities)
+                sca; rmpath(defaults.path.utilities);
                 fprintf('\nESCAPE KEY DETECTED\n'); return
             end
             tmpSeeker(t,8) = find(strcmpi(KbName(resp_set), resp));
             tmpSeeker(t,7) = rt + (defaults.maxDur*norespyet);
+
         end
         tmpSeeker(t,9) = offset_dur;
-        T.p3_RT(8*(b-1) + t) = tmpSeeker(t,7);
-        T.p3_actual_response_key(8*(b-1) + t) = tmpSeeker(t,8);
+        T.p3_keypress_RT(8*(b-1) + t) = tmpSeeker(t,7);
+        T.p3_keypress_key(8*(b-1) + t) = tmpSeeker(t,8);
         T.RAW_p4_short_question_onset(8*(b-1) + t) = offset_dur;
+        T.param_ques_type_string{8*(b-1) + t} = isicue;
+
+
+        % T.param_ques_type_string       = design.qim(:,1);
+        slideName{tmpSeeker(t,5)}
+        T.param_image_filename{8*(b-1) + t}       = slideName{tmpSeeker(t,5)};
+        % param_ques_type_string
     end % END TRIAL LOOP
 
 
@@ -453,6 +465,7 @@ T.p1_block_fix(:) = T.RAW_p1_block_fix(:) - T.RAW_param_triggerOnset(:) - (TR*6)
 T.p1_block_question_onset(:) = T.RAW_p1_block_question_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
 T.p1_block_isi_blackscreen(:) = T.RAW_p1_block_isi_blackscreen(:) - T.RAW_param_triggerOnset(:) - (TR*6);
 T.p2_image_onset(:) = T.RAW_p2_image_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p3_keypress_onset(:) = T.RAW_p3_keypress_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
 T.p4_short_question_onset = T.RAW_p4_short_question_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
 T.param_end_instruct_onset(:) = T.RAW_param_end_instruct_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
 T.total_param_experimentDuration(:) = T.RAW_param_end_instruct_onset(:) - T.RAW_param_triggerOnset(:);
