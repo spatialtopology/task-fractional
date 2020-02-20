@@ -213,9 +213,9 @@ switch upper(computer)
         % Do nothing - return empty chosen_device
         inputDevice = [];
 end
-resp_set = ptb_response_set([defaults.valid_keys defaults.start defaults.trigger defaults.end defaults.escape]); % response set
-
-
+% resp_set = ptb_response_set([defaults.valid_keys ]); % response set
+% defaults.start defaults.trigger defaults.end defaults.escape
+resp_set = cell2mat(cellfun(@KbName,{'1!', '2@'}, 'Unif', false));
 % F. Initialize Screen _________________________________________________________
 taskname                      = 'tomspunt';
 screens                       = Screen('Screens'); % Get the screen numbers
@@ -383,6 +383,7 @@ for b = 1:nBlocks
         end
 
         % ________ 4-3. Look for Button Press ___________________________________________
+        % [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
         [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
         offset_dur = Screen('Flip', w.win); % QUESTION CUE
         T.p2_image_duration(8*(b-1) + t) = offset_dur - T.RAW_p2_image_onset(8*(b-1) + t);
@@ -392,6 +393,7 @@ for b = 1:nBlocks
 
         norespyet = isempty(resp);
 
+        % if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
         if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
         if ~isempty(resp)
             T.RAW_p3_keypress_onset(8*(b-1) + t) = GetSecs;
@@ -399,6 +401,7 @@ for b = 1:nBlocks
                 sca; rmpath(defaults.path.utilities);
                 fprintf('\nESCAPE KEY DETECTED\n'); return
             end
+            % tmpSeeker(t,8) = find(strcmpi(KbName(resp_set), resp));
             tmpSeeker(t,8) = find(strcmpi(KbName(resp_set), resp));
             tmpSeeker(t,7) = rt + (defaults.maxDur*norespyet);
 
