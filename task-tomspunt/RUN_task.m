@@ -215,7 +215,8 @@ switch upper(computer)
 end
 % resp_set = ptb_response_set([defaults.valid_keys ]); % response set
 % defaults.start defaults.trigger defaults.end defaults.escape
-resp_set = cell2mat(cellfun(@KbName,{'1!', '2@'}, 'Unif', false));
+% resp_set = cell2mat(cellfun(@KbName,{'1!', '2@'}, 'Unif', false));
+resp_set =  ptb_response_set([defaults.valid_keys defaults.escape]);
 % F. Initialize Screen _________________________________________________________
 taskname                      = 'tomspunt';
 screens                       = Screen('Screens'); % Get the screen numbers
@@ -302,6 +303,7 @@ instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 % ------------------------------------------------------------------------------
 %                       0. Present Instruction Screen
 % ------------------------------------------------------------------------------
+DisableKeysForKbCheck([]);
 start.texture = Screen('MakeTexture',w.win, imread(instruct_start));
 Screen('DrawTexture',w.win,start.texture,[],[]);
 Screen('Flip',w.win);
@@ -310,13 +312,16 @@ Screen('Flip',w.win);
 % ------------------------------------------------------------------------------
 %                           1. Wait for trigger
 % ------------------------------------------------------------------------------
-WaitKeyPress(KbName('s'));
+
+% WaitKeyPress(KbName('s'));
+secs=KbTriggerWait(KbName('s'),inputDevice);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
 
-WaitKeyPress(KbName('5%'));
-T.RAW_param_triggerOnset(:) = GetSecs;
+% WaitKeyPress(KbName('5%'));
+T.RAW_param_triggerOnset(:)=KbTriggerWait(KbName(defaults.trigger),inputDevice);
+% T.RAW_param_triggerOnset(:) = GetSecs;
 anchor = T.RAW_param_triggerOnset(1);
 WaitSecs(TR*6);
 
