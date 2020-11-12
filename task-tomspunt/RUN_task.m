@@ -1,20 +1,21 @@
-function RUN_task(sub_num)
+function RUN_task(sub_num, biopac)
 order = 0;
 test_tag = 0;
+fMRI = 0;
 % ---------------------
 % debug mode % Initial
-% debug     = 1;   % PTB Debugging
-%
-% AssertOpenGL;
-% commandwindow;
-% ListenChar(2);
-% if debug
-%     ListenChar(0);
-%     PsychDebugWindowConfiguration;
-% end
+debug     = 0;   % PTB Debugging
+
+AssertOpenGL;
+commandwindow;
+ListenChar(2);
+if debug
+    ListenChar(0);
+    PsychDebugWindowConfiguration;
+end
 
 global p
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 PsychDefaultSetup(2);
 % RUN_TASK  Run Why/How Localizer Task
 %
@@ -81,13 +82,13 @@ if nargin<2, test_tag = 0; end
 if isempty(order), order = 0; end
 
 % Check for Psychtoolbox ________________________________________________
-% try
-%     ptbVersion = PsychtoolboxVersion;
-% catch
-%     url = 'https://psychtoolbox.org/PsychtoolboxDownload';
-%     fprintf('\n\t!!! WARNING !!!\n\tPsychophysics Toolbox does not appear to on your search path!\n\tSee: %s\n\n', url);
-%     return
-% end
+try
+    ptbVersion = PsychtoolboxVersion;
+catch
+    url = 'https://psychtoolbox.org/PsychtoolboxDownload';
+    fprintf('\n\t!!! WARNING !!!\n\tPsychophysics Toolbox does not appear to on your search path!\n\tSee: %s\n\n', url);
+    return
+end
 % PsychDefaultSetup(2);
 % Print Title ________________________________________________
 script_name='----------- Images Test -----------';
@@ -97,13 +98,66 @@ fprintf('\n%s\n%s\n%s\n',boxTop,script_name,boxTop)
 % DEFAULTS ________________________________________________
 defaults = task_defaults;
 KbName('UnifyKeyNames');
-trigger = KbName(defaults.trigger);
+if fMRI 
+[id, name] = GetKeyboardIndices;
+trigger_index = find(contains(name, 'Current Designs'));
+trigger_inputDevice = id(trigger_index);
+else trigger_inputDevice = -3
+end
+% 
+% keyboard_index = find(contains(name, 'AT Translated Set 2 Keyboard'));
+% keyboard_inputDevice = id(keyboard_index);
 TR = 0.46;
 addpath(defaults.path.utilities);
+
 
 % ------------------------------------------------------------------------------
 %                                Parameters
 % ------------------------------------------------------------------------------
+
+%% 0. Biopac parameters ________________________________________________________
+% % if (py_env.Status == 'Loaded')~= 1
+% % 
+% % end
+% task_dir = pwd;
+% cd('/home/spacetop/repos/labjackpython');
+% % if (py_env.Status == 'Loaded')~= 1
+% pe = pyenv;
+% % if pe.Status == 'Loaded'
+% % return
+% % else pe = pyenv('ExecutionMode', 'InProcess');
+% % end
+% 
+% py.importlib.import_module('u3');
+% % Check to see if u3 was imported correctly
+% % py.help('u3')
+% % reloadPy();
+% d = py.u3.U3();
+% % set every channel to 0
+% for FIO = 0:7
+% d.setFIOState(pyargs('fioNum', int64(FIO), 'state', int64(0)));
+% end
+% 
+% 
+% cd(task_dir);
+task_dir = pwd;
+% load python labjack library "u3"
+cd('/home/spacetop/repos/labjackpython');
+pe = pyenv;
+%  reloadPy()
+py.importlib.import_module('u3');
+d = py.u3.U3();
+% set every biopac channel to 0
+for channel = 0:7
+d.setFIOState(pyargs('fioNum', int64(channel), 'state', int64(0)));
+end
+cd(task_dir);
+
+% biopac channel
+channel_trigger    = 0;
+channel_fixation_block = 1;
+channel_question_block        = 2;
+channel_image     = 3;
 
 %% A. directory ________________________________________________________________
 main_dir                        = pwd;
@@ -114,9 +168,9 @@ if ~exist(sub_save_dir, 'dir')
 end
 
 %% B. load design mat __________________________________________________________
-load([defaults.path.design filesep 'design.mat']);
+X=load([defaults.path.design filesep 'design.mat']);
 if order==0, randidx = randperm(4); order = randidx(1); end
-design              = alldesign{order};
+design              = X.alldesign{order};
 switch lower(defaults.language)
     case 'german'
         pbc_brief           = design.preblockcues;
@@ -150,7 +204,11 @@ eventTimes          = cumsum([defaults.prestartdur; BOA]);
 blockSeeker(:,3)    = eventTimes(1:end-1);
 numTRs              = ceil(eventTimes(end)/defaults.TR);
 totalTime           = defaults.TR*numTRs;
-
+% [id,name] = GetKeyboardIndices;
+% if size(id,2) == 12;
+%     trigger_inputDevice = 9;
+%     keyboard_inputDevice = 13;
+% end
 % C. output table variables ________________________________________________________
 %     trialSeeker (stores trial-wise runtime data)
 %     1 - block #
@@ -171,6 +229,7 @@ vnames = {'param_fmriSession', 'param_counterbalanceVer',...
     'p4_short_question_onset',...
     'param_end_instruct_onset','total_param_experimentDuration',...
     'RAW_param_triggerOnset',...
+    'param_start_biopac',...
     'RAW_p1_block_fix','RAW_p1_block_question_onset','RAW_p1_block_isi_blackscreen',...
     'RAW_p2_image_onset',...
     'RAW_p3_keypress_onset',...
@@ -200,19 +259,19 @@ fprintf('%s\n', repmat('-', 1, length(script_name)));
 
 
 % E. Setup Input Device(s) _____________________________________________________
-switch upper(computer)
-    case 'MACI64'
-        inputDevice = ptb_get_resp_device;
-    case {'PCWIN','PCWIN64'}
-        % JMT:
-        % Do nothing for now - return empty chosen_device
-        % Windows XP merges keyboard input and will process external keyboards
-        % such as the Silver Box correctly
-        inputDevice = [];
-    otherwise
-        % Do nothing - return empty chosen_device
-        inputDevice = [];
-end
+% switch upper(computer)
+%     case 'MACI64'
+%         inputDevice = ptb_get_resp_device;
+%     case {'PCWIN','PCWIN64'}
+%         % JMT:
+%         % Do nothing for now - return empty chosen_device
+%         % Windows XP merges keyboard input and will process external keyboards
+%         % such as the Silver Box correctly
+%         inputDevice = [];
+%     otherwise
+%         % Do nothing - return empty chosen_device
+%         inputDevice = [];
+% end
 % resp_set = ptb_response_set([defaults.valid_keys ]); % response set
 % defaults.start defaults.trigger defaults.end defaults.escape
 % resp_set = cell2mat(cellfun(@KbName,{'1!', '2@'}, 'Unif', false));
@@ -221,6 +280,8 @@ resp_set =  ptb_response_set([defaults.valid_keys defaults.escape]);
 taskname                      = 'tomspunt';
 screens                       = Screen('Screens'); % Get the screen numbers
 p.ptb.screenNumber            = max(screens); % Draw to the external screen if avaliable
+p.ptb.device = PsychHID('Devices');
+
 p.ptb.white                   = WhiteIndex(p.ptb.screenNumber);
 p.ptb.black                   = BlackIndex(p.ptb.screenNumber);
 [p.ptb.window, p.ptb.rect]    = PsychImaging('OpenWindow', p.ptb.screenNumber, p.ptb.black);
@@ -303,7 +364,7 @@ instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 % ------------------------------------------------------------------------------
 %                       0. Present Instruction Screen
 % ------------------------------------------------------------------------------
-DisableKeysForKbCheck([]);
+% DisableKeysForKbCheck([]);
 start.texture = Screen('MakeTexture',w.win, imread(instruct_start));
 Screen('DrawTexture',w.win,start.texture,[],[]);
 Screen('Flip',w.win);
@@ -313,15 +374,16 @@ Screen('Flip',w.win);
 %                           1. Wait for trigger
 % ------------------------------------------------------------------------------
 
-% WaitKeyPress(KbName('s'));
-secs=KbTriggerWait(KbName('s'),inputDevice);
+% WaitKeyPress(KbName('s'), 1);
+secs = KbTriggerWait(KbName('s'),-3);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
 
 % WaitKeyPress(KbName('5%'));
-T.RAW_param_triggerOnset(:)=KbTriggerWait(KbName(defaults.trigger),inputDevice);
+T.RAW_param_triggerOnset(:) = KbTriggerWait(KbName('5%'), trigger_inputDevice);
 % T.RAW_param_triggerOnset(:) = GetSecs;
+T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel_trigger, 1);
 anchor = T.RAW_param_triggerOnset(1);
 WaitSecs(TR*6);
 
@@ -336,8 +398,9 @@ for b = 1:nBlocks
     % ________ 3-1. Present Fixation Screen Until Question Onset ________________________
     Screen('DrawTexture',w.win, fixTex);
     T.RAW_p1_block_fix(8*(b-1)+1:8*b) = Screen('Flip',w.win);
+    T.CHANGE(:)                   = biopac_linux_matlab(biopac, channel_fixation_block, 1);
 
-    % ________ 3-2. Get Data for This Block (While Waiting for Block Onset) _____________
+%    % ________ 3-2. Get Data for This Block (While Waiting for Block Onset) _____________
     tmpSeeker   = trialSeeker(trialSeeker(:,1)==b,:);
     pbcue       = pbc_brief{blockSeeker(b,4)};  % question cue
     isicue      = design.isicues{blockSeeker(b,4)};  % isi cue
@@ -354,12 +417,16 @@ for b = 1:nBlocks
 
     % ________ 3-4. Present Question Screen and Prepare First ISI (Blank) Screen ________
     WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3)); % duration of fixation
+    T.CHANGE(:)                   = biopac_linux_matlab(biopac, channel_fixation_block, 0);
+
     T.p1_block_fix_dur(8*(b-1)+1:8*b) = GetSecs - T.RAW_p1_block_fix(8*(b-1)+1);
     T.RAW_p1_block_question_onset(8*(b-1)+1:8*b) = Screen('Flip', w.win); % p2_question_cue
+    T.CHANGE(:)                   = biopac_linux_matlab(biopac, channel_question_block, 1);
     Screen('FillRect', w.win, w.black);
 
     % ________ 3-5. Present Blank Screen Prior to First Trial ___________________________
     WaitSecs('UntilTime', anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur);
+    T.CHANGE(:)                   = biopac_linux_matlab(biopac, channel_question_block, 0);
     T.RAW_p1_block_isi_blackscreen(8*(b-1)+1:8*b) = Screen('Flip', w.win); % p3_fixation_onset
 
 % ------------------------------------------------------------------------------
@@ -380,6 +447,7 @@ for b = 1:nBlocks
 
         % ________ 4-2. Present Screen for Current Trial & Prepare ISI Screen ___________
         T.RAW_p2_image_onset(8*(b-1) + t) = Screen('Flip',w.win); % IMAGE WITH OPTIONS
+        T.CHANGE(:)                   = biopac_linux_matlab(biopac, channel_image, 1);
         tmpSeeker(t,6) = T.RAW_p2_image_onset(8*(b-1) + t) - (anchor + TR*6);
         if t==nTrialsBlock % present fixation after last trial of block
             Screen('DrawTexture', w.win, fixTex);
@@ -389,8 +457,9 @@ for b = 1:nBlocks
 
         % ________ 4-3. Look for Button Press ___________________________________________
         % [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
-        [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
+        [resp, rt] = ptb_get_resp_windowed_noflip(trigger_inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
         offset_dur = Screen('Flip', w.win); % QUESTION CUE
+        T.CHANGE(:)                   = biopac_linux_matlab(biopac, channel_image, 0);
         T.p2_image_duration(8*(b-1) + t) = offset_dur - T.RAW_p2_image_onset(8*(b-1) + t);
 
         % ________ 4-4. Present ISI, ____________________________________________________
@@ -399,7 +468,7 @@ for b = 1:nBlocks
         norespyet = isempty(resp);
 
         % if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
-        if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
+        if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(trigger_inputDevice, resp_set, defaults.ISI*0.90); end
         if ~isempty(resp)
             T.RAW_p3_keypress_onset(8*(b-1) + t) = GetSecs;
             if strcmpi(resp, defaults.escape)
@@ -480,27 +549,44 @@ WaitKeyPress(KbName('e'));
 ShowCursor;
 
 % Exit ____________________________________________________________________
-ptb_exit;
-rmpath(defaults.path.utilities);
 
-    function WaitKeyPress(kID)
-        while KbCheck(-3); end  % Wait until all keys are released.
+function [time] = biopac_linux_matlab(biopac, channel_num, state_num)
+    if biopac
+        d.setFIOState(pyargs('fioNum', int64(channel_num), 'state', int64(state_num)))
+        time = GetSecs;
+    else
+        time = GetSecs;
+        return
+    end
+end
 
-        while 1
-            % Check the state of the keyboard.
-            [ keyIsDown, ~, keyCode ] = KbCheck(-3);
-            % If the user is pressing a key, then display its code number and name.
-            if keyIsDown
+    function reloadPy()
+        warning('off', 'MATLAB:ClassInstanceExists')
+        clear classes
+        mod = py.importlib.import_module('u3');
+        py.importlib.reload(mod);
+        
+    end
+function WaitKeyPress(kID)
+    while KbCheck(-3); end  % Wait until all keys are released.
 
-                if keyCode(KbName('ESCAPE'))
-                    cleanup; break;
-                elseif keyCode(kID)
-                    break;
-                end
-                % make sure key's released
-                while KbCheck(-3); end
+    while 1
+        % Check the state of the keyboard.
+        [ keyIsDown, ~, keyCode ] = KbCheck(-3);
+        % If the user is pressing a key, then display its code number and name.
+        if keyIsDown
+
+            if keyCode(KbName('ESCAPE'))
+                cleanup; break;
+            elseif keyCode(kID)
+                break;
             end
+            % make sure key's released
+            while KbCheck(-3); end
         end
     end
+end
+ptb_exit;
+rmpath(defaults.path.utilities);
 
 end
