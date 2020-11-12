@@ -21,8 +21,8 @@ function chosen_device = ptb_get_resp_device(prompt)
 if nargin<1, prompt = 'Which device?'; end
 
 chosen_device = [];
-numDevices=PsychHID('NumDevices');
-devices=PsychHID('Devices');
+numDevices=PsychHID('NumDevices'); %5
+devices=PsychHID('Devices'); %5
 candidate_devices = [];
 boxTop(1:length(prompt))='-';
 keyboard_idx = GetKeyboardIndices;
