@@ -1,4 +1,4 @@
-function tom_localizer(sub_num)
+function tom_localizer(sub_num, biopac)
 run_num=1;
 %% Version: September 7, 2011
 % updated by Heejung Jung
@@ -149,9 +149,38 @@ run_num=1;
 %                                Parameters
 % ------------------------------------------------------------------------------
 
+%% 0. Biopac parameters _________________________________________________
+script_dir = pwd;
+
+% biopac channel
+channel_trigger           = 0;
+channel_fixation          = 1;
+channel_story             = 2;
+channel_question          = 3;
+channel_last_fixation     = 4;
+
+
+
+%% 0. Biopac parameters _________________________________________________
+if biopac == 1
+    script_dir = pwd;
+    cd('/home/spacetop/repos/labjackpython');
+    pe = pyenv;
+    py.importlib.import_module('u3');
+    % Check to see if u3 was imported correctly
+    % py.help('u3')
+    d = py.u3.U3();
+    % set every channel to 0
+    d.configIO(pyargs('FIOAnalog', int64(0), 'EIOAnalog', int64(0)));
+    for FIONUM = 0:7
+        d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
+    end
+    cd(script_dir);
+end
+
 %% A. directory _____________________________________________________
-tomsaxe_dir			= pwd;
-textdir				= fullfile(tomsaxe_dir, 'text_files');
+tomsaxe_dir			  = pwd;
+textdir				    = fullfile(tomsaxe_dir, 'text_files');
 sub_save_dir			= fullfile(tomsaxe_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh');
 if ~exist(sub_save_dir, 'dir')
     mkdir(sub_save_dir)
@@ -179,16 +208,16 @@ TR                                 = 0.46;
 
 %% C. output table variables _____________________________________________________
 vnames = {'param_fmriSession', ...
-                                  'p1_fixation_onset',...
-                                  'p2_filename', 'p2_filetype','p2_story_onset',...
-                                  'p3_ques_onset',...
-                                  'p4_responseonset','p4_responsekey','p4_RT',...
-                                  'experimentDuration',...
-                                  'RAW_param_triggerOnset', 'RAW_p1_fixation_onset',...
-                                  'RAW_p2_story_onset', 'RAW_p3_ques_onset',...
-                                  'RAW_p4_responseonset',...
-                                  'RAW_param_end_instruct_onset','RAW_param_final_fixation'};
-                                  % 'param_end_instruct_onset',
+    'p1_fixation_onset',...
+    'p2_filename', 'p2_filetype','p2_story_onset',...
+    'p3_ques_onset',...
+    'p4_responseonset','p4_responsekey','p4_RT',...
+    'experimentDuration',...
+    'RAW_param_trigger_onset', 'RAW_p1_fixation_onset',...
+    'RAW_p2_story_onset', 'RAW_p3_ques_onset',...
+    'RAW_p4_responseonset',...
+    'RAW_param_end_instruct_onset','RAW_param_final_fixation'};
+% 'param_end_instruct_onset',
 T                                  = array2table(zeros(trialsPerRun,size(vnames,2)));
 T.Properties.VariableNames         = vnames;
 
@@ -262,7 +291,7 @@ try
     p.ptb.ifi                      = Screen('GetFlipInterval',p.ptb.window);
     Screen('BlendFunction', p.ptb.window,'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA');
 
-%% H. Keyboard information _____________________________________________________
+    %% H. Keyboard information _____________________________________________________
     KbName('UnifyKeyNames');
     p.keys.confirm                 = KbName('return');
     p.keys.right                   = KbName('2@');
@@ -279,7 +308,7 @@ try
     p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
     Screen( 'Preference', 'SkipSyncTests', 0);
     Screen( p.ptb.window, 'TextFont', 'Helvetica');
-    Screen( p.ptb.window, 'TextSize', 30);
+    Screen( p.ptb.window, 'TextSize', 40);
 catch exception
     ShowCursor;
     sca;
@@ -287,6 +316,17 @@ catch exception
     return
 end
 
+
+
+% H. Make Images Into Textures ________________________________________________
+DrawFormattedText(p.ptb.window,sprintf('LOADING\n\n0%% complete'),'center','center',p.ptb.white );
+Screen('Flip',p.ptb.window);
+for trl = 1:36
+start_tex = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
+end_tex   = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
+DrawFormattedText(p.ptb.window,sprintf('LOADING\n\n%d%% complete', ceil(100*trl/36)),'center','center',p.ptb.white);
+Screen('Flip',p.ptb.window);
+end
 
 %% -----------------------------------------------------------------------------
 %                              START EXPERIMENT
@@ -296,8 +336,8 @@ end
 %                       0. Present Instruction Screen
 % ------------------------------------------------------------------------------
 Screen('TextSize',p.ptb.window,72);
-start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start)); % start image
-Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
+% start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start)); % start image
+Screen('DrawTexture',p.ptb.window, start_tex,[],[]);
 Screen(p.ptb.window, 'Flip');
 
 % ------------------------------------------------------------------------------
@@ -309,8 +349,11 @@ Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
 Screen('Flip', p.ptb.window);
 
 WaitKeyPress(p.keys.trigger);
-T.RAW_param_triggerOnset(:) = GetSecs;
-experimentStart = T.RAW_param_triggerOnset(1);
+T.RAW_param_trigger_onset(:) = GetSecs;
+experimentStart = T.RAW_param_trigger_onset(1);
+T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel_trigger, 1);
+
+%% ___________________________ Dummy scans ____________________________
 WaitSecs(TR*6);
 
 counter				    = zeros(1,2)+(5*(run_num-1));
@@ -328,9 +371,9 @@ for trial = 1:trialsPerRun
     Screen(p.ptb.window, 'Flip');
     counter(1,design(trial)) = counter(1,design(trial)) + 1;
 
-% ------------------------------------------------------------------------------
-%                          3. Determine stimuli filenames
-% ------------------------------------------------------------------------------
+    % ------------------------------------------------------------------------------
+    %                          3. Determine stimuli filenames
+    % ------------------------------------------------------------------------------
     trialT			= design(trial);							% trial type. 1 = false belief, 2 = false photograph
     % numbeT			= counter(1,trialT);						% the number of the stimuli
     numbeT      = random_seq(trial);
@@ -340,9 +383,9 @@ for trial = 1:trialsPerRun
     T.p2_filename{trial} = {sprintf('%d%s_story.txt',numbeT,condPrefs{trialT})};
     T.p2_filetype{trial} = trial_type{trialT};
 
-% ------------------------------------------------------------------------------
-%                          4. Present story
-% ------------------------------------------------------------------------------
+    % ------------------------------------------------------------------------------
+    %                          4. Present story
+    % ------------------------------------------------------------------------------
     % ________ 4-1. Open Story _________________________________________________
     textfid			= fopen(storyname, 'r');
     lCounter		= 1;										% line counter
@@ -351,8 +394,10 @@ for trial = 1:trialsPerRun
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         T.RAW_p1_fixation_onset(trial) = Screen('Flip', p.ptb.window);
-    end					% wait for fixation period to elapse
+        T.event01_fixation_biopac(trl)             = biopac_linux_matlab(biopac, channel_fixation, 1);
 
+    end					% wait for fixation period to elapse
+    biopac_linux_matlab(biopac, channel_fixation, 0);
     % ________ 4-2. Display Story ______________________________________________
     while 1
         tline		= fgetl(textfid);							% read line from text file.
@@ -362,11 +407,12 @@ for trial = 1:trialsPerRun
     end
     fclose(textfid);
     T.RAW_p2_story_onset(trial) = Screen(p.ptb.window, 'Flip');
+    T.event02_story_biopac(trl)             = biopac_linux_matlab(biopac, channel_story, 1);
     trialsOnsets(trial) = GetSecs-experimentStart;
 
-% ------------------------------------------------------------------------------
-%                          5. Present Question
-% ------------------------------------------------------------------------------
+    % ------------------------------------------------------------------------------
+    %                          5. Present Question
+    % ------------------------------------------------------------------------------
 
     % ________ 5-1. Open question ______________________________________________
     textfid			= fopen(questname);
@@ -381,13 +427,15 @@ for trial = 1:trialsPerRun
     while GetSecs - trialStart < fixDur + storyDur; end	% wait for story presentation period
 
     % ________ 5-2. Display Question ___________________________________________
+    biopac_linux_matlab(biopac, channel_story, 0);
     T.RAW_p3_ques_onset(trial) = Screen(p.ptb.window, 'Flip');
+    T.event03_question_biopac(trl)             = biopac_linux_matlab(biopac, channel_question, 1);
 
     responseStart	= GetSecs;
 
-% ------------------------------------------------------------------------------
-%                          6. Get Response
-% ------------------------------------------------------------------------------
+    % ------------------------------------------------------------------------------
+    %                          6. Get Response
+    % ------------------------------------------------------------------------------
     while ( GetSecs - T.RAW_p3_ques_onset(trial) ) < questDur
         [keyIsDown,secs,keyCode]	= KbCheck; % check to see if a key is being pressed
 
@@ -396,24 +444,53 @@ for trial = 1:trialsPerRun
             sca;
             return
         elseif keyCode(p.keys.right)
+            biopac_linux_matlab(biopac, channel_question, 0);
             RT(trial,1)				= GetSecs - T.RAW_p3_ques_onset(trial); %responseStart;
             key(trial,1)    	= 2;
             T.RAW_p4_responseonset(trial) = secs;
             T.p4_responsekey(trial)    = 2;
             T.p4_RT(trial)    = RT(trial,1);
+            WaitSecs(0.5);
+
+            % remainder_time = task_duration-0.5-RT(trial,1)
+            Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+                p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+            Screen('Flip', p.ptb.window);
+            biopac_linux_matlab(biopac, channel_fixation, 1);
+            %WaitSecs(remainder_time);
+            %biopac_linux_matlab(biopac, channel_fixation, 0);
+
+
         elseif keyCode(p.keys.left)
+            biopac_linux_matlab(biopac, channel_question, 0);
             RT(trial,1)				= GetSecs - T.RAW_p3_ques_onset(trial); %responseStart;
             key(trial,1)			= 1;
             T.RAW_p4_responseonset(trial) = secs;
             T.p4_responsekey(trial) = 1;
             T.p4_RT(trial)    = RT(trial,1);
+            WaitSecs(0.5);
+
+            %remainder_time = task_duration-0.5-RT(trial,1);
+            Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+                p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+            Screen('Flip', p.ptb.window);
+            biopac_linux_matlab(biopac, channel_fixation, 1);
+            %WaitSecs(remainder_time);
+
+
+
 
         end
     end
+    biopac_linux_matlab(biopac, channel_question, 0);
+    biopac_linux_matlab(biopac, channel_fixation, 0);
+    T.RAW_p4_responseonset(trial) = secs;
+    T.p4_responsekey(trial) = 1;
+    T.p4_RT(trial)    = RT(trial,1);
 
-% ------------------------------------------------------------------------------
-%                        7. Save information in the event of a crash
-% ------------------------------------------------------------------------------
+    % ------------------------------------------------------------------------------
+    %                        7. Save information in the event of a crash
+    % ------------------------------------------------------------------------------
     save_filename = [strcat('sub-', sprintf('%04d', sub_num)), '_ses-04_task-tomsaxe.mat'];
     save_fullfile = fullfile(sub_save_dir, save_filename);
     save(save_fullfile,'sub_num','run_num','design','items','key','RT','trialsOnsets');
@@ -424,28 +501,31 @@ trials_end			= GetSecs;
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 T.RAW_param_final_fixation(:) = Screen('Flip', p.ptb.window);
+biopac_linux_matlab(biopac, channel_last_fixation, 1);
 
 WaitSecs(endDur);
+biopac_linux_matlab(biopac, channel_last_fixation, 0);
 
 % ------------------------------------------------------------------------------
 %                       END AND SAVE EXPERIMENT
 % ------------------------------------------------------------------------------
 % _________________________ End Instructions _____________________________
-end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
-Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
+% end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
+Screen('DrawTexture',p.ptb.window,end_tex,[],[]);
 T.RAW_param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
+biopac_linux_matlab(biopac, channel_trigger, 0);
 
 
-T.experimentDuration(:) = T.RAW_param_end_instruct_onset(1) - T.RAW_param_triggerOnset(1);
+T.experimentDuration(:) = T.RAW_param_end_instruct_onset(1) - T.RAW_param_trigger_onset(1);
 experimentEnd		= GetSecs;
 experimentDuration	= T.experimentDuration(1);
 numconds			= 2;
 
 % convert variables
-T.p1_fixation_onset(:) = T.RAW_p1_fixation_onset(:)- T.RAW_param_triggerOnset(:) - (TR*6);
-T.p2_story_onset(:) = T.RAW_p2_story_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p3_ques_onset(:) = T.RAW_p3_ques_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p4_responseonset(:) = T.RAW_p4_responseonset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+T.p1_fixation_onset(:) = T.RAW_p1_fixation_onset(:)- T.RAW_param_trigger_onset(:) - (TR*6);
+T.p2_story_onset(:) = T.RAW_p2_story_onset(:) - T.RAW_param_trigger_onset(:) - (TR*6);
+T.p3_ques_onset(:) = T.RAW_p3_ques_onset(:) - T.RAW_param_trigger_onset(:) - (TR*6);
+T.p4_responseonset(:) = T.RAW_p4_responseonset(:) - T.RAW_param_trigger_onset(:) - (TR*6);
 
 %% __________________________ save parameter ___________________________________
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
@@ -466,7 +546,15 @@ catch exception
     cd(orig_dir);
 end					% end main function
 
-
+function [time] = biopac_linux_matlab(biopac, channel_num, state_num)
+    if biopac
+        d.setFIOState(pyargs('fioNum', int64(channel_num), 'state', int64(state_num)))
+        time = GetSecs;
+    else
+        time = GetSecs;
+        return
+    end
+end
     function WaitKeyPress(kID)
         while KbCheck(-3); end
         while 1
