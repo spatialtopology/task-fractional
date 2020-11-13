@@ -437,6 +437,7 @@ for trial = 1:trialsPerRun
     %                          6. Get Response
     % ------------------------------------------------------------------------------
     while ( GetSecs - T.RAW_p3_ques_onset(trial) ) < questDur
+        
         [keyIsDown,secs,keyCode]	= KbCheck; % check to see if a key is being pressed
 
         if keyCode(p.keys.esc)
@@ -484,9 +485,6 @@ for trial = 1:trialsPerRun
     end
     biopac_linux_matlab(biopac, channel_question, 0);
     biopac_linux_matlab(biopac, channel_fixation, 0);
-    T.RAW_p4_responseonset(trial) = secs;
-    T.p4_responsekey(trial) = 1;
-    T.p4_RT(trial)    = RT(trial,1);
 
     % ------------------------------------------------------------------------------
     %                        7. Save information in the event of a crash
