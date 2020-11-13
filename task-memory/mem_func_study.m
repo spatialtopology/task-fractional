@@ -1,4 +1,4 @@
-function [cfg,expParam] = mt_study(p,cfg,expParam,logFile,sesName, sub_num)
+function [cfg,expParam] = mem_func_study(p,cfg,expParam,logFile,sesName, sub_num)
 
 % Description:
 %  This function runs the study task. There are no blocks.

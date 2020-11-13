@@ -1,4 +1,4 @@
-function [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName)
+function [cfg,expParam] = mem_func_saveStimList_images(cfg,expParam,sesName)
 
 if nargin < 3
     error('Not enough input arguments!');
@@ -67,24 +67,24 @@ if strcmp(phase,'stud')
                 fprintf(fid,'%s\n',imNames(cfg.stim.(sesName).imToPick(im)).name);
             end
         end
-    fclose(fid);   
+    fclose(fid);
     %%%%%%%%%%%%%%%%%%%%%%%%
     % Predefined list
     else
         source = [cfg.files.stimListDir '\stimList_' sesName '.txt'];
         destination = [cfg.stim.(sesName).stimListFile];
         copyfile(source,destination);
-        
+
         formatStr = '%s';
-        commentStyle = '!!!'; 
-        
+        commentStyle = '!!!';
+
         if exist(destination,'file')
             % read the real file
             fid = fopen(destination,'r');
             logData = textscan(fid,formatStr,'Delimiter','\t','emptyvalue',NaN,'CommentStyle',commentStyle);
             fclose(fid);
         end
-        
+
         for i = 1 : length(logData{1})
             cfg.stim.(sesName).imToPick(:,1) = str2num(logData{1}{i}(4:6));
             if i <= cfg.stim.nonTestBuffersStudy || i > cfg.stim.nStudy + cfg.stim.nonTestBuffersStudy
@@ -92,7 +92,7 @@ if strcmp(phase,'stud')
             else
                 cfg.stim.(sesName).imToPick(i,2) = 1;
             end
-        end  
+        end
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % List to test
@@ -105,7 +105,7 @@ elseif strcmp(phase,'test')
         sesNameStudy = ['stud' num2str(phaseNum)];
         imStudied = cfg.stim.(sesNameStudy).imToPick;
         imStudied = sort(imStudied(imStudied(:,2) == 1));
-        
+
         % Load all study list of the experiment and all previous test list
         % already created
         imAlreadyUsed = [];
@@ -118,7 +118,7 @@ elseif strcmp(phase,'test')
             imAlreadyUsed = [imAlreadyUsed; cfg.stim.(sesNamePrev).imToTest(:,1)];
         end
         imAlreadyUsed = sort(imAlreadyUsed);
-        
+
         % Randomly pick up new images
         imToTest(:,1) = randperm(length(imNames),cfg.stim.nTestNew);
         for im = 1 : length(imToTest)
@@ -129,13 +129,13 @@ elseif strcmp(phase,'test')
             imAlreadyUsed = [imAlreadyUsed;currentIm];
             imToTest(im) = currentIm;
         end
-        
+
         % Randomly pick up old image
         imToTest = [imToTest;imStudied(randperm(length(imStudied),cfg.stim.nTestOld))];
-        
+
         imToTest(1:cfg.stim.nTestNew,2) = 0;
         imToTest(cfg.stim.nTestNew+1:end,2) = 1;
-        
+
         [a,b] = sort(imToTest);
         imToTest = imToTest(b(:,1),:);
         cfg.stim.(sesName).imToTest = imToTest;
@@ -149,27 +149,25 @@ elseif strcmp(phase,'test')
         source = [cfg.files.stimListDir '\stimList_' sesName '.txt'];
         destination = [cfg.stim.(sesName).stimListFile];
         copyfile(source,destination);
-        
+
         formatStr = '%s';
-        commentStyle = '!!!'; 
-        
+        commentStyle = '!!!';
+
         if exist(destination,'file')
             % read the real file
             fid = fopen(destination,'r');
             logData = textscan(fid,formatStr,'Delimiter','\t','emptyvalue',NaN,'CommentStyle',commentStyle);
             fclose(fid);
         end
-        
+
         for i = 1 : length(logData{1})
             cfg.stim.(sesName).imToTest(i,1) = str2num(logData{1}{i}(4:6));
-        end  
-        
+        end
+
         oldnewfile = [cfg.files.stimListDir '\stimList_' sesName '.mat'];
         load(oldnewfile)
-        cfg.stim.(sesName).imToTest(:,2) = oldnew;    
+        cfg.stim.(sesName).imToTest(:,2) = oldnew;
     end
 end
 
 fprintf('Done.\n');
-
-

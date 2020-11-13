@@ -330,6 +330,7 @@ Screen('Flip', p.ptb.window);
 
 WaitKeyPress(p.keys.trigger);
 T.param_triggerOnset(:)          = GetSecs;
+T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel_trigger, 1);
 WaitSecs(TR*6);
 
 % ------------------------------------------------------------------------------
@@ -374,6 +375,7 @@ Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.param_end_instruct_onset(:)  = Screen('Flip',p.ptb.window);
 WaitKeyPress(p.keys.end); % press s
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) -T.param_triggerOnset(1);
+T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel_trigger, 0);
 
 %
 % _________________________ 8. save parameter _________________________________

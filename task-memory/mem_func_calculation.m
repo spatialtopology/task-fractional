@@ -1,4 +1,4 @@
-function calculation(p, cfg, sub_num, task_num)
+function mem_func_calculation(p, cfg, sub_num, task_num)
 
 main_dir = cfg.files.expDir;
 vnames = {'param_fmriSession',... %'param_counterbalanceVer','param_triggerOnset',...

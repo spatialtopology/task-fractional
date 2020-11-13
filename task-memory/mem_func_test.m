@@ -1,4 +1,4 @@
-function [cfg,expParam, accuracy_freq] = mt_test(p,cfg,expParam,logFile,sesName,sub_num)
+function [cfg,expParam, accuracy_freq] = mem_func_test(p,cfg,expParam,logFile,sesName,sub_num)
 % Description:
 %  This function runs the test task. There are no blocks.
 task_duration = 2;
