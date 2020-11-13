@@ -1,4 +1,4 @@
-function RUN_posner(sub_num)
+function RUN_posner(sub_num, biopac)
 
 % created by Heejung Jung
 % 2019.11.15
@@ -7,10 +7,39 @@ function RUN_posner(sub_num)
 %                          Experiment parameters
 %--------------------------------------------------------------------------
 
+
+%% 0. Biopac parameters _________________________________________________
+script_dir = pwd;
+% biopac channel
+channel_trigger          = 0;
+channel_fixation         = 1;
+channel_cue              = 2;
+channel_target           = 3;
+channel_target_remainder = 4;
+channel_fixation_2       = 5;
+
+
+%% 0. Biopac parameters _________________________________________________
+if biopac == 1
+    script_dir = pwd;
+    cd('/home/spacetop/repos/labjackpython');
+    pe = pyenv;
+    py.importlib.import_module('u3');
+    % Check to see if u3 was imported correctly
+    % py.help('u3')
+    d = py.u3.U3();
+    % set every channel to 0
+    d.configIO(pyargs('FIOAnalog', int64(0), 'EIOAnalog', int64(0)));
+    for FIONUM = 0:7
+        d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
+    end
+    cd(script_dir);
+end
+
 % A. psychtoolbox parameters _____________________________________________
 global p
 
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 PsychDefaultSetup(2);
 screens                        = Screen('Screens'); % Get the screen numbers
 p.ptb.screenNumber             = max(screens); % Draw to the external screen if avaliable
@@ -140,6 +169,7 @@ Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
 Screen('Flip', p.ptb.window);
 % T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
 WaitKeyPress(p.keys.trigger);
+T.param_end_biopac(:)                     = biopac_linux_matlab(biopac, channel_trigger, 1);
 T.RAW_param_triggerOnset(:) = GetSecs;
 WaitSecs(TR*6);
 
@@ -154,8 +184,10 @@ for trl = 1:size(countBalMat,1)
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
     Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
     T.RAW_p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
+    T.CHANGE(trl)                   = biopac_linux_matlab(biopac, channel_fixation, 1);
     WaitSecs(jitter1);
     T.RAW_p1_fixation_offset(trl) = GetSecs;
+    biopac_linux_matlab(biopac, channel_fixation, 1);
     T.p1_ptb_fixation_duration(trl) = T.RAW_p1_fixation_offset(trl) - T.RAW_p1_fixation_onset(trl);
     % T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
 
@@ -168,8 +200,10 @@ for trl = 1:size(countBalMat,1)
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.leftRects, p.rect.penWidthPixels);
         T.RAW_p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
+        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_cue, 1);
         WaitSecs(cue_duration);
         T.RAW_p2_cue_offset(trl) = GetSecs;
+        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_cue, 0);
         T.p2_cue_duration(trl) = T.RAW_p2_cue_offset(trl)- T.RAW_p2_cue_onset(trl);
 
     elseif string(countBalMat.cue{trl}) == "right"
@@ -177,9 +211,12 @@ for trl = 1:size(countBalMat,1)
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.rightRects, p.rect.penWidthPixels);
+        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_cue, 1);
         T.RAW_p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
+
         WaitSecs(cue_duration);
         T.RAW_p2_cue_offset(trl) = GetSecs;
+        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_cue, 0);
         T.p2_cue_duration(trl) = T.RAW_p2_cue_offset(trl)- T.RAW_p2_cue_onset(trl);
     else
         error('check!');
@@ -195,13 +232,16 @@ for trl = 1:size(countBalMat,1)
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('DrawDots', p.ptb.window, [p.target.leftXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
+
         T.RAW_p3_target_onset(trl) = Screen('Flip', p.ptb.window);
+        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target, 1);
     elseif string(countBalMat.target{trl}) == "right"
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('DrawDots', p.ptb.window, [p.target.rightXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
         T.RAW_p3_target_onset(trl) = Screen('Flip', p.ptb.window);
+        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target, 1);
     end
 
     % ------------------------------------------------------------------------
@@ -220,6 +260,7 @@ for trl = 1:size(countBalMat,1)
             sca;
             return
         elseif keyCode(p.keys.left)
+        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target, 0);
             RT = secs - T.RAW_p3_target_onset(trl);
             T.p4_RT(trl) = secs - T.RAW_p3_target_onset(trl);
             T.p4_responsekey(trl)  = 1;
@@ -229,11 +270,14 @@ for trl = 1:size(countBalMat,1)
             Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
                 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
             T.RAW_p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
+            T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target_remainder, 1);
             WaitSecs(remainder_time);
+            T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target_remainder, 0);
             T.p4_fixation_duration(trl) = remainder_time;
 
 
         elseif keyCode(p.keys.right)
+        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target, 0);
             RT = secs - T.RAW_p3_target_onset(trl);
             T.p4_RT(trl) = secs - T.RAW_p3_target_onset(trl);
             T.p4_responsekey(trl)  = 2; % right
@@ -243,12 +287,15 @@ for trl = 1:size(countBalMat,1)
             Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
                 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
             T.RAW_p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
+            T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target_remainder, 1);
             WaitSecs(remainder_time);
+            T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target_remainder, 0);
             T.p4_fixation_duration(trl) = remainder_time;
 
         end
 
     end
+    T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_target_remainder, 0);
     T.RAW_p4_responseonset(trl) = secs;
     % T.p4_responsekey(trl) = response;
     % T.p4_RT(trl) = RT;
@@ -256,7 +303,9 @@ for trl = 1:size(countBalMat,1)
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
     T.RAW_p5_fixation_onset(trl) = Screen('Flip', p.ptb.window);
-    WaitSecs(0.2)
+    T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_fixation_2, 1);
+    WaitSecs(0.2);
+    T.CHANGE(trl) = biopac_linux_matlab(biopac, channel_fixation_2, 1);
 end
 
 
@@ -264,6 +313,7 @@ end
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.RAW_param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
+T.param_end_biopac(:)                     = biopac_linux_matlab(biopac, channel_trigger, 0);
 T.experimentDuration(:) = T.RAW_param_end_instruct_onset(1) - T.RAW_param_triggerOnset(1);
 
 % ------------------------------------------------------------------------
@@ -290,6 +340,11 @@ ShowCursor;
 close all;
 sca;
 
+clear p; clearvars; Screen('Close'); close all; sca;
+%% -----------------------------------------------------------------------------
+%                                   Function
+%-------------------------------------------------------------------------------
+
     function WaitKeyPress(kID)
         while KbCheck(-3); end
         while 1
@@ -305,5 +360,14 @@ sca;
         end
     end
 
+    function [time] = biopac_linux_matlab(biopac, channel_num, state_num)
+        if biopac
+            d.setFIOState(pyargs('fioNum', int64(channel_num), 'state', int64(state_num)))
+            time = GetSecs;
+        else
+            time = GetSecs;
+            return
+        end
+    end
 
 end
