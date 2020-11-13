@@ -1,4 +1,4 @@
-function memorizationTask(sub_num)
+function RUN_memory(sub_num, biopac)
 % function memorizationTask(expName,subNum)
 
 
@@ -23,7 +23,7 @@ function memorizationTask(sub_num)
 % check for Opengl compatibility, abort otherwise:
 % AssertOpenGL;
 global p
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 PsychDefaultSetup(2);
 
 % Make sure keyboard mapping is the same on all supported operating systems
@@ -34,7 +34,7 @@ rng('shuffle');
 
 % need to be in the experiment directory to run it. See if this function is
 % in the current directory; if it is then we're in the right spot.
-if ~exist(fullfile(pwd,sprintf('%s.m','memorizationTask')),'file')
+if ~exist(fullfile(pwd,sprintf('%s.m','RUN_memory')),'file')
     error('Must be in the experiment directory to run the experiment.');
 end
 
@@ -42,10 +42,10 @@ end
 
 % make sure there are somewhere betwen 0 and 2 arguments
 minArg = 0;
-maxArg = 1;
+maxArg = 2;
 narginchk(minArg,maxArg);
 
-if nargin == 0
+% if nargin == 0
     % if no variables are provided, use an input dialogue
 %         repeat = 1;
 %         while repeat
@@ -61,19 +61,19 @@ if nargin == 0
 %                 continue
 %             end
 % 1. grab participant number ___________________________________________________
-    expName = 'canna';
-    prompt = 'session number : ';
-    session = input(prompt);
+%     expName = 'canna';
+    %prompt = 'session number : ';
+    %session = input(prompt);
 
-    if isempty(sub_num) || ~isnumeric(sub_num) || mod(sub_num,1) ~= 0 || sub_num <= 0
-        prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
-        sub_num = input(prompt);
-        %         if isempty(str2double(subNum)) || ~isnumeric(str2double(subNum)) || mod(str2double(subNum),1) ~= 0 || str2double(subNum) <= 0
-        h = errordlg('Subject number must be an integer (e.g., 9) and greater than zero. Try again.', 'Input Error');
-        repeat = 1;
-        uiwait(h);
-        %             continue
-    end
+%     if isempty(sub_num) || ~isnumeric(sub_num) || mod(sub_num,1) ~= 0 || sub_num <= 0
+%         prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
+%         sub_num = input(prompt);
+%         %         if isempty(str2double(subNum)) || ~isnumeric(str2double(subNum)) || mod(str2double(subNum),1) ~= 0 || str2double(subNum) <= 0
+%         h = errordlg('Subject number must be an integer (e.g., 9) and greater than zero. Try again.', 'Input Error');
+%         repeat = 1;
+%         uiwait(h);
+%         %             continue
+%     end
     %         if ~exist(fullfile(pwd,sprintf('config_%s.m',expName)),'file')
     %             h = errordlg(sprintf('Configuration file for experiment with name ''%s'' does not exist (config_%s.m). Check the experiment name and try again.',expName,expName), 'Input Error');
     %             repeat = 1;
@@ -88,7 +88,7 @@ if nargin == 0
 % elseif nargin == 0
 %     % cannot proceed with one argument
 %     error('You provided 1 argument, but you need either zero or two! Must provide either no inputs (%s;) or provide experiment name (as a string) and subject number (as an integer).',mfilename,mfilename,expName);
-end
+% end
 
 % Experiment database struct preparation _______________________________________
 
@@ -179,6 +179,39 @@ save(cfg.files.expParamFile,'cfg','expParam');
 % fprintf('Running experiment: %s, subject %s, session %d...\n',expParam.expName,expParam.subject,expParam.sessionNum);
 fprintf('Running experiment: subject %s, session %d...\n',expParam.subject,expParam.sessionNum);
 
+
+% Biopac parameters
+script_dir = pwd;
+% biopac channel
+channel = struct;
+
+channel.trigger    = 0;
+channel.fixation   = 1;
+channel.image      = 2;
+channel.math       = 3;
+channel.remainder  = 4;
+channel.study      = 5;
+channel.test       = 6;
+channel.calc       = 7;
+
+
+if biopac == 1
+    script_dir = pwd;
+    cd('/home/spacetop/repos/labjackpython');
+    pe = pyenv;
+    py.importlib.import_module('u3');
+    % Check to see if u3 was imported correctly
+    % py.help('u3')
+    channel.d = py.u3.U3();
+    % set every channel to 0
+    channel.d.configIO(pyargs('FIOAnalog', int64(0), 'EIOAnalog', int64(0)));
+    for FIONUM = 0:7
+        channel.d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
+    end
+    cd(script_dir);
+end
+
+
 % try
 % Open data file
 logFile = fopen(cfg.files.sesLogFile,'at');
@@ -187,7 +220,7 @@ logFile = fopen(cfg.files.sesLogFile,'at');
 % set some font display options; must be set before opening w with Screen
 DefaultFontName = 'Courier New';
 DefaultFontStyle = 1;
-DefaultFontSize = 18;
+DefaultFontSize = 22;
 if ispc
     Screen('Preference','DefaultFontName',DefaultFontName);
     Screen('Preference','DefaultFontStyle',DefaultFontStyle);
@@ -330,20 +363,20 @@ Screen('Flip', p.ptb.window);
 
 WaitKeyPress(p.keys.trigger);
 T.param_triggerOnset(:)          = GetSecs;
-T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel_trigger, 1);
+T.param_start_biopac(:)                   = biopac_linux_matlab(biopac,channel, channel.trigger, 1);
 WaitSecs(TR*6);
 
 % ------------------------------------------------------------------------------
 %                              Main task
 % ------------------------------------------------------------------------------
 
-[cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud1',sub_num);
-calculation(p, cfg, sub_num, 1);
-[cfg,expParam, test1_accuracy] = mt_test(p,cfg,expParam,logFile, 'test1',sub_num);
+[cfg,expParam] = mem_func_study(p,cfg,expParam,logFile,'stud1',sub_num, biopac, channel);
+mem_func_calculation(p, cfg, sub_num, 1, biopac, channel);
+[cfg,expParam, test1_accuracy] = mem_func_test(p,cfg,expParam,logFile, 'test1',sub_num, biopac, channel);
 % -------------------------------------------------------------------------
-[cfg,expParam] = mt_study(p,cfg,expParam,logFile,'stud2',sub_num);
-calculation(p, cfg, sub_num, 2);
-[cfg,expParam, test2_accuracy] = mt_test(p, cfg,expParam,logFile, 'test2',sub_num);
+[cfg,expParam] = mem_func_study(p,cfg,expParam,logFile,'stud2',sub_num, biopac, channel);
+mem_func_calculation(p, cfg, sub_num, 2, biopac, channel);
+[cfg,expParam, test2_accuracy] = mem_func_test(p, cfg,expParam,logFile, 'test2',sub_num, biopac, channel);
 
 
 
@@ -375,7 +408,7 @@ Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.param_end_instruct_onset(:)  = Screen('Flip',p.ptb.window);
 WaitKeyPress(p.keys.end); % press s
 T.param_experimentDuration(:) = T.param_end_instruct_onset(1) -T.param_triggerOnset(1);
-T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel_trigger, 0);
+T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel, channel.trigger, 0);
 
 %
 % _________________________ 8. save parameter _________________________________
@@ -430,6 +463,17 @@ fprintf('*********************************\n*********************************\n'
 % ------------------------------------------------------------------------------
 %                                Function
 % ------------------------------------------------------------------------------
+function [time] = biopac_linux_matlab(biopac, channel, channel_num, state_num)
+    if biopac
+        channel.d.setFIOState(pyargs('fioNum', int64(channel_num), 'state', int64(state_num)))
+        time = GetSecs;
+    else
+        time = GetSecs;
+        return
+    end
+end
+
+
 function WaitKeyPress(kID)
 while KbCheck(-3); end  % Wait until all keys are released.
 

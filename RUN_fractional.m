@@ -10,7 +10,8 @@
 clear all;
 prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
 sub_num = input(prompt);
-
+prompt = 'run biopac YES=1 NO=0 : ';
+biopac = input(prompt);
 
 % 2. counterbalance version ____________________________________________________
 
@@ -41,7 +42,7 @@ switch task1
         t1 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'RUN_posner');
     case 'memory'
         chdir_t1 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
-        t1 = fullfile(main_dir, 'task-memory','memorizationTask');
+        t1 = fullfile(main_dir, 'task-memory','RUN_memory');
 end
 switch task2
     case 'tomsaxe'
@@ -55,11 +56,11 @@ switch task2
         t2 = fullfile(main_dir, 'task-posnerAR', 'scripts', 'RUN_posner');
     case 'memory'
         chdir_t2 = strcat('cd(''', fullfile(main_dir,'task-memory') , ''')');
-        t2 = fullfile(main_dir, 'task-memory','memorizationTask');
+        t2 = fullfile(main_dir, 'task-memory','RUN_memory');
 end
 
-run_task1 = strcat(t1, '(' ,num2str(sub_num), ')');
-run_task2 = strcat(t2, '(' ,num2str(sub_num), ')');
+run_task1 = strcat(t1, "(" ,num2str(sub_num),",", num2str(biopac),")");
+run_task2 = strcat(t2, '(' ,num2str(sub_num),',', num2str(biopac),')');
 
 % prompt session number
 prompt = 'run number (1 or 2): ';

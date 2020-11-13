@@ -186,8 +186,8 @@ if expParam.sessionNum == 1
             %             cfg.stim.(sesName).preStim = [0.5 0.7];
             % create the stimulus list
             cfg.stim.(sesName).stimListFile = fullfile(cfg.files.subSaveDir,['stimList_' sesName '.txt']);
-%            [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName,[]);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName);
+%            [cfg,expParam] = mem_func_saveStimList_images(cfg,expParam,sesName,[]);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            [cfg,expParam] = mem_func_saveStimList_images(cfg,expParam,sesName);
 
             % instruction message
             m1 = 'You are going to be shown a series of stimuli.\n\n\n\n';
@@ -216,8 +216,8 @@ if expParam.sessionNum == 1
             % create the stimulus list
             cfg.stim.(sesName).stimListFile = fullfile(cfg.files.subSaveDir,['stimList_' sesName '.txt']);
             %[cfg,expParam] =
-            %mt_saveStimList_images(cfg,expParam,sesName,[]);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            [cfg,expParam] = mt_saveStimList_images(cfg,expParam,sesName);
+            %mem_func_saveStimList_images(cfg,expParam,sesName,[]);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            [cfg,expParam] = mem_func_saveStimList_images(cfg,expParam,sesName);
 
             % instruction message
             m1 = 'You are going to be shown a series of stimuli.\n\n\n\n';

@@ -98,13 +98,13 @@ fprintf('\n%s\n%s\n%s\n',boxTop,script_name,boxTop)
 % DEFAULTS ________________________________________________
 defaults = task_defaults;
 KbName('UnifyKeyNames');
-if fMRI 
+if fMRI
 [id, name] = GetKeyboardIndices;
 trigger_index = find(contains(name, 'Current Designs'));
 trigger_inputDevice = id(trigger_index);
 else trigger_inputDevice = -3
 end
-% 
+%
 % keyboard_index = find(contains(name, 'AT Translated Set 2 Keyboard'));
 % keyboard_inputDevice = id(keyboard_index);
 TR = 0.46;
@@ -117,7 +117,7 @@ addpath(defaults.path.utilities);
 
 %% 0. Biopac parameters ________________________________________________________
 % % if (py_env.Status == 'Loaded')~= 1
-% % 
+% %
 % % end
 % task_dir = pwd;
 % cd('/home/spacetop/repos/labjackpython');
@@ -127,7 +127,7 @@ addpath(defaults.path.utilities);
 % % return
 % % else pe = pyenv('ExecutionMode', 'InProcess');
 % % end
-% 
+%
 % py.importlib.import_module('u3');
 % % Check to see if u3 was imported correctly
 % % py.help('u3')
@@ -137,8 +137,8 @@ addpath(defaults.path.utilities);
 % for FIO = 0:7
 % d.setFIOState(pyargs('fioNum', int64(FIO), 'state', int64(0)));
 % end
-% 
-% 
+%
+%
 % cd(task_dir);
 task_dir = pwd;
 % load python labjack library "u3"
@@ -305,7 +305,7 @@ HideCursor(p.ptb.screenNumber);
 
 
 % G. Initialize Logfile (Trialwise Data Recording) _____________________________
-d=clock;
+clock_log =clock;
 
 if ~exist(defaults.path.data,'dir')
     [canSaveData,saveDataMsg,saveDataMsgID] = mkdir(defaults.path.data);
@@ -313,14 +313,14 @@ if ~exist(defaults.path.data,'dir')
         error(saveDataMsgID,'Cannot write in directory %s due to the following error: %s',pwd,saveDataMsg);
     end
 end
-logfile = fullfile(sub_save_dir, sprintf('LOG_sub-%04d_task-tomspunt_order-%02d_time-%s_%02.0f-%02.0f.txt', sub_num, order,date,d(4),d(5)));
+logfile = fullfile(sub_save_dir, sprintf('LOG_sub-%04d_task-tomspunt_order-%02d_time-%s_%02.0f-%02.0f.txt', sub_num, order,date,clock_log(4),clock_log(5)));
 
 fprintf('\nA running log of this session will be saved to %s\n',logfile);
 fid=fopen(logfile,'a');
 if fid<1
     error('could not open logfile!')
 end
-fprintf(fid,'Started: %s %2.0f:%02.0f\n',date,d(4),d(5));
+fprintf(fid,'Started: %s %2.0f:%02.0f\n',date,clock_log(4),clock_log(5));
 
 
 % H. Make Images Into Textures ________________________________________________
@@ -532,6 +532,7 @@ end
 end_texture = Screen('MakeTexture',w.win, imread(instruct_end));
 Screen('DrawTexture',w.win,end_texture,[],[]);
 T.RAW_param_end_instruct_onset(:) = Screen('Flip',w.win);
+biopac_linux_matlab(biopac, channel_trigger, 0);
 
 % convert variables
 T.p1_block_fix(:) = T.RAW_p1_block_fix(:) - T.RAW_param_triggerOnset(:) - (TR*6);
@@ -545,7 +546,7 @@ T.total_param_experimentDuration(:) = T.RAW_param_end_instruct_onset(:) - T.RAW_
 
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
-WaitKeyPress(KbName('e'));
+KbTriggerWait(KbName('e'), trigger_inputDevice);
 ShowCursor;
 
 % Exit ____________________________________________________________________
@@ -565,7 +566,7 @@ end
         clear classes
         mod = py.importlib.import_module('u3');
         py.importlib.reload(mod);
-        
+
     end
 function WaitKeyPress(kID)
     while KbCheck(-3); end  % Wait until all keys are released.
