@@ -116,36 +116,16 @@ addpath(defaults.path.utilities);
 % ------------------------------------------------------------------------------
 
 %% 0. Biopac parameters ________________________________________________________
-% % if (py_env.Status == 'Loaded')~= 1
-% %
-% % end
-% task_dir = pwd;
-% cd('/home/spacetop/repos/labjackpython');
-% % if (py_env.Status == 'Loaded')~= 1
-% pe = pyenv;
-% % if pe.Status == 'Loaded'
-% % return
-% % else pe = pyenv('ExecutionMode', 'InProcess');
-% % end
-%
-% py.importlib.import_module('u3');
-% % Check to see if u3 was imported correctly
-% % py.help('u3')
-% % reloadPy();
-% d = py.u3.U3();
-% % set every channel to 0
-% for FIO = 0:7
-% d.setFIOState(pyargs('fioNum', int64(FIO), 'state', int64(0)));
-% end
-%
-%
-% cd(task_dir);
 task_dir = pwd;
 % load python labjack library "u3"
 cd('/home/spacetop/repos/labjackpython');
 pe = pyenv;
 %  reloadPy()
-py.importlib.import_module('u3');
+    try
+        py.importlib.import_module('u3');
+    catch
+        warning("u3 already imported!");
+    end
 d = py.u3.U3();
 % set every biopac channel to 0
 for channel = 0:7
