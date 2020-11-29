@@ -116,22 +116,41 @@ addpath(defaults.path.utilities);
 % ------------------------------------------------------------------------------
 
 %% 0. Biopac parameters ________________________________________________________
-task_dir = pwd;
-% load python labjack library "u3"
-cd('/home/spacetop/repos/labjackpython');
-pe = pyenv;
-%  reloadPy()
+% task_dir = pwd;
+% % load python labjack library "u3"
+% cd('/home/spacetop/repos/labjackpython');
+% pe = pyenv;
+% %  reloadPy()
+%     try
+%         py.importlib.import_module('u3');
+%     catch
+%         warning("u3 already imported!");
+%     end
+% d = py.u3.U3();
+% % set every biopac channel to 0
+% for channel = 0:7
+% d.setFIOState(pyargs('fioNum', int64(channel), 'state', int64(0)));
+% end
+% cd(task_dir);
+if biopac == 1
+    script_dir = pwd;
+    cd('/home/spacetop/repos/labjackpython');
+    pe = pyenv;
     try
         py.importlib.import_module('u3');
     catch
         warning("u3 already imported!");
     end
-d = py.u3.U3();
-% set every biopac channel to 0
-for channel = 0:7
-d.setFIOState(pyargs('fioNum', int64(channel), 'state', int64(0)));
+    % Check to see if u3 was imported correctly
+    % py.help('u3')
+    channel.d = py.u3.U3();
+    % set every channel to 0
+    channel.d.configIO(pyargs('FIOAnalog', int64(0), 'EIOAnalog', int64(0)));
+    for FIONUM = 0:7
+        channel.d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
+    end
+    cd(script_dir);
 end
-cd(task_dir);
 
 % biopac channel
 channel_trigger    = 0;
