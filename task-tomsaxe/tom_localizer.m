@@ -397,7 +397,7 @@ for trial = 1:trialsPerRun
     while GetSecs - trialStart < fixDur
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-        T.RAW_p1_fixation_onset(trial) = Screen('Flip', p.ptb.window);
+        T.RAW_p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
         T.event01_fixation_biopac(trl)             = biopac_linux_matlab(biopac, channel_fixation, 1);
 
     end					% wait for fixation period to elapse
