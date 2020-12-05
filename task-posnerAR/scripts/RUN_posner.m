@@ -24,7 +24,7 @@ script_dir = pwd;
 %channel.target           = 3;
 %channel.target_remainder = 4;
 %channel.fixation      = 5;
-
+channel = struct
 channel.trigger          = 0;
 channel.fixation         = 1;
 channel.cue              = 2;
@@ -360,10 +360,12 @@ save(psychtoolbox_saveFileName, 'p');
 KbTriggerWait(p.keys.end, stim_PC);
 WaitSecs(0.2);
 ShowCursor;
-close all;
-sca;
 
+if biopac
+  d.close()
+end
 clear p; clearvars; Screen('Close'); close all; sca;
+
 %% -----------------------------------------------------------------------------
 %                                   Function
 %-------------------------------------------------------------------------------
