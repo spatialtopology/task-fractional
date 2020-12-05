@@ -7,6 +7,13 @@ function RUN_posner(sub_num, biopac)
 %                          Experiment parameters
 %--------------------------------------------------------------------------
 
+if fMRI
+[id, name] = GetKeyboardIndices;
+trigger_index = find(contains(name, 'Current Designs'));
+trigger_inputDevice = id(trigger_index);
+stim_PC = -3%id(find(contains(name, '')))
+else trigger_inputDevice = -3
+end
 
 %% 0. Biopac parameters _________________________________________________
 script_dir = pwd;
@@ -16,7 +23,7 @@ script_dir = pwd;
 %%channel.cue              = 2;
 %channel.target           = 3;
 %channel.target_remainder = 4;
-%channel.fixation       = 5;
+%channel.fixation      = 5;
 
 channel.trigger          = 0;
 channel.fixation         = 1;
@@ -174,13 +181,14 @@ Screen('Flip',p.ptb.window);
 % ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
 HideCursor;
-% KbTriggerWait(p.keys.start);
-WaitKeyPress(p.keys.start);
+KbTriggerWait(p.keys.start, stim_PC);
+%WaitKeyPress(p.keys.start);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
 % T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
-WaitKeyPress(p.keys.trigger);
+% WaitKeyPress(p.keys.trigger);
+KbTriggerWait(p.keys.trigger, trigger_inputDevice);
 T.param_end_biopac(:)                     = biopac_linux_matlab(biopac, channel, channel.trigger, 1);
 T.RAW_param_triggerOnset(:) = GetSecs;
 WaitSecs(TR*6);
@@ -259,13 +267,14 @@ for trl = 1:size(countBalMat,1)
     % ------------------------------------------------------------------------
     %                            4. button press within 2s
     % -------------------------------------------------------------------------
+
     % 4.1. record key press _______________________________________________
     %     while respToBeMade && timeStim < trial_duration
     while (GetSecs - T.RAW_p3_target_onset(trl)) < trial_duration
         T.p4_responsekey(trl) = 0;
         T.p4_responsekeyname{trl} = 'nan';
         RT = 99;
-        [keyIsDown,secs, keyCode] = KbCheck;
+        [keyIsDown,secs, keyCode] = KbCheck(trigger_inputDevice);
 
         if keyCode(p.keys.esc)
             ShowCursor;
@@ -283,7 +292,8 @@ for trl = 1:size(countBalMat,1)
                 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
             T.RAW_p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
             T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.target_remainder, 1);
-            WaitSecs(remainder_time);
+            %WaitSecs(remainder_time);
+            WaitSecs('UntilTime', T.RAW_p3_target_onset(trl) + trial_duration)
             T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.target_remainder, 0);
             T.p4_fixation_duration(trl) = remainder_time;
 
@@ -300,7 +310,7 @@ for trl = 1:size(countBalMat,1)
                 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
             T.RAW_p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
             T.CHANGE(trl) = biopac_linux_matlab(biopac, channel.target_remainder, 1);
-            WaitSecs(remainder_time);
+            WaitSecs('UntilTime', T.RAW_p3_target_onset(trl) + trial_duration)
             T.CHANGE(trl) = biopac_linux_matlab(biopac, channel.target_remainder, 0);
             T.p4_fixation_duration(trl) = remainder_time;
 
@@ -343,10 +353,11 @@ T.p5_fixation_onset(:) = T.RAW_p5_fixation_onset(:) - T.RAW_param_triggerOnset(:
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
 
-psychtoolbox_saveFileName = fullfile(sub_save_dir, [strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_psychtoolbox_params.mat' ]);
+psychtoolbox_saveFileName = fullfile(sub_save_dir, [strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_psychtoolboxparams.mat' ]);
 save(psychtoolbox_saveFileName, 'p');
 
-WaitKeyPress(p.keys.end);
+% WaitKeyPress(p.keys.end);
+KbTriggerWait(p.keys.end, stim_PC);
 WaitSecs(0.2);
 ShowCursor;
 close all;
@@ -357,20 +368,20 @@ clear p; clearvars; Screen('Close'); close all; sca;
 %                                   Function
 %-------------------------------------------------------------------------------
 
-    function WaitKeyPress(kID)
-        while KbCheck(-3); end
-        while 1
-            [keyIsDown, ~, keyCode ] = KbCheck(-3);
-            if keyIsDown
-                if keyCode(p.keys.esc)
-                    cleanup; break;
-                elseif keyCode(kID)
-                    break;
-                end
-                while KbCheck(-3); end
-            end
-        end
-    end
+    % function WaitKeyPress(kID)
+    %     while KbCheck(-3); end
+    %     while 1
+    %         [keyIsDown, ~, keyCode ] = KbCheck(-3);
+    %         if keyIsDown
+    %             if keyCode(p.keys.esc)
+    %                 cleanup; break;
+    %             elseif keyCode(kID)
+    %                 break;
+    %             end
+    %             while KbCheck(-3); end
+    %         end
+    %     end
+    % end
 
     function [time] = biopac_linux_matlab(biopac, channel, channel_num, state_num)
         if biopac

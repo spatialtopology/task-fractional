@@ -1,7 +1,7 @@
 function RUN_task(sub_num, biopac)
 order = 0;
 test_tag = 0;
-fMRI = 0;
+fMRI = 1;
 % ---------------------
 % debug mode % Initial
 debug     = 0;   % PTB Debugging

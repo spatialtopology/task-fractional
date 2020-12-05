@@ -148,6 +148,13 @@ run_num=1;
 % ------------------------------------------------------------------------------
 %                                Parameters
 % ------------------------------------------------------------------------------
+if fMRI
+[id, name] = GetKeyboardIndices;
+trigger_index = find(contains(name, 'Current Designs'));
+trigger_inputDevice = id(trigger_index);
+stim_PC = -3%id(find(contains(name, '')))
+else trigger_inputDevice = -3
+end
 
 %% 0. Biopac parameters _________________________________________________
 script_dir = pwd;
@@ -158,8 +165,6 @@ channel_fixation          = 1;
 channel_story             = 2;
 channel_question          = 3;
 channel_last_fixation     = 4;
-
-
 
 %% 0. Biopac parameters _________________________________________________
 if biopac == 1
@@ -347,12 +352,14 @@ Screen(p.ptb.window, 'Flip');
 % ------------------------------------------------------------------------------
 %                           1. Wait for trigger
 % ------------------------------------------------------------------------------
-WaitKeyPress(p.keys.start)
+%WaitKeyPress(p.keys.start)
+KbTriggerWait(p.keys.start, stim_PC);
+
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2); % will flip immediately
 Screen('Flip', p.ptb.window);
 
-WaitKeyPress(p.keys.trigger);
+KbTriggerWait(p.keys.trigger, trigger_inputDevice);
 T.RAW_param_trigger_onset(:) = GetSecs;
 experimentStart = T.RAW_param_trigger_onset(1);
 T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel_trigger, 1);
@@ -441,8 +448,8 @@ for trial = 1:trialsPerRun
     %                          6. Get Response
     % ------------------------------------------------------------------------------
     while ( GetSecs - T.RAW_p3_ques_onset(trial) ) < questDur
-        
-        [keyIsDown,secs,keyCode]	= KbCheck; % check to see if a key is being pressed
+
+        [keyIsDown,secs,keyCode]	= KbCheck(trigger_inputDevice); % check to see if a key is being pressed
 
         if keyCode(p.keys.esc)
             ShowCursor;
@@ -533,6 +540,9 @@ T.p4_responseonset(:) = T.RAW_p4_responseonset(:) - T.RAW_param_trigger_onset(:)
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
 writetable(T,saveFileName);
 WaitKeyPress(p.keys.end);
+if biopac
+  d.close()
+end
 
 try
     sca
