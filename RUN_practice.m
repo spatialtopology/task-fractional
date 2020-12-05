@@ -1,13 +1,11 @@
 % To Do
 % [x] memory should run 4 times
 
-
-
 % 1. grab participant number ___________________________________________________
 clear all;
-% prompt = 'session number : ';
+% prompt = 'SESSION number : ';
 % session = input(prompt);
-prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
+prompt = 'PARTICIPANT number (in raw number form, e.g. 1, 2,...,98): ';
 sub_num = input(prompt);
 
 
@@ -57,7 +55,7 @@ run_task1 = strcat(t1, '(' ,num2str(sub_num), ')');
 run_task2 = strcat(t2, '(' ,num2str(sub_num), ')');
 
 % prompt session number
-prompt = 'run number (1 or 2): ';
+prompt = 'RUN number (1 or 2): ';
 run_num = input(prompt);
 
 if run_num == 1
