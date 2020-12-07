@@ -1,4 +1,9 @@
-function [cfg,expParam, accuracy_freq] = mem_func_test(p,cfg,expParam,logFile,sesName,sub_num,biopac,channel)
+function [cfg,expParam, accuracy_freq] = mem_func_test(p,cfg,expParam,logFile,sesName,studydetails,channel)
+
+%% -----------------------------------------------------------------------------
+%                              Parameters
+% ------------------------------------------------------------------------------
+
 % Description:
 %  This function runs the test task. There are no blocks.
 task_duration = 2;
@@ -31,10 +36,14 @@ if ~isfield(sessionCfg,'fixDuringStim')
     sessionCfg.fixDuringStim = false;bio_param
 end
 
-% biopac reset
+
+% biopac reset ________________________________________________________________
+if channel.biopac
 for FIONUM = 1:7
     channel.d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
 end
+end
+
 % prepared stimuli list for presentation ________________________________________________________
 % load stimuli list
 fileToLoad = sessionCfg.stimListFile;
@@ -48,22 +57,52 @@ if cfg.stim.shuffle
     oldNew = oldNew(orderStimTest);
 end
 
-% D. making output table ________________________________________________________
-vnames = {'param_fmriSession','param_experiment_start','param_memory_session_name'...
-    'event01_fixation_onset','event01_fixation_biopac', 'event01_fixation_duration',...
-    'event02_image_onset','event02_image_filename',...
-    'p3_correct_response','p3_actual_buttonbox','p3_responsekey','p3_responsekeyname',...
-    'p3_actual_responseonset','p3_actual_RT',...
-    'event04_fixation_onset','event04_fixation_duration','event04_fixation_biopac'...
-    'param_end_instruct_onset', 'param_experimentDuration', 'test_accuracy'};
-T                              = array2table(zeros(size(stimList,1),size(vnames,2)));
-T.Properties.VariableNames     = vnames;
-T.event02_image_filename            = cell(size(stimList,1),1);
-T.param_memory_session_name    = cell(size(stimList,1),1);
-T.p3_responsekeyname           = cell(size(stimList,1),1);
 
+% bids_string ________________________________________________________
+% example: sub-0001_ses-01_task-fractional_run-01-memory-test01
+taskname = 'memory';
+bids_string                     = [strcat('sub-', sprintf('%04d', studydetails.sub_num)), ...
+strcat('_ses-',sprintf('%02d', studydetails.session_id)),...
+strcat('_task-fractional'),...
+strcat('_run-', sprintf('%02d', studydetails.run_order),'_', taskname, '_', sesName)];
+
+
+
+% D. making output table ________________________________________________________
+%vnames = {'src_subject_id','session_id','RAW_param_experiment_start','param_memory_session_name','RAW_param_start_biopac'...
+%    'RAW_event01_fixation_onset', 'event01_fixation_duration',...
+%    'RAW_event02_image_onset','event02_image_filename',...
+%    'param_answer','event03_response_ptbkey','event03_response_key','event03_response_keyname',...
+%    'event03_response_onset','event03_RT',...
+%    'event04_fixation_onset','event04_fixation_duration','event04_fixation_biopac'...
+%    'param_end_instruct_onset', 'param_experiment_duration', 'test_accuracy', 'event01_fixation_duration'};
+
+
+vnames = {'src_subject_id','session_id','run_num','param_memory_session_name',...
+'event01_fixation_onset','event01_fixation_duration',...
+'event02_image_onset','event02_image_filename',...
+'param_answer','event03_response_ptbkey','event03_response_key','event03_response_keyname','event03_response_onset','event03_RT',...
+'event04_fixation_duration',...
+'param_end_instruct_onset','param_experiment_duration','test_accuracy',...
+'RAW_param_experiment_start','RAW_param_start_biopac',...
+'RAW_event01_fixation_onset','RAW_event01_fixation_biopac',...
+'RAW_event02_image_onset','RAW_event02_image_biopac',...
+'RAW_event03_response_onset','RAW_event04_fixation_onset','RAW_event04_fixation_biopac'};
+vtypes = {'double','double','double','string',...
+'double','double',...
+'double','string',...
+'double','double','double','string','double','double',...
+'double',...
+'double','double','double',...
+'double','double',...
+'double','double',...
+'double','double',...
+'double','double','double'};
+T = table('Size', [size(stimList,1) size(vnames,2)], 'VariableNames', vnames, 'VariableTypes', vtypes);
+T.src_subject_id(:) = studydetails.sub_num;
+T.session_id(:) = studydetails.session_id;
+T.run_num(:) = studydetails.run_order;
 T.param_memory_session_name(:) = {sesName};
-T.param_fmriSession(:)         = 4;
 % G. instructions _____________________________________________________
 main_dir                       = pwd;
 instruct_filepath              = fullfile(main_dir, 'instructions');
@@ -86,45 +125,49 @@ Screen('TextFont', p.ptb.window, cfg.text.basicFontName);
 Screen('TextStyle', p.ptb.window, cfg.text.basicFontStyle);
 % DrawFormattedText(p.ptb.window, cfg.text.(sesName).instructionsMessage, 'center', 'center');%, cfg.text.whiteTextColor);
 
-% ______________________________ Instructions _________________________________
+%% -----------------------------------------------------------------------------
+%                              Start Experiment
+% ------------------------------------------------------------------------------
+
 Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_test));
 Screen('DrawTexture',p.ptb.window,start.texture,[],[]);
-T.param_experiment_start(:) = Screen('Flip', p.ptb.window);
-T.param_test_biopac(:)                   = biopac_linux_matlab(biopac,channel, channel.test, 1);
+T.RAW_param_experiment_start(:) = Screen('Flip', p.ptb.window);
+T.RAW_param_start_biopac(:) = biopac_linux_matlab(channel, channel.test, 1);
 WaitSecs(5);
 
 % DisableKeysForKbCheck([]);
 KbName('UnifyKeyNames');
 thisGetSecs = GetSecs;
 fprintf(logFile,'%f\t%s\t%s\t%s\n',...
-    T.param_experiment_start(1),...
-    expParam.subject,...
-    sesName,...
-    'TEST_START');
+    T.RAW_param_experiment_start(1), expParam.subject, sesName, 'TEST_START');
 
-%     thisGetSecs,...
 % ___________________________ 0. Experimental loop ____________________________
 % display stimuli
 for trl = 1 : length(stimList)
     correctAnswer = oldNew(trl);
     if sessionCfg.isFix
-
-        % _________________________ 1. Fixtion Jitter mean 1 sec _______________________
-
+    %% -----------------------------------------------------------------------------
+    %                        1. Fixtion Jitter mean 1 sec
+    %-------------------------------------------------------------------------------
         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
         DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.whiteTextColor);
-        T.event01_fixation_onset(trl) = Screen('Flip', p.ptb.window);
-        T.event01_fixation_biopac(:)                   = biopac_linux_matlab(biopac, channel, channel.fixation, 1);
+        T.RAW_event01_fixation_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_event01_fixation_biopac(trl) = biopac_linux_matlab(channel, channel.fixation, 1);
         timeFix = sessionCfg.preStim(1) + ((sessionCfg.preStim(2) - sessionCfg.preStim(1)).*rand(1,1));
         T.event01_fixation_duration(trl) = timeFix;
-        WaitSecs(timeFix);
-        biopac_linux_matlab(biopac, channel, channel.fixation, 0);
+        WaitSecs('UntilTime', T.RAW_event01_fixation_onset(trl) + timeFix);
+        biopac_linux_matlab(channel, channel.fixation, 0);
     end
+
+
+    %% -----------------------------------------------------------------------------
+    %                               2. image texture
+    %-------------------------------------------------------------------------------
+
     switch cfg.stim.studyType
         case('i') % show images
             stimImgFile = fullfile(stimDir,stimList{trl});
-            stimImgFile(stimImgFile=='\') = '/';
             stimImg = imread(stimImgFile);
             stimImg = uint8(stimImg);
             imageTexture = Screen('MakeTexture', p.ptb.window, stimImg);
@@ -147,18 +190,12 @@ for trl = 1 : length(stimList)
             DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
 
             [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip', p.ptb.window);
-            T.event02_image_biopac(trl)        = biopac_linux_matlab(biopac,channel,  channel.image, 1);
-
+            T.RAW_event02_image_biopac(trl)        = biopac_linux_matlab(channel,  channel.image, 1);
 
             thisGetSecs = GetSecs;
             fprintf(logFile,'%f\t%s\t%s\t%s\t%s\t%s\n',...
-                thisGetSecs,...
-                expParam.subject,...
-                sesName,...
-                'TEST_STIM',...
-                'image',...
-                stimList{trl});
-            T.event02_image_onset(trl) = StimulusOnsetTime;
+                thisGetSecs, expParam.subject, sesName, 'TEST_STIM', 'image', stimList{trl});
+            T.RAW_event02_image_onset(trl) = StimulusOnsetTime;
             T.event02_image_filename{trl} = stimList{trl};
 
         case('w') % show words
@@ -166,31 +203,24 @@ for trl = 1 : length(stimList)
             Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
             DrawFormattedText(p.ptb.window, currentWord, 'center', 'center', cfg.text.whiteTextColor);
             [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip', p.ptb.window);
-            T.event02_image_biopac(trl)        = biopac_linux_matlab(biopac, channel, channel.image, 1);
+            T.RAW_event02_image_biopac(trl)        = biopac_linux_matlab(channel, channel.image, 1);
 
             thisGetSecs = GetSecs;
             fprintf(logFile,'%f\t%s\t%s\t%s\t%s\t%s\n',...
-                thisGetSecs,...
-                expParam.subject,...
-                sesName,...
-                'TEST_STIM',...
-                'word',...
-                currentWord);
+                thisGetSecs, expParam.subject, sesName, 'TEST_STIM', 'word', currentWord);
     end
-    %     if sessionCfg.answerFast % get the answer as fast as possible
-    % Wait for answer
-    %     respToBeMade = true;
+    %% -----------------------------------------------------------------------------
+    %                                  3. Keypress
+    %-------------------------------------------------------------------------------
+
     keyCode = zeros(1,256);
     timeStim = GetSecs - thisGetSecs;
     %         while respToBeMade && timeStim < 2%sessionCfg.stim
     while KbCheck(-3); end
     if sessionCfg.answerFast
         while (GetSecs - StimulusOnsetTime) < task_duration
-            answer = 99;
-            RT = 99;
-            actual_key = 99;
-            responsekeyname = 'nan';
-            secs = 99;
+            answer = NaN; RT = NaN; actual_key = NaN; responsekeyname = 'NA'; secs = NaN;
+            T.RAW_event03_response_onset(trl) = NaN;
             % check the keyboard
             [keyIsDown,secs, keyCode] = KbCheck(-3);
             FlushEvents('keyDown');
@@ -198,67 +228,56 @@ for trl = 1 : length(stimList)
                 % if keyCode(KbName(cfg.keys.oldKey))
                 if keyCode(KbName('1!'))
                     %             respToBeMade = false;
-                    answer = 1;
-                    actual_key = 1;
-                    responsekeyname = 'left';
+                    answer = 1; actual_key = 1; responsekeyname = 'left';
+                    T.RAW_event03_response_onset(trl) = secs;
                     RT = secs-StimulusOnsetTime;
-                    biopac_linux_matlab(biopac, channel, channel.image, 0);
+                    biopac_linux_matlab(channel, channel.image, 0);
                     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.experimenterColor); % Text output of mouse position draw in the centre of the screen
                     DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
                     Screen('DrawTexture', p.ptb.window, imageTexture, [],[],0);
                     Screen('Flip', p.ptb.window);
                     WaitSecs(0.5);
-                    %remainder_time = task_duration-0.5-RT;
                     DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.whiteTextColor);
                     Screen('Flip', p.ptb.window);
-                    biopac_linux_matlab(biopac, channel, channel.remainder, 1);
-                    %WaitSecs(remainder_time);
-                    % elseif keyCode(KbName(cfg.keys.newKey))
+                    biopac_linux_matlab(channel, channel.remainder, 1);
+                    WaitSecs('UntilTime', StimulusOnsetTime + task_duration);
                 elseif keyCode(KbName('2@'))
-                    %             respToBeMade = false;
-                    answer = 0;
-                    actual_key = 2;
-                    responsekeyname = 'right';
+                    answer = 0; actual_key = 2; responsekeyname = 'right';
+                    T.RAW_event03_response_onset(trl) = secs;
                     RT = secs-StimulusOnsetTime;
-                    biopac_linux_matlab(biopac, channel, channel.image, 0);
+                    biopac_linux_matlab(channel, channel.image, 0);
                     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
                     DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.experimenterColor); % Text output of mouse position draw in the centre of the screen
                     Screen('DrawTexture', p.ptb.window, imageTexture, [],[],0);
                     Screen('Flip', p.ptb.window);
                     WaitSecs(0.5);
-                    %remainder_time = task_duration-0.5-RT;
                     DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.whiteTextColor);
                     Screen('Flip', p.ptb.window);
-                    biopac_linux_matlab(biopac, channel, channel.remainder, 1);
-                    %WaitSecs(remainder_time);
+                    biopac_linux_matlab(channel, channel.remainder, 1);
+                    WaitSecs('UntilTime', StimulusOnsetTime + task_duration);
                 end
             end
             %         timeStim = GetSecs - thisGetSecs;
             timeStim = GetSecs - StimulusOnsetTime;
         end
-        biopac_linux_matlab(biopac, channel, channel.image, 0);
-        biopac_linux_matlab(biopac, channel, channel.remainder, 0);
+        biopac_linux_matlab(channel, channel.image, 0);
+        biopac_linux_matlab(channel, channel.remainder, 0);
         switch cfg.stim.studyType
             case('i') % images
-                %                 Screen('Close', imageTexture);
                 clear stimImg
         end
 
     end
     thisGetSecs = GetSecs;
     fprintf(logFile,'%f\t%s\t%s\t%s\t%s\t%s\t%f\n',...
-        thisGetSecs,...
-        expParam.subject,...
-        sesName,...
-        'TEST_RESP',...
-        num2str(correctAnswer),num2str(answer),RT);
+        thisGetSecs, expParam.subject, sesName, 'TEST_RESP', num2str(correctAnswer),num2str(answer),RT);
 
-    T.p3_correct_response(trl) = correctAnswer;
-    T.p3_actual_buttonbox(trl) = actual_key;
-    T.p3_responsekey(trl) = answer;
-    T.p3_actual_RT(trl) = RT;
-    T.p3_responsekeyname{trl} = responsekeyname;
-    T.p3_actual_responseonset(trl) = secs;
+    T.param_answer(trl) = correctAnswer;
+    T.event03_response_ptbkey(trl) = actual_key;
+    T.event03_response_key(trl) = answer;
+    T.event03_RT(trl) = RT;
+    T.event03_response_keyname{trl} = responsekeyname;
+    
 
 
     % isi
@@ -266,27 +285,41 @@ for trl = 1 : length(stimList)
     %     Screen('Flip', p.ptb.window);
     %     WaitSecs(sessionCfg.isi);
 end
+%% -----------------------------------------------------------------------------
+%                                 4. remaining time
+%-------------------------------------------------------------------------------
 
-remaining_time = 120 - (GetSecs - T.param_experiment_start(1));
+remaining_time = 120 - (GetSecs - T.RAW_param_experiment_start(1));
 Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
-T.event04_fixation_onset(:) = Screen('Flip', p.ptb.window);
-T.event04_fixation_biopac(:) = biopac_linux_matlab(biopac, channel, channel.fixation, 1);
+T.RAW_event04_fixation_onset(:) = Screen('Flip', p.ptb.window);
+T.RAW_event04_fixation_biopac(:) = biopac_linux_matlab(channel, channel.fixation, 1);
 WaitSecs(remaining_time);
 T.event04_fixation_duration(:) = remaining_time;
-biopac_linux_matlab(biopac, channel, channel.remainder, 1);
-
+biopac_linux_matlab(channel, channel.fixation, 0);
 
 T.param_end_instruct_onset(:) = GetSecs;
-biopac_linux_matlab(biopac, channel, channel.test, 0);
-T.param_experimentDuration(:) = T.param_end_instruct_onset(1)- T.param_experiment_start(1);
-T.test_accuracy = T.p3_correct_response == T.p3_responsekey;
+biopac_linux_matlab(channel, channel.test, 0);
+T.param_experiment_duration(:) = T.param_end_instruct_onset(1)- T.RAW_param_experiment_start(1);
+T.test_accuracy = T.param_answer == T.event03_response_key;
 accuracy_freq =  sum(T.test_accuracy);
-% __________________________ save parameter ____________________________________
-sub_save_dir = cfg.files.sesSaveDir;
-saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-memory-',sesName, '_beh.csv' ]);
+
+%% -----------------------------------------------------------------------------
+%                               5. save parameter
+%-------------------------------------------------------------------------------
+T.param_experiment_start(:) = T.RAW_param_experiment_start - - studydetails.trigger_onset - studydetails.dummy;
+T.event01_fixation_onset(:) = T.RAW_event01_fixation_onset(:) - studydetails.trigger_onset - studydetails.dummy;
+T.event02_image_onset(:) = T.RAW_event01_fixation_onset(:) - studydetails.trigger_onset - studydetails.dummy;
+T.event03_response_onset(:) = T.RAW_event01_fixation_onset(:) - studydetails.trigger_onset - studydetails.dummy;
+
+saveFileName = fullfile(studydetails.sub_save_dir,[bids_string, '_beh.csv' ]);
+repoFileName = fullfile(studydetails.repo_save_dir,[bids_string, '_beh.csv' ]);
 writetable(T,saveFileName);
+writetable(T,repoFileName);
+
+if channel.biopac
 for FIONUM = 1:7
     channel.d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
+end
 end
 % ------------------------------------------------------------------------------
 %                                Function

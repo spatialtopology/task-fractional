@@ -1,8 +1,22 @@
-function mem_func_calculation(p, cfg, sub_num, task_num,biopac, channel)
+function mem_func_calculation(p, cfg,  sesName, studydetails, channel)
+
+if channel.biopac
 for FIONUM = 1:7
     channel.d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
 end
-main_dir = cfg.files.expDir;
+end
+
+% bids_string ________________________________________________________
+% example: sub-0001_ses-01_task-fractional_run-01-memory-test01
+taskname = 'memory';
+bids_string                     = [strcat('sub-', sprintf('%04d', studydetails.sub_num)), ...
+strcat('_ses-',sprintf('%02d', studydetails.session_id)),...
+strcat('_task-fractional'),...
+strcat('_run-', sprintf('%02d', studydetails.run_order),'_', taskname, '_', sesName)];
+
+task_num = str2double(regexp(sesName,'\d*','match'));
+
+
 vnames = {'param_fmriSession',... %'param_counterbalanceVer','param_triggerOnset',...
     'calc_start', ...
     'p1_fixation_onset','p1_fixation_offset','p1_ptb_fixation_duration','p1_fixation_duration',...
@@ -15,9 +29,9 @@ vnames = {'param_fmriSession',... %'param_counterbalanceVer','param_triggerOnset
 T                              = array2table(zeros(4,size(vnames,2)));
 T.Properties.VariableNames     = vnames;
 T.p4_responsekeyname           = cell(4,1);
-T.param_fmriSession(:)         = 4;
+T.param_fmriSession(:)         = studydetails.session_id;
 
-calc_main                      = fullfile(main_dir, 'instructions', 'memory_calc.png');
+calc_main                      = fullfile(studydetails.main_dir, 'instructions', 'memory_calc.png');
 
 p.fix.sizePix                  = 40; % size of the arms of our fixation cross
 p.fix.lineWidthPix             = 4; % Set the line width for our fixation cross
@@ -62,7 +76,7 @@ s(2).correctanswer = [1,2,1,2];
 main = Screen('MakeTexture',p.ptb.window, imread(calc_main));
 Screen('DrawTexture',p.ptb.window,main,[],[]);
 T.calc_start(:) = Screen('Flip',p.ptb.window);
-biopac_linux_matlab(biopac, channel, channel.calc, 1);
+biopac_linux_matlab( channel, channel.calc, 1);
 WaitSecs(5); %4
 
 % for loop
@@ -70,26 +84,26 @@ for trl = 1:4
     % ___________________________ 2. print fixation ________________________________
     Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
     T.p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
-    biopac_linux_matlab(biopac, channel, channel.fixation, 1);
+    biopac_linux_matlab( channel, channel.fixation, 1);
     WaitSecs(fix_duration);
     T.p1_fixation_offset(trl) = GetSecs;
-      biopac_linux_matlab(biopac, channel, channel.fixation, 0);
+      biopac_linux_matlab( channel, channel.fixation, 0);
     T.p1_ptb_fixation_duration(trl) = T.p1_fixation_offset(trl) - T.p1_fixation_onset(trl);
     T.p1_fixation_duration(trl) = 5;
 
     % ______________________________ 3. print text _________________________________
     DrawFormattedText(p.ptb.window, s(task_num).operation{trl}, 'center','center', cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
     T.p2_operation(trl) = Screen('Flip',p.ptb.window);
-    biopac_linux_matlab(biopac, channel, channel.math, 1);
+    biopac_linux_matlab( channel, channel.math, 1);
     WaitSecs(20);
-    biopac_linux_matlab(biopac, channel, channel.math, 0);
+    biopac_linux_matlab( channel, channel.math, 0);
 
     % ____________________________ 4. print options ________________________________
     DrawFormattedText(p.ptb.window, s(task_num).operation{trl}, 'center','center', cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
     DrawFormattedText(p.ptb.window, s(task_num).options_L{trl}, textLXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
     DrawFormattedText(p.ptb.window, s(task_num).options_R{trl}, textRXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
     [VBLTimestamp StimulusOnsetTime FlipTimestamp] = Screen('Flip',p.ptb.window);
-    biopac_linux_matlab(biopac, channel, channel.math, 1);
+    biopac_linux_matlab( channel, channel.math, 1);
     T.p3_option(trl) = StimulusOnsetTime;
     keyCode = zeros(1,256);
 
@@ -106,7 +120,7 @@ for trl = 1:4
                 actual_key = 1;
                 responsekeyname = 'left';
                 RT = secs-StimulusOnsetTime;
-                biopac_linux_matlab(biopac, channel, channel.math, 0);
+                biopac_linux_matlab( channel, channel.math, 0);
                 DrawFormattedText(p.ptb.window, s(task_num).operation{trl}, 'center','center', cfg.text.whiteTextColor);
                 DrawFormattedText(p.ptb.window, s(task_num).options_L{trl}, textLXc,  textYc, cfg.text.experimenterColor ); % Text output of mouse position draw in the centre of the screen
                 DrawFormattedText(p.ptb.window, s(task_num).options_R{trl}, textRXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
@@ -118,14 +132,14 @@ for trl = 1:4
                 Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
 
                 Screen('Flip', p.ptb.window);
-                biopac_linux_matlab(biopac, channel, channel.remainder, 1);
+                biopac_linux_matlab( channel, channel.remainder, 1);
                 %WaitSecs(remainder_time);
 
             elseif keyCode(KbName('2@')) % right
                 actual_key = 2;
                 responsekeyname = 'right';
                 RT = secs-StimulusOnsetTime;
-                biopac_linux_matlab(biopac, channel, channel.math, 0);
+                biopac_linux_matlab( channel, channel.math, 0);
                 DrawFormattedText(p.ptb.window, s(task_num).operation{trl}, 'center','center', cfg.text.whiteTextColor);
                 DrawFormattedText(p.ptb.window, s(task_num).options_L{trl}, textLXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
                 DrawFormattedText(p.ptb.window, s(task_num).options_R{trl}, textRXc,  textYc, cfg.text.experimenterColor ); % Text output of mouse position draw in the centre of the screen
@@ -137,15 +151,15 @@ for trl = 1:4
                 Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor ,[p.ptb.xCenter p.ptb.yCenter]);
 
                 Screen('Flip', p.ptb.window);
-                biopac_linux_matlab(biopac, channel, channel.remainder, 1);
+                biopac_linux_matlab( channel, channel.remainder, 1);
                 %WaitSecs(remainder_time);
             end
         end
         %         timeStim = GetSecs - thisGetSecs;
         timeStim = GetSecs - StimulusOnsetTime;
     end
-    biopac_linux_matlab(biopac, channel, channel.math, 0);
-    biopac_linux_matlab(biopac, channel, channel.remainder, 0);
+    biopac_linux_matlab( channel, channel.math, 0);
+    biopac_linux_matlab( channel, channel.remainder, 0);
     T.p4_responsekey(trl) = actual_key;
     T.p4_responseRT(trl) = RT;
     T.p4_responsekeyname{trl} = responsekeyname;
@@ -158,21 +172,23 @@ end
 remaining_time = 120 - (GetSecs - T.calc_start(1));
 Screen('DrawLines', p.ptb.window, p.fix.allCoords, p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
 T.p5_fixation_onset(:) = Screen('Flip', p.ptb.window);
-biopac_linux_matlab(biopac, channel, channel.remainder, 1);
+biopac_linux_matlab( channel, channel.remainder, 1);
 WaitSecs(remaining_time);
 T.p5_fixation_duration(:) = remaining_time;
-biopac_linux_matlab(biopac, channel, channel.remainder, 0);
+biopac_linux_matlab( channel, channel.remainder, 0);
 
 T.calc_end(:) = GetSecs;
-biopac_linux_matlab(biopac, channel, channel.calc, 0);
+biopac_linux_matlab( channel, channel.calc, 0);
 T.calc_accuracy(trl) = T.p4_correct_answer(trl) == T.p4_responsekey(trl);
 T.calc_duration(:) = T.calc_end(1)- T.calc_start(1);
 
+if channel.biopac
 for FIONUM = 1:7
     channel.d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
 end
+end
 %% __________________________ save parameter ___________________________________
 sub_save_dir = cfg.files.sesSaveDir;
-saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-memory-distraction-',num2str(task_num), '_beh.csv' ]);
+saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', studydetails.sub_num)), '_task-memory-distraction-',num2str(task_num), '_beh.csv' ]);
 writetable(T,saveFileName);
 end
