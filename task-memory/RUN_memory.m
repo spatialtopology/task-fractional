@@ -1,7 +1,8 @@
-function RUN_memory(sub_num, biopac)
+function RUN_memory(sub_num, run_num, biopac, session, fMRI)
 % function memorizationTask(expName,subNum)
 
-
+% Code provided by Tim Curran
+% Minimal changes maded by Heejung Jung
 % Input:
 %  expName:       the name of the experiment (as a string). You must set up
 %                 a config_EXPNAME.m file describing the experiment
@@ -15,8 +16,7 @@ function RUN_memory(sub_num, biopac)
 %     A popup window will prompt for the above info. It is not possible to
 %     run the photoCellTest using this method.
 
-% Code provided by Tim Curran
-% Minimal changes maded by Heejung Jung
+
 % Clear Matlab window:
 % clc
 
@@ -33,7 +33,7 @@ KbName('UnifyKeyNames');
 rng('shuffle');
 
 % need to be in the experiment directory to run it. See if this function is
-% in the current directory; if it is then we're in the right spot.
+% in the current directory; if it is then we are in the right spot.
 if ~exist(fullfile(pwd,sprintf('%s.m','RUN_memory')),'file')
     error('Must be in the experiment directory to run the experiment.');
 end
@@ -42,7 +42,7 @@ end
 
 % make sure there are somewhere betwen 0 and 2 arguments
 minArg = 0;
-maxArg = 2;
+maxArg = 5;
 narginchk(minArg,maxArg);
 
 % if nargin == 0
@@ -184,6 +184,7 @@ fprintf('Running experiment: subject %s, session %d...\n',expParam.subject,expPa
 script_dir = pwd;
 % biopac channel
 channel = struct;
+channel.biopac = biopac;
 
 channel.trigger    = 0;
 channel.fixation   = 1;
@@ -195,7 +196,7 @@ channel.test       = 6;
 channel.calc       = 7;
 
 
-if biopac == 1
+if channel.biopac == 1
     script_dir = pwd;
     cd('/home/spacetop/repos/labjackpython');
     pe = pyenv;
@@ -270,6 +271,7 @@ p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
 p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
 TR = 0.46;
+dummy = TR*6;
 % E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
@@ -280,6 +282,20 @@ p.keys.esc                     = KbName('ESCAPE');
 p.keys.trigger                 = KbName('5%');
 p.keys.start                   = KbName('s');
 p.keys.end                     = KbName('e');
+
+
+task_dir                       = pwd; % ~/repos/fractional/task-memory
+main_dir                       = task_dir;
+repo_dir                       = fileparts(fileparts(main_dir));
+taskname                       = 'memory';
+
+sub_save_dir = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh'  );
+repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
+    'task-fractional');
+if ~exist(sub_save_dir, 'dir');    mkdir(sub_save_dir);     end
+if ~exist(repo_save_dir, 'dir');    mkdir(repo_save_dir);   end
+
+
 
 % G. instructions _____________________________________________________
 instruct_filepath              = fullfile(cfg.files.expDir, 'instructions');
@@ -339,14 +355,17 @@ expParam.session.(sesName).startTime = sprintf('%.2d:%.2d:%.2d',startTime(4),sta
 
 
 % D. making output table ________________________________________________________
-vnames = {'param_fmriSession', 'param_triggerOnset',...
-                                'param_end_instruct_onset', 'param_experimentDuration'};
+vnames = {'src_subject_id','session_id', 'param_trigger_onset',...
+                                'param_end_instruct_onset', 'experiment_duration'};
 T                              = array2table(zeros(1,size(vnames,2)));
 T.Properties.VariableNames         = vnames;
-T.param_fmriSession(:) = 4;
+T.session_id(:) = 4;
 
 
-% ______________________________ Instructions __________________________________
+%% -----------------------------------------------------------------------------
+%                              Start Experiment
+% ------------------------------------------------------------------------------
+
 HideCursor;
 Screen('TextSize',p.ptb.window,72);
 start.texture = Screen('MakeTexture',p.ptb.window, imread(instruct_start));
@@ -359,35 +378,39 @@ Screen('Flip',p.ptb.window);
 WaitKeyPress(p.keys.start); % press s
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,p.fix.lineWidthPix, cfg.text.whiteTextColor, [p.ptb.xCenter p.ptb.yCenter]);
 Screen('Flip', p.ptb.window);
-%
-%         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
-%         DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
-%         T.p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
-
 
 WaitKeyPress(p.keys.trigger);
-T.param_triggerOnset(:)          = GetSecs;
-T.param_start_biopac(:)                   = biopac_linux_matlab(biopac,channel, channel.trigger, 1);
-WaitSecs(TR*6);
+T.param_trigger_onset(:)          = GetSecs;
+T.param_start_biopac(:)           = biopac_linux_matlab(channel, channel.trigger, 1);
+WaitSecs(dummy);
 
 % ------------------------------------------------------------------------------
 %                              Main task
 % ------------------------------------------------------------------------------
+% structure study details will be passed onto each subtask _____________________________________________________
+studydetails = struct;
+studydetails.sub_num = sub_num;
+studydetails.run_order = run_num;
+studydetails.trigger_onset = T.param_trigger_onset(1);
+studydetails.session_id = session;
+studydetails.dummy = dummy;
+studydetails.sub_save_dir = sub_save_dir;
+studydetails.repo_save_dir = repo_save_dir;
+studydetails.main_dir = main_dir;
 
-[cfg,expParam] = mem_func_study(p,cfg,expParam,logFile,'stud1',sub_num, biopac, channel);
-mem_func_calculation(p, cfg, sub_num, 1, biopac, channel);
-[cfg,expParam, test1_accuracy] = mem_func_test(p,cfg,expParam,logFile, 'test1',sub_num, biopac, channel);
+[cfg,expParam] = mem_func_study(p,cfg,expParam,logFile,'study01',studydetails, channel);
+mem_func_calculation(p, cfg, 'calc01',studydetails, channel);
+[cfg,expParam, test1_accuracy] = mem_func_test(p,cfg,expParam,logFile, 'test01', studydetails, channel);
 % -------------------------------------------------------------------------
-[cfg,expParam] = mem_func_study(p,cfg,expParam,logFile,'stud2',sub_num, biopac, channel);
-mem_func_calculation(p, cfg, sub_num, 2, biopac, channel);
-[cfg,expParam, test2_accuracy] = mem_func_test(p, cfg,expParam,logFile, 'test2',sub_num, biopac, channel);
+[cfg,expParam] = mem_func_study(p,cfg,expParam,logFile,'study02',studydetails, channel);
+mem_func_calculation(p, cfg, 'calc02',studydetails, channel);
+[cfg,expParam, test2_accuracy] = mem_func_test(p, cfg,expParam,logFile, 'test02', studydetails, channel);
 
 
 
-% Session is done
+% Session is done _____________________________________________________________
 
 fprintf('Done with %s session %d (%s).\n',expParam.subject,expParam.sessionNum,sesName);
-
 % record the end time for this session
 endTime = fix(clock);
 expParam.session.(sesName).endTime = sprintf('%.2d:%.2d:%.2d',endTime(4),endTime(5),endTime(6));
@@ -411,8 +434,8 @@ end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.param_end_instruct_onset(:)  = Screen('Flip',p.ptb.window);
 WaitKeyPress(p.keys.end); % press s
-T.param_experimentDuration(:) = T.param_end_instruct_onset(1) -T.param_triggerOnset(1);
-T.param_start_biopac(:)                   = biopac_linux_matlab(biopac, channel, channel.trigger, 0);
+T.experiment_duration(:) = T.param_end_instruct_onset(1) -T.param_trigger_onset(1);
+biopac_linux_matlab( channel, channel.trigger, 0);
 
 %
 % _________________________ 8. save parameter _________________________________
@@ -420,22 +443,7 @@ sub_save_dir = cfg.files.sesSaveDir;
 saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'main_beh.csv' ]);
 writetable(T,saveFileName);
 
-close all;
-sca;
 
-% KbWait(-1,2);
-% RestrictKeysForKbCheck([]);
-% Screen('Flip', p.ptb.window);
-% WaitSecs(1.000);
-
-% Cleanup at end of experiment - Close window, show mouse cursor, close
-% result file, switch Matlab/Octave back to priority 0 -- normal
-% priority:
-% % Screen('CloseAll');
-% fclose('all');
-ShowCursor;
-% ListenChar;
-% Priority(0);
 
 
 % ------------------------------------------------------------------------------
@@ -463,20 +471,11 @@ fprintf('*********************************\n*********************************\n'
 % input(prompt2);
 
 
-
+if channel.biopac;  channel.d.close();  end
+clear p; clearvars; Screen('Close'); close all; sca;
 % ------------------------------------------------------------------------------
 %                                Function
 % ------------------------------------------------------------------------------
-function [time] = biopac_linux_matlab(biopac, channel, channel_num, state_num)
-    if biopac
-        channel.d.setFIOState(pyargs('fioNum', int64(channel_num), 'state', int64(state_num)))
-        time = GetSecs;
-    else
-        time = GetSecs;
-        return
-    end
-end
-
 
 function WaitKeyPress(kID)
 while KbCheck(-3); end  % Wait until all keys are released.
