@@ -6,7 +6,7 @@ sub_prompt = 'PARTICIPANT (in raw number form, e.g. 1, 2,...,98): ';
 sub_num = input(sub_prompt);
 biopac_prompt = 'BIOPAC (YES=1, NO=0) : ';
 biopac = input(biopac_prompt);
-fMRI = 0;
+fMRI = 1;
 
 % 2. counterbalance version ____________________________________________________
 
