@@ -103,7 +103,7 @@ if fMRI
 [keyboard_id, keyboard_name] = GetKeyboardIndices;
 trigger_index = find(contains(keyboard_name, 'Current Designs'));
 trigger_inputDevice = keyboard_id(trigger_index);
-stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')))
+stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')));
 else
 trigger_inputDevice = -3;
 stim_PC = -3;
@@ -154,10 +154,10 @@ taskname                        = 'tomspunt';
 
 % bids_string
 % example: sub-0001_ses-04_task-fractional_run-tomspunt-01
-bids_string                     = [strcat('sub-', sprintf('%04d', sub_num)), ...
+bids_string                         = [strcat('sub-', sprintf('%04d', sub_num)), ...
 strcat('_ses-',sprintf('%02d', session)),...
 strcat('_task-fractional'),...
-strcat('_run-', taskname, sprintf('-%02d', run_num))];
+strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
 sub_save_dir = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh'  );
 repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
     'task-fractional');
@@ -395,7 +395,7 @@ WaitSecs(TR*6);
 
 nBlocks = length(blockSeeker);
 T.event03_response_onset(:)	= NaN; T.event03_response_key(:) = NaN; T.event03_response_keyname(:)	= 'NA'; T.event03_RT(:) = NaN;
-T.RAW_e3_response_onset(:) = NaN; 
+T.RAW_e3_response_onset(:) = NaN;
 % ------------------------------------------------------------------------------
 % .                          3. Block look start
 % ------------------------------------------------------------------------------
@@ -555,13 +555,13 @@ T.param_experiment_duration(:) = T.RAW_param_end_instruct_onset(1) - T.param_tri
 T.event03_response_keyname(ismember(T.event03_response_key(:),1),:) = 'left';
 T.event03_response_keyname(ismember(T.event03_response_key(:),2),:) = 'right';
 
-saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
-repoFileName = fullfile(repo_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
+saveFileName = fullfile(sub_save_dir,[bids_string,'_beh.csv' ]);
+repoFileName = fullfile(repo_save_dir,[bids_string,'_beh.csv' ]);
 
 writetable(T,saveFileName);
 writetable(T,repoFileName);
 
-KbTriggerWait(KbName('e'), trigger_inputDevice);
+KbTriggerWait(KbName('e'), stim_PC);
 ShowCursor;
 
 if biopac;  channel.d.close();  end

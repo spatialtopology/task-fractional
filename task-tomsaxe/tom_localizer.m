@@ -154,7 +154,7 @@ if fMRI
 [keyboard_id, keyboard_name] = GetKeyboardIndices;
 trigger_index = find(contains(keyboard_name, 'Current Designs'));
 trigger_inputDevice = keyboard_id(trigger_index);
-stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')))
+stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')));
 else
 trigger_inputDevice = -3;
 stim_PC = -3;
@@ -251,10 +251,10 @@ vtypes = {'double','double','double','double','double',...
 'double','double',...
 'double','double',...
 'double','double',...
-'double','double',...
+'double',...
 'double','double'};
 
-T = table('Size', [length(design) size(vnames,2)], 'VariableNames', vnames, 'VariableTypes', vtypes);
+T = table('Size', [length(design), size(vnames,2)], 'VariableNames', vnames, 'VariableTypes', vtypes);
 T.src_subject_id(:)          = sub_num;
 T.session_id(:)              = session;
 T.run_id(:)                  = run_num;

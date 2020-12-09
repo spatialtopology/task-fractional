@@ -6,7 +6,7 @@ function RUN_posner(sub_num, run_num, biopac, session, fMRI)
 %--------------------------------------------------------------------------
 %                          Experiment parameters
 %--------------------------------------------------------------------------
-fMRI = 1;
+fMRI = 0;
 if fMRI
 [keyboard_id, keyboard_name] = GetKeyboardIndices;
 trigger_inputDevice = keyboard_id(find(contains(keyboard_name, 'Current Designs')));
@@ -99,10 +99,10 @@ repo_dir                       = fileparts(fileparts(fileparts((task_dir)))); % 
 taskname                       = 'posner';
 % bids_string
 % example: sub-0001_ses-04_task-fractional_run-posner-01
-bids_string                     = [strcat('sub-', sprintf('%04d', sub_num)), ...
+bids_string                         = [strcat('sub-', sprintf('%04d', sub_num)), ...
 strcat('_ses-',sprintf('%02d', session)),...
 strcat('_task-fractional'),...
-strcat('_run-',  sprintf('%02d', run_num), '-', taskname)];
+strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
 sub_save_dir = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh'  );
 repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
     'task-fractional');
@@ -290,7 +290,7 @@ for trl = 1:size(countBalMat,1)
     % ------------------------------------------------------------------------
     %                            4. button press within 2s
     % -------------------------------------------------------------------------
-
+    biopac_linux_matlab(biopac, channel, channel.target_remainder, 0);
     % 4.1. record key press _______________________________________________
     %     while respToBeMade && timeStim < trial_duration
     while (GetSecs - T.RAW_event03_target_onset(trl)) < trial_duration
@@ -303,7 +303,7 @@ for trl = 1:size(countBalMat,1)
 
         RT = NaN;
         [keyIsDown,secs, keyCode] = KbCheck(trigger_inputDevice);
-            
+
         if keyCode(p.keys.esc)
             ShowCursor;
             sca;
@@ -347,6 +347,7 @@ for trl = 1:size(countBalMat,1)
         end
 
     end
+    biopac_linux_matlab(biopac, channel, channel.target, 0);
     biopac_linux_matlab(biopac, channel, channel.target_remainder, 0);
 
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
