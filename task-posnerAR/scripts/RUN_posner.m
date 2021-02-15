@@ -6,7 +6,7 @@ function RUN_posner(sub_num, run_num, biopac, session, fMRI)
 %--------------------------------------------------------------------------
 %                          Experiment parameters
 %--------------------------------------------------------------------------
-fMRI = 0;
+
 if fMRI
 [keyboard_id, keyboard_name] = GetKeyboardIndices;
 trigger_inputDevice = keyboard_id(find(contains(keyboard_name, 'Current Designs')));
@@ -96,6 +96,7 @@ p.rect.RcenteredRect           = CenterRectOnPointd(p.rect.baseRect, 100, p.ptb.
 task_dir                       = pwd;
 main_dir                       = fileparts(task_dir); % ~/repos/fractional/task-posnerAR
 repo_dir                       = fileparts(fileparts(fileparts((task_dir)))); % ~/repos/
+payment_dir                    = fullfile(repo_dir, 'fractional', 'payment', strcat('sub-', sprintf('%04d', sub_num)));
 taskname                       = 'posner';
 % bids_string
 % example: sub-0001_ses-04_task-fractional_run-posner-01
@@ -388,6 +389,10 @@ T.event05_fixation_onset(:) = T.RAW_event05_fixation_onset(:) - trigger_dummy_re
 T.event05_fixation_onset_biopac(:) = T.RAW_event05_fixation_onset_biopac(:) - trigger_dummy_removed;
 T.param_end_instruct_onset(:) = T.RAW_param_end_instruct_onset(1) - T.param_trigger_onset(1) - (TR*6);
 T.param_end_biopac(:) = T.RAW_param_end_biopac(1) - T.param_trigger_onset(1) - (TR*6);
+T.accuracy = T.event03_target_type == T.event04_response_keyname;
+accuracy_freq = sum(T.accuracy);
+
+%% save file ___________________________________________________________________
 
 saveFileName = fullfile(sub_save_dir,[bids_string, '_beh.csv' ]);
 repoFileName = fullfile(repo_save_dir,[bids_string, '_beh.csv' ]);
@@ -398,6 +403,23 @@ psychtoolbox_saveFileName = fullfile(sub_save_dir, [bids_string, '_psychtoolboxp
 psychtoolbox_repoFileName = fullfile(repo_save_dir, [bids_string, '_psychtoolboxparams.mat' ]);
 save(psychtoolbox_saveFileName, 'p');
 save(psychtoolbox_repoFileName, 'p');
+
+% ------------------------------------------------------------------------------
+%                                payment
+% ------------------------------------------------------------------------------
+pettycashfile = fullfile(payment_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_run-', sprintf('%02d', run_num),'-', taskname ,'_pettycash.txt' ]);
+fid=fopen(pettycashfile,'w');
+fprintf(fid,'*********************************\n*********************************\nThis is the end of the attention task.\n');
+fprintf(fid,'This participants total accuracy was %0.2f percent.\n',(accuracy_freq/size(countBalMat,1))*100);
+fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/size(countBalMat,1))*10));
+fprintf(fid,'*********************************\n*********************************\n');
+fclose(fid);
+% print in command window
+fprintf('*********************************\n*********************************\nThis is the end of the attention task.\n');
+fprintf('This participants total accuracy was %0.2f percent.\n',(accuracy_freq/size(countBalMat,1))*100);
+fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/size(countBalMat,1))*10));
+fprintf('*********************************\n*********************************\n');
+
 
 % WaitKeyPress(p.keys.end);
 KbTriggerWait(p.keys.end, stim_PC);
