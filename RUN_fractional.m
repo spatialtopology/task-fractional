@@ -6,7 +6,7 @@ sub_prompt = 'PARTICIPANT (in raw number form, e.g. 1, 2,...,98): ';
 sub_num = input(sub_prompt);
 biopac_prompt = 'BIOPAC (YES=1, NO=0) : ';
 biopac = input(biopac_prompt);
-fMRI = 1;
+fMRI = 0;
 
 % 2. counterbalance version ____________________________________________________
 
@@ -59,12 +59,12 @@ end
 prompt = 'RUN number (1 or 2): ';
 run_num = input(prompt);
 
-run_task1 = strcat(t1, "(" ,num2str(sub_num),",",num2str(run_num),",", num2str(biopac),",", num2str(session),",", num2str(fMRI),  ")");
-run_task2 = strcat(t2, '(' ,num2str(sub_num),',',num2str(run_num),",", num2str(biopac),",", num2str(session),",", num2str(fMRI),  ')');
+run_task1 = strcat(t1, "(" ,num2str(sub_num),",",num2str(1),",", num2str(biopac),",", num2str(session),",", num2str(fMRI),  ")");
+run_task2 = strcat(t2, '(' ,num2str(sub_num),',',num2str(2),",", num2str(biopac),",", num2str(session),",", num2str(fMRI),  ')');
 
 if run_num == 1
-eval(chdir_t1);
-run(run_task1);
+eval(chdir_t1);run(run_task1);
+eval(chdir_t2);run(run_task2);
 elseif run_num == 2
 eval(chdir_t2);
 run(run_task2);
