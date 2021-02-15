@@ -44,7 +44,7 @@ PsychDefaultSetup(2);
 %   for the 'slow' setting is 382 seconds. These values may be
 %   automatically adjusted to be a multiple of your TR, which is also
 %   specified in the task_defaults.m file. See the task_defaults.m file for
-%   further information. To see the actual run time for the settings you've
+%   further information. To see the actual run time for the settings youve
 %   specified, simply run this function.
 %
 %   COLUMN KEY FOR KEY OUTPUT VARIABLES (SAVED ON TASK COMPLETION)
@@ -150,6 +150,7 @@ end
 task_dir                        = pwd;
 main_dir                        = pwd; % ~/repos/fractional/task-tomspunt
 repo_dir                        = fileparts(fileparts(task_dir)); % ~/repos/
+payment_dir                     = fullfile(repo_dir, 'fractional', 'payment', strcat('sub-', sprintf('%04d', sub_num)));
 taskname                        = 'tomspunt';
 
 % bids_string
@@ -161,8 +162,9 @@ strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
 sub_save_dir = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh'  );
 repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
     'task-fractional');
-if ~exist(sub_save_dir, 'dir');    mkdir(sub_save_dir);     end
-if ~exist(repo_save_dir, 'dir');    mkdir(repo_save_dir);   end
+if ~exist(sub_save_dir, 'dir');     mkdir(sub_save_dir);     end
+if ~exist(repo_save_dir, 'dir');    mkdir(repo_save_dir);    end
+if ~exist(payment_dir, 'dir');      mkdir(payment_dir);      end
 
 
 %% B. load design mat __________________________________________________________
@@ -554,12 +556,31 @@ T.param_end_instruct_onset(:) = T.RAW_param_end_instruct_onset(:) - T.param_trig
 T.param_experiment_duration(:) = T.RAW_param_end_instruct_onset(1) - T.param_trigger_onset(1);
 T.event03_response_keyname(ismember(T.event03_response_key(:),1),:) = 'left';
 T.event03_response_keyname(ismember(T.event03_response_key(:),2),:) = 'right';
+T.accuracy = T.param_normative_response == T.event03_response_key;
+accuracy_freq = sum(T.accuracy);
 
+%% save file ___________________________________________________________________
 saveFileName = fullfile(sub_save_dir,[bids_string,'_beh.csv' ]);
 repoFileName = fullfile(repo_save_dir,[bids_string,'_beh.csv' ]);
 
 writetable(T,saveFileName);
 writetable(T,repoFileName);
+
+% ------------------------------------------------------------------------------
+%                                payment
+% ------------------------------------------------------------------------------
+pettycashfile = fullfile(payment_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_run-', sprintf('%02d', run_num),'-', taskname ,'_pettycash.txt' ]);
+fid=fopen(pettycashfile,'w');
+fprintf(fid,'*********************************\n*********************************\nThis is the end of the images task.\n');
+fprintf(fid,'This participants total accuracy was %0.2f percent.\n',(accuracy_freq/256)*100);
+fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/256)*10));
+fprintf(fid,'*********************************\n*********************************\n');
+fclose(fid);
+% print in command window
+fprintf('*********************************\n*********************************\nThis is the end of the images task.\n');
+fprintf('This participants total accuracy was %0.2f percent.\n',(accuracy_freq/256)*100);
+fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/256)*10));
+fprintf('*********************************\n*********************************\n');
 
 KbTriggerWait(KbName('e'), stim_PC);
 ShowCursor;
