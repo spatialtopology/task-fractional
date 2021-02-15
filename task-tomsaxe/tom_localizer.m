@@ -160,6 +160,7 @@ trigger_inputDevice = -3;
 stim_PC = -3;
 end
 
+
 %% 0. Biopac parameters _________________________________________________
 script_dir = pwd;
 % biopac channel
@@ -193,6 +194,7 @@ end
 tomsaxe_dir			                    = pwd;
 textdir				                      = fullfile(tomsaxe_dir, 'text_files');
 repo_dir                            = fileparts(fileparts(tomsaxe_dir)); % ~/repos/
+payment_dir                         = fullfile(repo_dir, 'fractional', 'payment', strcat('sub-', sprintf('%04d', sub_num)));
 taskname                            = 'tomsaxe';
 
 % bids_string _____________________________________________________
@@ -205,8 +207,10 @@ sub_save_dir		                  	= fullfile(tomsaxe_dir, 'data',...
  strcat('sub-', sprintf('%04d', sub_num)), 'beh');
 repo_save_dir                       = fullfile(repo_dir, 'data', ...
 strcat('sub-', sprintf('%04d', sub_num)), 'task-fractional');
-if ~exist(sub_save_dir, 'dir');    mkdir(sub_save_dir);     end
-if ~exist(repo_save_dir, 'dir');    mkdir(repo_save_dir);   end
+
+if ~exist(sub_save_dir, 'dir');     mkdir(sub_save_dir);     end
+if ~exist(repo_save_dir, 'dir');    mkdir(repo_save_dir);    end
+if ~exist(payment_dir, 'dir');      mkdir(payment_dir);      end
 
 
 %% B. design parameters _____________________________________________________
@@ -226,6 +230,7 @@ ips					                       = ((trialsPerRun) * (fixDur + storyDur + questDur
 trial_type                         = {'false_belief', 'false_photo'};
 taskname                           = 'tomsaxe';
 TR                                 = 0.46;
+
 
 
 %% C. output table variables _____________________________________________________
@@ -303,6 +308,7 @@ if isempty(dir(sub_save_dir))
     end
 end
 
+HideCursor;
 
 %% G. Verify that all necessary files and folders are in place _________________
 
@@ -312,7 +318,7 @@ try
     cd(textdir);
     HideCursor;
 
-    Screen('Preference', 'SkipSyncTests', 1);
+    Screen('Preference', 'SkipSyncTests', 0);
     PsychDefaultSetup(2);
     screens                        = Screen('Screens');
     p.ptb.screenNumber             = max(screens);
@@ -416,7 +422,8 @@ for trl = 1:trialsPerRun
     storyname		= fullfile(textdir, sprintf('%d%s_story.txt',numbeT,condPrefs{trialT}));
     questname		= fullfile(textdir, sprintf('%d%s_question.txt',numbeT,condPrefs{trialT}));
     items(trl,1)	= numbeT;
-    T.event02_filename{trl} = sprintf('%d%s_story.txt',numbeT,condPrefs{trialT});
+    T.event02_filename(trl) = sprintf('%d%s_story.txt',numbeT,condPrefs{trialT});
+    fprintf(sprintf('%d%s_story.txt',numbeT,condPrefs{trialT}));
     T.event02_filetype{trl} = trial_type{trialT};
 
     % ------------------------------------------------------------------------------
@@ -556,7 +563,10 @@ T.param_experiment_duration(:) = T.RAW_param_end_instruct_onset(1) - T.param_tri
 experimentEnd		               = GetSecs;
 param_experiment_duration	     = T.param_experiment_duration(1);
 numconds		                   = 2;
-
+saveFileName = fullfile(sub_save_dir,[bids_string, '_beh.csv' ]);
+repoFileName = fullfile(repo_save_dir,[bids_string, '_beh.csv' ]);
+writetable(T,saveFileName);
+writetable(T,repoFileName);
 % convert variables
 T.event01_fixation(:)          = T.RAW_e1_fixation_onset(:)- T.param_trigger_onset(:) - (TR*6);
 T.event01_fixation_dur(:)      = T.RAW_e2_story_onset(:) - T.RAW_e1_fixation_onset(:);
@@ -564,13 +574,45 @@ T.event02_story_onset(:)       = T.RAW_e2_story_onset(:) - T.param_trigger_onset
 T.event03_question_onset(:)    = T.RAW_e3_question_onset(:) - T.param_trigger_onset(:) - (TR*6);
 T.event04_response_onset(:)    = T.RAW_e4_response_onset(:) - T.param_trigger_onset(:) - (TR*6);
 T.param_end_instruct_onset(:)  = T.RAW_param_end_instruct_onset(:) - T.param_trigger_onset(:) - (TR*6);
+%Ttotal = outerjoin(T, answer, 'Type', 'left');
+%Ttotal = innerjoin(T, answer);
+%Ttotal = innerjoin(answer,T);
 
+% [tnew, rows_in_t1] = innerjoin(T, answer);
+% [~, sortinds] = sort(rows_in_t1);
+% Ttotal = tnew(sortinds,:);
+Tload = readtable(saveFileName);
+answer_filename = fullfile(tomsaxe_dir, 'answer_key.csv');
+answer = readtable(answer_filename, 'Format','%s%u');
+
+Ttotal = join(Tload, answer, 'LeftKeys', 'event02_filename', 'RightKeys', 'event02_filename');
+Ttotal.accuracy = Ttotal.answer == Ttotal.event04_response_key;
+accuracy_freq = sum(Ttotal.accuracy);
 %% __________________________ save parameter ___________________________________
 saveFileName = fullfile(sub_save_dir,[bids_string, '_beh.csv' ]);
 repoFileName = fullfile(repo_save_dir,[bids_string, '_beh.csv' ]);
-writetable(T,saveFileName);
-writetable(T,repoFileName);
+writetable(Ttotal,saveFileName);
+writetable(Ttotal,repoFileName);
 %WaitKeyPress(p.keys.end);
+
+
+% ------------------------------------------------------------------------------
+%                                payment
+% ------------------------------------------------------------------------------
+pettycashfile = fullfile(payment_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_run-', sprintf('%02d', run_num),'-', taskname ,'_pettycash.txt' ]);
+fid=fopen(pettycashfile,'w');
+fprintf(fid,'*********************************\n*********************************\nThis is the end of the true/false task.\n');
+fprintf(fid,'This participants total accuracy was %0.2f percent.\n',(accuracy_freq/20)*100);
+fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/20)*10));
+fprintf(fid,'*********************************\n*********************************\n');
+fclose(fid);
+% print in command window
+fprintf('*********************************\n*********************************\nThis is the end of the true/false task.\n');
+fprintf('This participants total accuracy was %0.2f percent.\n',(accuracy_freq/20)*100);
+fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/20)*10));
+fprintf('*********************************\n*********************************\n');
+
+
 
 KbTriggerWait(p.keys.end, stim_PC);
 if biopac;   channel.d.close(); end
