@@ -287,6 +287,7 @@ p.keys.end                     = KbName('e');
 task_dir                       = pwd; % ~/repos/fractional/task-memory
 main_dir                       = task_dir;
 repo_dir                       = fileparts(fileparts(main_dir));
+payment_dir                     = fullfile(repo_dir, 'fractional', 'payment', strcat('sub-', sprintf('%04d', sub_num)));
 taskname                       = 'memory';
 
 bids_string                         = [strcat('sub-', sprintf('%04d', sub_num)), ...
@@ -297,8 +298,10 @@ strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
 sub_save_dir = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh'  );
 repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
     'task-fractional');
-if ~exist(sub_save_dir, 'dir');    mkdir(sub_save_dir);     end
-if ~exist(repo_save_dir, 'dir');    mkdir(repo_save_dir);   end
+
+if ~exist(sub_save_dir, 'dir');     mkdir(sub_save_dir);     end
+if ~exist(repo_save_dir, 'dir');    mkdir(repo_save_dir);    end
+if ~exist(payment_dir, 'dir');      mkdir(payment_dir);      end
 
 
 
@@ -445,28 +448,32 @@ biopac_linux_matlab( channel, channel.trigger, 0);
 %
 % _________________________ 8. save parameter _________________________________
 sub_save_dir = cfg.files.sesSaveDir;
-saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'main_beh.csv' ]);
+
+%% save file ___________________________________________________________________
+saveFileName = fullfile(sub_save_dir,[bids_string,'_beh.csv' ]);
+repoFileName = fullfile(repo_save_dir,[bids_string,'_beh.csv' ]);
+
 writetable(T,saveFileName);
-
-
+writetable(T,repoFileName);
 
 
 % ------------------------------------------------------------------------------
 %                                payment
 % ------------------------------------------------------------------------------
-pettycashfile = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_pettycash.txt' ]);
+pettycashfile = fullfile(payment_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_run-', sprintf('%02d', run_num),'-', taskname ,'_pettycash.txt' ]);
+
 fid=fopen(pettycashfile,'w');
 total_acc = test1_accuracy + test2_accuracy;
 fprintf(fid,'*********************************\n*********************************\nThis is the end of the memory task.\n');
-fprintf(fid,'This participants total accuracy was %0.2f out of 80.\n',total_acc);
-fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((total_acc)*0.25));
+fprintf(fid,'This participants total accuracy was %0.2f percent.\n',(total_acc/80)*100);
+fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((total_acc/80)*10));
 fprintf(fid,'*********************************\n*********************************\n');
-fclose(fid);true
+fclose(fid);
 % print in command window
-fprintf('*********************************\n*********************************\nThis is the end of the memory task.\n')
-fprintf('This participants total accuracy was %0.2f out of 80.\n',total_acc)
-fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((total_acc)*0.25))
-fprintf('*********************************\n*********************************\n')
+fprintf(fid,'*********************************\n*********************************\nThis is the end of the memory task.\n');
+fprintf(fid,'This participants total accuracy was %0.2f percent.\n',(total_acc/80)*100);
+fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((total_acc/80)*10));
+fprintf(fid,'*********************************\n*********************************\n');
 
 % things to consider
 % [ ] non-answered items?
