@@ -308,7 +308,6 @@ if isempty(dir(sub_save_dir))
     end
 end
 
-HideCursor;
 
 %% G. Verify that all necessary files and folders are in place _________________
 
@@ -316,7 +315,7 @@ HideCursor;
 %  instruction screens are set up.
 try
     cd(textdir);
-    HideCursor;
+    
 
     Screen('Preference', 'SkipSyncTests', 0);
     PsychDefaultSetup(2);
