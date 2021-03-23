@@ -1,17 +1,12 @@
-% To Do
-% [x] memory should run 4 times
-% [x] there should be a task in between memory 2.5 min each
-% [x] time memory task : study 1 min, test 1.5 min
-% [x] make sure tomsaxe runs smoothly
-% [x] randomize tomsaxe
-
-
 % 1. grab participant number ___________________________________________________
 clear all;
-prompt = 'subject number (in raw number form, e.g. 1, 2,...,98): ';
-sub_num = input(prompt);
-prompt = 'run biopac YES=1 NO=0 : ';
-biopac = input(prompt);
+prompt = 'SESSION (default=4): ';
+session = input(prompt);
+sub_prompt = 'PARTICIPANT (in raw number form, e.g. 1, 2,...,98): ';
+sub_num = input(sub_prompt);
+biopac_prompt = 'BIOPAC (YES=1, NO=0) : ';
+biopac = input(biopac_prompt);
+fMRI = 0;
 
 % 2. counterbalance version ____________________________________________________
 
@@ -59,16 +54,17 @@ switch task2
         t2 = fullfile(main_dir, 'task-memory','RUN_memory');
 end
 
-run_task1 = strcat(t1, "(" ,num2str(sub_num),",", num2str(biopac),")");
-run_task2 = strcat(t2, '(' ,num2str(sub_num),',', num2str(biopac),')');
 
 % prompt session number
-prompt = 'run number (1 or 2): ';
+prompt = 'RUN number (1 or 2): ';
 run_num = input(prompt);
 
+run_task1 = strcat(t1, "(" ,num2str(sub_num),",",num2str(1),",", num2str(biopac),",", num2str(session),",", num2str(fMRI),  ")");
+run_task2 = strcat(t2, '(' ,num2str(sub_num),',',num2str(2),",", num2str(biopac),",", num2str(session),",", num2str(fMRI),  ')');
+
 if run_num == 1
-eval(chdir_t1);
-run(run_task1);
+eval(chdir_t1);run(run_task1);
+eval(chdir_t2);run(run_task2);
 elseif run_num == 2
 eval(chdir_t2);
 run(run_task2);

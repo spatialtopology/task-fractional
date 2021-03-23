@@ -1,4 +1,4 @@
-function RUN_posner(sub_num, biopac)
+function RUN_posner(sub_num, run_num, biopac, session, fMRI)
 
 % created by Heejung Jung
 % 2019.11.15
@@ -8,23 +8,18 @@ function RUN_posner(sub_num, biopac)
 %--------------------------------------------------------------------------
 
 if fMRI
-[id, name] = GetKeyboardIndices;
-trigger_index = find(contains(name, 'Current Designs'));
-trigger_inputDevice = id(trigger_index);
-stim_PC = -3%id(find(contains(name, '')))
-else trigger_inputDevice = -3
+[keyboard_id, keyboard_name] = GetKeyboardIndices;
+trigger_inputDevice = keyboard_id(find(contains(keyboard_name, 'Current Designs')));
+stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')));
+else
+trigger_inputDevice = -3;
+stim_PC = -3;
 end
 
 %% 0. Biopac parameters _________________________________________________
 script_dir = pwd;
 % biopac channel
-%channel.trigger          = 0;
-%channel.fixation         = 1;
-%%channel.cue              = 2;
-%channel.target           = 3;
-%channel.target_remainder = 4;
-%channel.fixation      = 5;
-channel = struct
+channel = struct;
 channel.trigger          = 0;
 channel.fixation         = 1;
 channel.cue              = 2;
@@ -46,11 +41,11 @@ if biopac == 1
     end
     % Check to see if u3 was imported correctly
     % py.help('u3')
-    d = py.u3.U3();
+    channel.d = py.u3.U3();
     % set every channel to 0
-    d.configIO(pyargs('FIOAnalog', int64(0), 'EIOAnalog', int64(0)));
+    channel.d.configIO(pyargs('FIOAnalog', int64(0), 'EIOAnalog', int64(0)));
     for FIONUM = 0:7
-        d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
+        channel.d.setFIOState(pyargs('fioNum', int64(FIONUM), 'state', int64(0)));
     end
     cd(script_dir);
 end
@@ -78,7 +73,7 @@ p.fix.xCoords                  = [-p.fix.sizePix p.fix.sizePix 0 0];
 p.fix.yCoords                  = [0 0 -p.fix.sizePix p.fix.sizePix];
 p.fix.allCoords                = [p.fix.xCoords; p.fix.yCoords];
 
-% building shapes
+% building shapes ______________________________________________________________
 p.rect.baseRect                = [0 0 p.ptb.screenYpixels*2/9 p.ptb.screenYpixels*2/9];
 p.rect.squareXpos              = [p.ptb.screenXpixels * 0.30 p.ptb.screenXpixels * 0.70];
 numSquares                     = length(p.rect.squareXpos);
@@ -99,16 +94,26 @@ p.rect.RcenteredRect           = CenterRectOnPointd(p.rect.baseRect, 100, p.ptb.
 
 % B. Directories _________________________________________________________
 task_dir                       = pwd;
-main_dir                       = fileparts(task_dir);
+main_dir                       = fileparts(task_dir); % ~/repos/fractional/task-posnerAR
+repo_dir                       = fileparts(fileparts(fileparts((task_dir)))); % ~/repos/
+payment_dir                    = fullfile(repo_dir, 'fractional', 'payment', strcat('sub-', sprintf('%04d', sub_num)));
 taskname                       = 'posner';
+% bids_string
+% example: sub-0001_ses-04_task-fractional_run-posner-01
+bids_string                         = [strcat('sub-', sprintf('%04d', sub_num)), ...
+strcat('_ses-',sprintf('%02d', session)),...
+strcat('_task-fractional'),...
+strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
+sub_save_dir = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh'  );
+repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
+    'task-fractional');
+if ~exist(sub_save_dir, 'dir');    mkdir(sub_save_dir);     end
+if ~exist(repo_save_dir, 'dir');    mkdir(repo_save_dir);   end
+
+% load counterbalancefile
 counterbalancefile             = fullfile(main_dir,'design', 's04_counterbalance', ...
     [strcat('sub-', sprintf('%04d', sub_num)),'_task-', taskname '_counterbalance.csv']);
 countBalMat                    = readtable(counterbalancefile);
-sub_save_dir                   = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh' );
-if ~exist(sub_save_dir, 'dir')
-    mkdir(sub_save_dir)
-end
-
 
 % C. experiment parameters _______________________________________________
 % cue to target duration: 200ms
@@ -118,31 +123,61 @@ cue_duration                   = 0.200;
 
 
 % D. making output table _________________________________________________
-vnames = {'param_fmriSession', 'param_counterbalanceVer','RAW_param_triggerOnset',...
-    'param_AR_invalid_sequence', 'param_valid_type',... %'param_cue', 'param_target',...
-    'p1_fixation_onset', 'p1_param_jitter','p1_fixation_offset','p1_ptb_fixation_duration',...
-    'p2_cue_type','p2_cue_onset','p2_cue_offset','p2_cue_duration',...
-    'p3_target_type','p3_target_onset',...
-    'p4_responseonset','p4_responsekey','p4_responsekeyname','p4_RT', 'p4_fixation_fillin', 'p4_fixation_duration',...
-    'p5_fixation_onset',...
-    'RAW_p1_fixation_onset','RAW_p1_fixation_offset',...
-    'RAW_p2_cue_onset','RAW_p2_cue_offset',...
-    'RAW_p3_target_onset',...
-    'RAW_p4_responseonset','RAW_p4_fixation_fillin',...
-    'RAW_p5_fixation_onset',...
-    'RAW_param_end_instruct_onset', 'experimentDuration'};
-
-T                              = array2table(zeros(size(countBalMat,1),size(vnames,2)));
-T.Properties.VariableNames     = vnames;
-T.param_fmriSession(:)         = 4;
-T.param_counterbalanceVer(:)   = sub_num;
-T.p1_param_jitter              = countBalMat.jitter;
+%vnames = {'param_fmriSession', 'param_counterbalanceVer','RAW_param_trigger_onset',...
+%    'param_AR_invalid_sequence', 'param_valid_type',... %'param_cue', 'param_target',...%
+%     'event01_fixation_onset', 'p1_param_jitter','p1_fixation_offset','p1_ptb_fixation_duration',...
+%     'p2_cue_type','event02_cue_onset','p2_cue_offset','event02_cue_duration',...
+%     'p3_target_type','event03_target_onset',...
+%     'event04_response_onset','event04_response_key','event04_response_keyname','event04_RT', 'event04_fixation_remainder_onset', 'event04_fixation_duration',...
+%     'event05_fixation_onset',...
+%     'RAW_event01_fixation_onset','RAW_p1_fixation_offset',...
+%     'RAW_event02_cue_onset','RAW_p2_cue_offset',...
+%     'RAW_event03_target_onset',...
+%     'event04_response_onset','RAW_event04_fixation_remainder_onset',...
+%     'event05_fixation_onset',...
+%     'RAW_param_end_instruct_onset', 'experimentDuration'};
+vnames = {
+'src_subject_id','param_session_id','run_num','param_counterbalance_ver',...
+'param_AR_invalid_sequence','param_valid_type','param_cue_location','param_target_location',...
+'param_trigger_onset','param_start_biopac',...
+'event01_param_jitter','event01_fixation_onset','event01_fixation_onset_biopac','event01_fixation_duration',...
+'event02_cue_type','event02_cue_onset','event02_cue_onset_biopac','event02_cue_duration',...
+'event03_target_type','event03_target_onset','event03_target_onset_biopac',...
+'event04_response_key','event04_response_keyname','event04_response_onset','event04_RT',...
+'event04_fixation_remainder_onset','event04_fixation_duration',...
+'event05_fixation_onset','event05_fixation_onset_biopac',...
+'param_end_instruct_onset','param_end_biopac','param_experiment_duration',...
+'RAW_event01_fixation_onset','RAW_event01_fixation_onset_biopac',...
+'RAW_event02_cue_onset','RAW_event02_cue_onset_biopac',...
+'RAW_event03_target_onset','RAW_event03_target_onset_biopac',...
+'RAW_event04_response_onset','RAW_event04_fixation_remainder_onset',...
+'RAW_event05_fixation_onset','RAW_event05_fixation_onset_biopac',...
+'RAW_param_end_instruct_onset','RAW_param_end_biopac'};
+vtypes = {
+  'double','double','double','double','double','string','string','string','double','double',...
+'double','double','double','double',...
+'string','double','double','double',...
+'string','double','double',...
+'double','string','double','double','double','double',...
+'double','double',...
+'double','double','double',...
+'double','double',...
+'double','double',...
+'double','double',...
+'double','double','double','double','double','double'};
+T = table('Size', [size(countBalMat,1) size(vnames,2)], 'VariableNames', vnames, 'VariableTypes', vtypes);
+T.src_subject_id(:)            = sub_num;
+T.session_id(:)                = session;
+T.run_num(:)                   = run_num;
+T.param_counterbalance_ver(:)  = sub_num;
+T.event01_param_jitter         = countBalMat.jitter;
 T.param_AR_invalid_sequence    = countBalMat.AR_invalid_sequence;
 T.param_valid_type             = countBalMat.valid_type;
-T.p2_cue_type                  = countBalMat.cue;
-T.p3_target_type               = countBalMat.target;
-T.p4_responsekeyname           = cell(size(countBalMat,1),1);
-
+T.param_cue_location           = countBalMat.cue;
+T.param_target_location        = countBalMat.target;
+T.event02_cue_type             = countBalMat.cue;
+T.event03_target_type          = countBalMat.target;
+%T.event04_response_keyname    = cell(size(countBalMat,1),1);
 
 % E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
@@ -155,10 +190,8 @@ p.keys.trigger                 = KbName('5%');
 p.keys.start                   = KbName('s');
 p.keys.end                     = KbName('e');
 
-
 % F. fmri Parameters __________________________________________________________
 TR                             = 0.46;
-
 
 % G. instructions _____________________________________________________
 instruct_filepath              = fullfile(main_dir, 'design', 'instructions');
@@ -166,7 +199,6 @@ instruct_start_name            = ['task-', taskname, '_start.png'];
 instruct_end_name              = ['task-', taskname, '_end.png'];
 instruct_start                 = fullfile(instruct_filepath, instruct_start_name);
 instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
-
 
 %% -----------------------------------------------------------------------------
 %                              Start Experiment
@@ -188,9 +220,9 @@ Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
 Screen('Flip', p.ptb.window);
 % T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
 % WaitKeyPress(p.keys.trigger);
-KbTriggerWait(p.keys.trigger, trigger_inputDevice);
-T.param_end_biopac(:)                     = biopac_linux_matlab(biopac, channel, channel.trigger, 1);
-T.RAW_param_triggerOnset(:) = GetSecs;
+T.param_trigger_onset(:) = KbTriggerWait(p.keys.trigger, trigger_inputDevice);
+T.param_start_biopac(:)                     = biopac_linux_matlab(biopac, channel, channel.trigger, 1);
+% T.param_trigger_onset(:) = GetSecs;
 WaitSecs(TR*6);
 
 % __________________________ Experimental loop ___________________________
@@ -199,17 +231,15 @@ for trl = 1:size(countBalMat,1)
     % ------------------------------------------------------------------------
     %                        1. Fixtion Jitter 300 / 120 = 2.5 sec
     % -------------------------------------------------------------------------
-    jitter1 = countBalMat.jitter(trl);
+
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
     Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
-    T.RAW_p1_fixation_onset(trl) = Screen('Flip', p.ptb.window);
-    T.CHANGE(trl)                   = biopac_linux_matlab(biopac, channel, channel.fixation, 1);
-    WaitSecs(jitter1);
-    T.RAW_p1_fixation_offset(trl) = GetSecs;
-    biopac_linux_matlab(biopac, channel, channel.fixation, 1);
-    T.p1_ptb_fixation_duration(trl) = T.RAW_p1_fixation_offset(trl) - T.RAW_p1_fixation_onset(trl);
-    % T.p1_fixation_duration(trl) = countBalMat.jitter(trl);
+    T.RAW_event01_fixation_onset(trl) = Screen('Flip', p.ptb.window);
+    T.RAW_event01_fixation_onset_biopac(trl)  = biopac_linux_matlab(biopac, channel, channel.fixation, 1);
+    WaitSecs('UntilTime', T.RAW_event01_fixation_onset(trl) + countBalMat.jitter(trl))
+    offset = biopac_linux_matlab(biopac, channel, channel.fixation, 0);
+    T.event01_fixation_duration(trl) = offset - T.RAW_event01_fixation_onset(trl);
 
     % ------------------------------------------------------------------------
     %                               2. cue 0.2 s
@@ -219,30 +249,25 @@ for trl = 1:size(countBalMat,1)
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.leftRects, p.rect.penWidthPixels);
-        T.RAW_p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
-        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.cue, 1);
-        WaitSecs(cue_duration);
-        T.RAW_p2_cue_offset(trl) = GetSecs;
-        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.cue, 0);
-        T.p2_cue_duration(trl) = T.RAW_p2_cue_offset(trl)- T.RAW_p2_cue_onset(trl);
+        T.RAW_event02_cue_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_event02_cue_onset_biopac(trl) = biopac_linux_matlab(biopac, channel, channel.cue, 1);
+        WaitSecs('UntilTime',T.RAW_event01_fixation_onset(trl) + countBalMat.jitter(trl) + cue_duration);
+        cue_offset = biopac_linux_matlab(biopac, channel, channel.cue, 0);
+        T.event02_cue_duration(trl) = cue_offset - T.RAW_event02_cue_onset(trl);
 
     elseif string(countBalMat.cue{trl}) == "right"
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('FrameRect', p.ptb.window, p.ptb.green, p.rect.rightRects, p.rect.penWidthPixels);
-        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.cue, 1);
-        T.RAW_p2_cue_onset(trl) = Screen('Flip', p.ptb.window);
-
-        WaitSecs(cue_duration);
-        T.RAW_p2_cue_offset(trl) = GetSecs;
-        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.cue, 0);
-        T.p2_cue_duration(trl) = T.RAW_p2_cue_offset(trl)- T.RAW_p2_cue_onset(trl);
+        T.RAW_event02_cue_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_event02_cue_onset_biopac(trl) = biopac_linux_matlab(biopac, channel, channel.cue, 1);
+        WaitSecs('UntilTime',T.RAW_event01_fixation_onset(trl) + countBalMat.jitter(trl) + cue_duration);
+        cue_offset = biopac_linux_matlab(biopac, channel, channel.cue, 0);
+        T.event02_cue_duration(trl) = cue_offset- T.RAW_event02_cue_onset(trl);
     else
         error('check!');
     end
-    % T.p2_cue_type{trl} = string(countBalMat.cue(trl));
-
 
     % ------------------------------------------------------------------------
     %                              3. target 2 s
@@ -252,28 +277,32 @@ for trl = 1:size(countBalMat,1)
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('DrawDots', p.ptb.window, [p.target.leftXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
-
-        T.RAW_p3_target_onset(trl) = Screen('Flip', p.ptb.window);
-        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.target, 1);
+        T.RAW_event03_target_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_event03_target_onset_biopac(trl) = biopac_linux_matlab(biopac, channel, channel.target, 1);
     elseif string(countBalMat.target{trl}) == "right"
         Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
             p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
         Screen('FrameRect', p.ptb.window, p.ptb.white, p.rect.allRects, p.rect.penWidthPixels);
         Screen('DrawDots', p.ptb.window, [p.target.rightXpos p.ptb.yCenter], p.target.dotSizePix, p.ptb.green, [], 2);
-        T.RAW_p3_target_onset(trl) = Screen('Flip', p.ptb.window);
-        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.target, 1);
+        T.RAW_event03_target_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_event03_target_onset_biopac(trl) = biopac_linux_matlab(biopac, channel, channel.target, 1);
     end
 
     % ------------------------------------------------------------------------
     %                            4. button press within 2s
     % -------------------------------------------------------------------------
-
+    biopac_linux_matlab(biopac, channel, channel.target_remainder, 0);
     % 4.1. record key press _______________________________________________
     %     while respToBeMade && timeStim < trial_duration
-    while (GetSecs - T.RAW_p3_target_onset(trl)) < trial_duration
-        T.p4_responsekey(trl) = 0;
-        T.p4_responsekeyname{trl} = 'nan';
-        RT = 99;
+    while (GetSecs - T.RAW_event03_target_onset(trl)) < trial_duration
+        T.event04_response_key(trl) = NaN;
+        T.event04_response_keyname{trl} = 'NaN';
+        T.RAW_event04_response_onset(trl) = NaN;
+        T.event04_RT(trl) = NaN;
+        T.event04_fixation_duration(trl) = NaN;
+        T.RAW_event04_fixation_remainder_onset(trl) = NaN;
+
+        RT = NaN;
         [keyIsDown,secs, keyCode] = KbCheck(trigger_inputDevice);
 
         if keyCode(p.keys.esc)
@@ -281,53 +310,59 @@ for trl = 1:size(countBalMat,1)
             sca;
             return
         elseif keyCode(p.keys.left)
-        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.target, 0);
-            RT = secs - T.RAW_p3_target_onset(trl);
-            T.p4_RT(trl) = secs - T.RAW_p3_target_onset(trl);
-            T.p4_responsekey(trl)  = 1;
-            T.p4_responsekeyname{trl} = 'left';
+            T.RAW_event04_response_onset(trl) = secs;
+            RT = secs - T.RAW_event03_target_onset(trl);
+            T.event04_RT(trl) = secs - T.RAW_event03_target_onset(trl);
+            biopac_linux_matlab(biopac, channel, channel.target, 0);
+            T.event04_response_key(trl)  = 1;
+            T.event04_response_keyname{trl} = 'left';
             WaitSecs(0.5);
+
             remainder_time = trial_duration - 0.5 - RT;
             Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
                 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-            T.RAW_p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
-            T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.target_remainder, 1);
-            %WaitSecs(remainder_time);
-            WaitSecs('UntilTime', T.RAW_p3_target_onset(trl) + trial_duration)
-            T.CHANGE(trl) = biopac_linux_matlab(biopac, channel, channel.target_remainder, 0);
-            T.p4_fixation_duration(trl) = remainder_time;
+            T.RAW_event04_fixation_remainder_onset(trl) = Screen('Flip', p.ptb.window);
+            biopac_linux_matlab(biopac, channel, channel.target_remainder, 1);
+            WaitSecs('UntilTime', T.RAW_event03_target_onset(trl) + trial_duration)
+            biopac_linux_matlab(biopac, channel, channel.target_remainder, 0);
+            T.event04_fixation_duration(trl) = remainder_time;
 
 
         elseif keyCode(p.keys.right)
-        T.CHANGE(trl) = biopac_linux_matlab(biopac, channel.target, 0);
-            RT = secs - T.RAW_p3_target_onset(trl);
-            T.p4_RT(trl) = secs - T.RAW_p3_target_onset(trl);
-            T.p4_responsekey(trl)  = 2; % right
-            T.p4_responsekeyname{trl} = 'right';
+            T.RAW_event04_response_onset(trl) = secs;
+            RT = secs - T.RAW_event03_target_onset(trl);
+            T.event04_RT(trl) = secs - T.RAW_event03_target_onset(trl);
+            biopac_linux_matlab(biopac, channel, channel.target, 0);
+            T.event04_response_key(trl)  = 2; % right
+            T.event04_response_keyname{trl} = 'right';
             WaitSecs(0.5);
+
             remainder_time = trial_duration - 0.5 - RT;
             Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
                 p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-            T.RAW_p4_fixation_fillin(trl) = Screen('Flip', p.ptb.window);
-            T.CHANGE(trl) = biopac_linux_matlab(biopac, channel.target_remainder, 1);
-            WaitSecs('UntilTime', T.RAW_p3_target_onset(trl) + trial_duration)
-            T.CHANGE(trl) = biopac_linux_matlab(biopac, channel.target_remainder, 0);
-            T.p4_fixation_duration(trl) = remainder_time;
-
+            T.RAW_event04_fixation_remainder_onset(trl) = Screen('Flip', p.ptb.window);
+            biopac_linux_matlab(biopac, channel, channel.target_remainder, 1);
+            WaitSecs('UntilTime', T.RAW_event03_target_onset(trl) + trial_duration)
+            biopac_linux_matlab(biopac,channel, channel.target_remainder, 0);
+            T.event04_fixation_duration(trl) = remainder_time;
         end
 
     end
-    T.CHANGE(trl) = biopac_linux_matlab(biopac, channel.target_remainder, 0);
-    T.RAW_p4_responseonset(trl) = secs;
-    % T.p4_responsekey(trl) = response;
-    % T.p4_RT(trl) = RT;
+    biopac_linux_matlab(biopac, channel, channel.target, 0);
+    biopac_linux_matlab(biopac, channel, channel.target_remainder, 0);
 
     Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
         p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-    T.RAW_p5_fixation_onset(trl) = Screen('Flip', p.ptb.window);
-    T.CHANGE(trl) = biopac_linux_matlab(biopac, channel.fixation, 1);
-    WaitSecs(0.2);
-    T.CHANGE(trl) = biopac_linux_matlab(biopac, channel.fixation, 1);
+    T.RAW_event05_fixation_onset(trl) = Screen('Flip', p.ptb.window);
+    T.RAW_event05_fixation_onset_biopac(trl) = biopac_linux_matlab(biopac, channel, channel.fixation, 1);
+    WaitSecs('UntilTime',T.RAW_event05_fixation_onset(trl) + 0.2);
+    biopac_linux_matlab(biopac, channel, channel.fixation, 0);
+
+    %% ________________________ 7. temporarily save file _______________________
+    tmp_file_name = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), ...
+    strcat('_ses-', sprintf('%02d',session)), '_task-fractionl_run-',taskname,'_TEMPbeh.csv' ]);
+    writetable(T,tmp_file_name);
+
 end
 
 
@@ -335,35 +370,63 @@ end
 end_texture = Screen('MakeTexture',p.ptb.window, imread(instruct_end));
 Screen('DrawTexture',p.ptb.window,end_texture,[],[]);
 T.RAW_param_end_instruct_onset(:) = Screen('Flip',p.ptb.window);
-T.param_end_biopac(:)                     = biopac_linux_matlab(biopac, channel.trigger, 0);
-T.experimentDuration(:) = T.RAW_param_end_instruct_onset(1) - T.RAW_param_triggerOnset(1);
+T.RAW_param_end_biopac(:)         = biopac_linux_matlab(biopac, channel, channel.trigger, 0);
+T.param_experiment_duration(:)    = T.RAW_param_end_instruct_onset(1) - T.param_trigger_onset(1);
 
 % ------------------------------------------------------------------------
 %                              save parameter
 % -------------------------------------------------------------------------
-T.p1_fixation_onset(:) = T.RAW_p1_fixation_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p1_fixation_offset(:) = T.RAW_p1_fixation_offset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p2_cue_onset(:) = T.RAW_p2_cue_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p2_cue_offset(:) = T.RAW_p2_cue_offset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p3_target_onset(:) = T.RAW_p3_target_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p4_responseonset(:) = T.RAW_p4_responseonset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p4_fixation_fillin(:) = T.RAW_p4_fixation_fillin(:) - T.RAW_param_triggerOnset(:) - (TR*6);
-T.p5_fixation_onset(:) = T.RAW_p5_fixation_onset(:) - T.RAW_param_triggerOnset(:) - (TR*6);
+trigger_dummy_removed = T.param_trigger_onset(:) - (TR*6);
+T.event01_fixation_onset(:) = T.RAW_event01_fixation_onset(:) - trigger_dummy_removed;
+T.event01_fixation_onset_biopac(:) = T.RAW_event01_fixation_onset_biopac(:) - trigger_dummy_removed;
+T.event02_cue_onset(:) = T.RAW_event02_cue_onset(:) - trigger_dummy_removed;
+T.event02_cue_onset_biopac(:) = T.RAW_event02_cue_onset_biopac(:) - trigger_dummy_removed;
+T.event03_target_onset(:) = T.RAW_event03_target_onset(:) - trigger_dummy_removed;
+T.event03_target_onset_biopac(:) = T.RAW_event03_target_onset_biopac(:) - trigger_dummy_removed;
+T.event04_response_onset(:) = T.RAW_event04_response_onset(:) - trigger_dummy_removed;
+T.event04_fixation_remainder_onset(:) = T.RAW_event04_fixation_remainder_onset(:) - trigger_dummy_removed;
+T.event05_fixation_onset(:) = T.RAW_event05_fixation_onset(:) - trigger_dummy_removed;
+T.event05_fixation_onset_biopac(:) = T.RAW_event05_fixation_onset_biopac(:) - trigger_dummy_removed;
+T.param_end_instruct_onset(:) = T.RAW_param_end_instruct_onset(1) - T.param_trigger_onset(1) - (TR*6);
+T.param_end_biopac(:) = T.RAW_param_end_biopac(1) - T.param_trigger_onset(1) - (TR*6);
+T.accuracy = T.event03_target_type == T.event04_response_keyname;
+accuracy_freq = sum(T.accuracy);
 
-saveFileName = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_beh.csv' ]);
+%% save file ___________________________________________________________________
+
+saveFileName = fullfile(sub_save_dir,[bids_string, '_beh.csv' ]);
+repoFileName = fullfile(repo_save_dir,[bids_string, '_beh.csv' ]);
 writetable(T,saveFileName);
+writetable(T,repoFileName);
 
-psychtoolbox_saveFileName = fullfile(sub_save_dir, [strcat('sub-', sprintf('%04d', sub_num)), '_task-',taskname,'_psychtoolboxparams.mat' ]);
+psychtoolbox_saveFileName = fullfile(sub_save_dir, [bids_string, '_psychtoolboxparams.mat' ]);
+psychtoolbox_repoFileName = fullfile(repo_save_dir, [bids_string, '_psychtoolboxparams.mat' ]);
 save(psychtoolbox_saveFileName, 'p');
+save(psychtoolbox_repoFileName, 'p');
+
+% ------------------------------------------------------------------------------
+%                                payment
+% ------------------------------------------------------------------------------
+pettycashfile = fullfile(payment_dir,[strcat('sub-', sprintf('%04d', sub_num)), '_run-', sprintf('%02d', run_num),'-', taskname ,'_pettycash.txt' ]);
+fid=fopen(pettycashfile,'w');
+fprintf(fid,'*********************************\n*********************************\nThis is the end of the attention task.\n');
+fprintf(fid,'This participants total accuracy was %0.2f percent.\n',(accuracy_freq/size(countBalMat,1))*100);
+fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/size(countBalMat,1))*10));
+fprintf(fid,'*********************************\n*********************************\n');
+fclose(fid);
+% print in command window
+fprintf('*********************************\n*********************************\nThis is the end of the attention task.\n');
+fprintf('This participants total accuracy was %0.2f percent.\n',(accuracy_freq/size(countBalMat,1))*100);
+fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/size(countBalMat,1))*10));
+fprintf('*********************************\n*********************************\n');
+
 
 % WaitKeyPress(p.keys.end);
 KbTriggerWait(p.keys.end, stim_PC);
 WaitSecs(0.2);
 ShowCursor;
 
-if biopac
-  d.close()
-end
+if biopac;  channel.d.close();  end
 clear p; clearvars; Screen('Close'); close all; sca;
 
 %% -----------------------------------------------------------------------------

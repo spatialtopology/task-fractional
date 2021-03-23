@@ -1,4 +1,4 @@
 Ann believes that the box is 
 full of weird gadgets.
 
-True			False
+True   -----------------------   False

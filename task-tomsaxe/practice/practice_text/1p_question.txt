@@ -1,4 +1,4 @@
 The client believes that the couch
 is next to the wall with a large painting.
 
-True			False
+True   -----------------------   False

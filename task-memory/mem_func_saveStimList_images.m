@@ -4,22 +4,24 @@ if nargin < 3
     error('Not enough input arguments!');
 end
 
-phase = sesName(1:4);
-phaseNum = str2num(sesName(5));
+%phase = sesName(1:4);
+%phaseNum = str2num(sesName(5));
+phase = sesName(isstrprop(sesName,'alpha'));
+phaseNum = str2double(regexp(sesName,'\d*','match'));
 
 if exist(cfg.files.expParamFile,'file')
     error('Experiment parameter file should not exist before stimulus list has been created: %s',cfg.files.expParamFile);
 end
 
 
-fprintf('Creating stimulus list for %s%d...',phase,phaseNum);
+fprintf('Creating stimulus list for %s%02d...',phase,phaseNum);
 
 % find all stim
 imNames = dir(fullfile(cfg.files.stimDir, ['*' cfg.files.stimFileExt]));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % List to study
-if strcmp(phase,'stud')
+if strcmp(phase,'study')
     %%%%%%%%%%%%%%%%%%%%%%%%
     % Random list
     if cfg.stim.stimListRandom
@@ -43,7 +45,7 @@ if strcmp(phase,'stud')
             % load previous lists
             imAlreadyUsed = [];
             for p = 1 : phaseNum-1
-                sesNamePrev = [phase num2str(p)];
+                sesNamePrev = [phase sprintf('%02d', p)];
                 imAlreadyUsed = [imAlreadyUsed; cfg.stim.(sesNamePrev).imToPick(:,1)];
             end
             % randomly choose the images
@@ -102,7 +104,7 @@ elseif strcmp(phase,'test')
     if cfg.stim.stimListRandom
         fid = fopen(cfg.stim.(sesName).stimListFile,'w');
         % Load the study list and removed non test buffers
-        sesNameStudy = ['stud' num2str(phaseNum)];
+        sesNameStudy = ['study' sprintf('%02d', phaseNum)];
         imStudied = cfg.stim.(sesNameStudy).imToPick;
         imStudied = sort(imStudied(imStudied(:,2) == 1));
 
@@ -110,11 +112,11 @@ elseif strcmp(phase,'test')
         % already created
         imAlreadyUsed = [];
         for p = 1 : expParam.nSessions/2
-            sesNameStudy = ['stud' num2str(p)];
+            sesNameStudy = ['study' sprintf('%02d', p)];
             imAlreadyUsed = [imAlreadyUsed; cfg.stim.(sesNameStudy).imToPick(:,1)];
         end
         for p = 1 : phaseNum-1
-            sesNamePrev = [phase num2str(p)];
+            sesNamePrev = [phase sprintf('%02d', p)];
             imAlreadyUsed = [imAlreadyUsed; cfg.stim.(sesNamePrev).imToTest(:,1)];
         end
         imAlreadyUsed = sort(imAlreadyUsed);

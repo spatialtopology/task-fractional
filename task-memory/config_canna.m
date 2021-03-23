@@ -10,7 +10,7 @@ function [cfg,expParam] = config_canna(cfg,expParam)
 % Set the number of sessions
 %expParam.sessionNum = 1;
 expParam.nSessions = 4; % 5
-expParam.sesTypes = {'stud1', 'test1', 'stud2', 'test2'}; %
+expParam.sesTypes = {'study01', 'test01', 'study02', 'test02'}; %
 
 %% If this is session 1, setup the experiment
 if expParam.sessionNum == 1
@@ -172,7 +172,7 @@ if expParam.sessionNum == 1
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     for s = 1 : expParam.nSessions/2
-        sesName = ['stud' num2str(s)];
+        sesName = ['study', sprintf('%02d', s)];
         if ismember(sesName,expParam.sesTypes)
             cfg.stim.(sesName).fixDuringISI = fixDuringISI;
             cfg.stim.(sesName).fixDuringPreStim = fixDuringPreStim;
@@ -199,7 +199,7 @@ if expParam.sessionNum == 1
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     for s = 1 : expParam.nSessions/2
-        sesName = ['test' num2str(s)];
+        sesName = ['test' sprintf('%02d', s)];
         if ismember(sesName,expParam.sesTypes)
             cfg.stim.(sesName).fixDuringISI = fixDuringISI;
             cfg.stim.(sesName).fixDuringPreStim = fixDuringPreStim;
