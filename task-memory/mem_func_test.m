@@ -217,20 +217,24 @@ for trl = 1 : length(stimList)
     timeStim = GetSecs - thisGetSecs;
     %         while respToBeMade && timeStim < 2%sessionCfg.stim
     while KbCheck(-3); end
+
     if sessionCfg.answerFast
         while (GetSecs - StimulusOnsetTime) < task_duration
             answer = NaN; RT = NaN; actual_key = NaN; responsekeyname = 'NA'; secs = NaN;
             T.RAW_event03_response_onset(trl) = NaN;
             % check the keyboard
-            [keyIsDown,secs, keyCode] = KbCheck(-3);
+            %[keyIsDown,secs, keyCode] = KbCheck(-3);
+            [~,~,buttonpressed] = GetMouse;
+            resp_onset = GetSecs;
             FlushEvents('keyDown');
-            if keyIsDown
+            %if keyIsDown
                 % if keyCode(KbName(cfg.keys.oldKey))
-                if keyCode(KbName('1!'))
+            if buttonpressed(1)
+                %keyCode(KbName('1!'))
                     %             respToBeMade = false;
                     answer = 1; actual_key = 1; responsekeyname = 'left';
-                    T.RAW_event03_response_onset(trl) = secs;
-                    RT = secs-StimulusOnsetTime;
+                    T.RAW_event03_response_onset(trl) = resp_onset;
+                    RT = resp_onset-StimulusOnsetTime;
                     biopac_linux_matlab(channel, channel.image, 0);
                     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.experimenterColor); % Text output of mouse position draw in the centre of the screen
                     DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
@@ -241,10 +245,11 @@ for trl = 1 : length(stimList)
                     Screen('Flip', p.ptb.window);
                     biopac_linux_matlab(channel, channel.remainder, 1);
                     WaitSecs('UntilTime', StimulusOnsetTime + task_duration);
-                elseif keyCode(KbName('2@'))
+            elseif buttonpressed(3)
+                %keyCode(KbName('2@'))
                     answer = 0; actual_key = 2; responsekeyname = 'right';
-                    T.RAW_event03_response_onset(trl) = secs;
-                    RT = secs-StimulusOnsetTime;
+                    T.RAW_event03_response_onset(trl) = resp_onset;
+                    RT = resp_onset-StimulusOnsetTime;
                     biopac_linux_matlab(channel, channel.image, 0);
                     DrawFormattedText(p.ptb.window, textOld, textLXc,  textYc, cfg.text.whiteTextColor); % Text output of mouse position draw in the centre of the screen
                     DrawFormattedText(p.ptb.window, textNew, textRXc,  textYc, cfg.text.experimenterColor); % Text output of mouse position draw in the centre of the screen
@@ -256,7 +261,7 @@ for trl = 1 : length(stimList)
                     biopac_linux_matlab(channel, channel.remainder, 1);
                     WaitSecs('UntilTime', StimulusOnsetTime + task_duration);
                 end
-            end
+            %end
             %         timeStim = GetSecs - thisGetSecs;
             timeStim = GetSecs - StimulusOnsetTime;
         end
@@ -277,7 +282,7 @@ for trl = 1 : length(stimList)
     T.event03_response_key(trl) = answer;
     T.event03_RT(trl) = RT;
     T.event03_response_keyname{trl} = responsekeyname;
-    
+
 
 
     % isi

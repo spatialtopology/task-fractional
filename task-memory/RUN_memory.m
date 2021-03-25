@@ -470,10 +470,12 @@ fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((total_acc/80)*10));
 fprintf(fid,'*********************************\n*********************************\n');
 fclose(fid);
 % print in command window
-fprintf(fid,'*********************************\n*********************************\nThis is the end of the memory task.\n');
-fprintf(fid,'This participants total accuracy was %0.2f percent.\n',(total_acc/80)*100);
-fprintf(fid,'Please pay %0.2f dollars.\nThank you !!\n', ((total_acc/80)*10));
-fprintf(fid,'*********************************\n*********************************\n');
+fprintf('*********************************\n*********************************\nThis is the end of the memory task.\n');
+fprintf('This participants total accuracy was %0.2f percent.\n',(total_acc/80)*100);
+fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((total_acc/80)*10));
+fprintf('*********************************\n*********************************\n');
+
+
 
 % things to consider
 % [ ] non-answered items?

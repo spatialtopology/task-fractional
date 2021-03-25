@@ -98,6 +98,15 @@ fprintf('\n%s\n%s\n%s\n',boxTop,script_name,boxTop)
 % DEFAULTS ________________________________________________
 defaults = task_defaults;
 KbName('UnifyKeyNames');
+% p.keys.confirm                 = KbName('return');
+% p.keys.right                   = KbName('3#');
+% p.keys.left                    = KbName('1!');
+% p.keys.space                   = KbName('space');
+% p.keys.esc                     = KbName('ESCAPE');
+% p.keys.trigger                 = KbName('5%');
+% p.keys.start                   = KbName('s');
+% p.keys.end                     = KbName('e');
+
 
 if fMRI
 [keyboard_id, keyboard_name] = GetKeyboardIndices;
@@ -156,9 +165,9 @@ taskname                        = 'tomspunt';
 % bids_string
 % example: sub-0001_ses-04_task-fractional_run-tomspunt-01
 bids_string                         = [strcat('sub-', sprintf('%04d', sub_num)), ...
-strcat('_ses-',sprintf('%02d', session)),...
-strcat('_task-fractional'),...
-strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
+    strcat('_ses-',sprintf('%02d', session)),...
+    strcat('_task-fractional'),...
+    strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
 sub_save_dir = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh'  );
 repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
     'task-fractional');
@@ -214,34 +223,34 @@ totalTime           = defaults.TR*numTRs;
 %     5 - stimulus # (corresponds to qim & qdata from design.mat file)
 
 vnames = {'src_subject_id','session_id','run_id','param_counterbalance_ver','param_block_num',...
-'param_trial_num','param_cond_type_num','param_cond_type_string','param_normative_response','param_ques_type_string',...
-'param_image_num','param_image_filename','param_trigger_onset','param_start_biopac',...
-'event01_fixation','event01_fixation_dur','event01_blockquestion_onset','event01_block_isi_blacksreen','event01_blockquestion_dur',...
-'event02_image_onset','event02_image_dur',...
-'event03_response_onset','event03_response_key','event03_response_keyname','event03_RT',...
-'event04_shortquestion_onset',...
-'param_end_instruct_onset','param_experiment_duration',...
-'RAW_e1_fixation','RAW_e1_fixation_biopac','RAW_e1_blockquestion_onset',...
-'RAW_e1_blockquestion_onset_biopac','RAW_e1_block_isi_blacksreen',...
-'RAW_e2_image_onset','RAW_e2_image_onset_biopac',...
-'RAW_e3_response_onset',...
-'RAW_e4_shortquestion_onset',...
-'RAW_param_end_instruct_onset'};
+    'param_trial_num','param_cond_type_num','param_cond_type_string','param_normative_response','param_ques_type_string',...
+    'param_image_num','param_image_filename','param_trigger_onset','param_start_biopac',...
+    'event01_fixation','event01_fixation_dur','event01_blockquestion_onset','event01_block_isi_blacksreen','event01_blockquestion_dur',...
+    'event02_image_onset','event02_image_dur',...
+    'event03_response_onset','event03_response_key','event03_response_keyname','event03_RT',...
+    'event04_shortquestion_onset',...
+    'param_end_instruct_onset','param_experiment_duration',...
+    'RAW_e1_fixation','RAW_e1_fixation_biopac','RAW_e1_blockquestion_onset',...
+    'RAW_e1_blockquestion_onset_biopac','RAW_e1_block_isi_blacksreen',...
+    'RAW_e2_image_onset','RAW_e2_image_onset_biopac',...
+    'RAW_e3_response_onset',...
+    'RAW_e4_shortquestion_onset',...
+    'RAW_param_end_instruct_onset'};
 
 vtypes = {'double','double','double','double','double',...
-'double','double','string','double','string',...
-'double','string','double','double',...
-'double','double','double','double','double',...
-'double','double',...
-'double','double','string','double',...
-'double',...
-'double','double',...
-'double','double','double',...
-'double','double',...
-'double','double',...
-'double',...
-'double',...
-'double'};
+    'double','double','string','double','string',...
+    'double','string','double','double',...
+    'double','double','double','double','double',...
+    'double','double',...
+    'double','double','string','double',...
+    'double',...
+    'double','double',...
+    'double','double','double',...
+    'double','double',...
+    'double','double',...
+    'double',...
+    'double',...
+    'double'};
 T = table('Size', [length(design.trialSeeker) size(vnames,2)], 'VariableNames', vnames, 'VariableTypes', vtypes);
 T.src_subject_id(:)            = sub_num;
 T.session_id(:)                = session;
@@ -283,7 +292,7 @@ fprintf('%s\n', repmat('-', 1, length(script_name)));
 % resp_set = ptb_response_set([defaults.valid_keys ]); % response set
 % defaults.start defaults.trigger defaults.end defaults.escape
 % resp_set = cell2mat(cellfun(@KbName,{'1!', '2@'}, 'Unif', false));
-resp_set =  ptb_response_set([defaults.valid_keys defaults.escape]);
+%resp_set =  ptb_response_set([defaults.valid_keys defaults.escape]);
 % F. Initialize Screen _________________________________________________________
 taskname                      = 'tomspunt';
 screens                       = Screen('Screens'); % Get the screen numbers
@@ -372,7 +381,7 @@ instruct_end                   = fullfile(instruct_filepath, instruct_end_name);
 % ------------------------------------------------------------------------------
 %                       0. Present Instruction Screen
 % ------------------------------------------------------------------------------
-% DisableKeysForKbCheck([]);
+DisableKeysForKbCheck([]);
 start.texture = Screen('MakeTexture',w.win, imread(instruct_start));
 Screen('DrawTexture',w.win,start.texture,[],[]);
 Screen('Flip',w.win);
@@ -382,15 +391,17 @@ Screen('Flip',w.win);
 %                           1. Wait for trigger
 % ------------------------------------------------------------------------------
 
-% WaitKeyPress(KbName('s'), 1);
-secs = KbTriggerWait(KbName('s'),-3);
-Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-    p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-Screen('Flip', p.ptb.window);
+KbTriggerWait(KbName('s'), stim_PC);
+%KbWait(-3,KbName('s'));
 
-% WaitKeyPress(KbName('5%'));
-T.param_trigger_onset(:) = KbTriggerWait(KbName('5%'), trigger_inputDevice);
-% T.param_trigger_onset(:) = GetSecs;
+Screen('DrawTexture',w.win, fixTex);
+Screen('Flip',w.win);
+
+KbTriggerWait(KbName('5%'), trigger_inputDevice);
+%KbWait(-3,KbName(defaults.trigger));
+
+%T.param_trigger_onset(:) = KbTriggerWait(KbName('5%'));
+T.param_trigger_onset(:) = GetSecs;
 T.param_start_biopac(:)    = biopac_linux_matlab(biopac, channel.trigger, 1);
 anchor = T.param_trigger_onset(1);
 WaitSecs(TR*6);
@@ -407,14 +418,14 @@ for b = 1:nBlocks
     Screen('DrawTexture',w.win, fixTex);
     T.RAW_e1_fixation(blk_rows) = Screen('Flip',w.win);
     T.RAW_e1_fixation_biopac(blk_rows) = biopac_linux_matlab(biopac, channel.fixation, 1);
-
-%    % ________ 3-2. Get Data for This Block (While Waiting for Block Onset) _____________
+    
+    %    % ________ 3-2. Get Data for This Block (While Waiting for Block Onset) _____________
     tmpSeeker   = trialSeeker(trialSeeker(:,1)==b,:);
     pbcue       = pbc_brief{blockSeeker(b,4)};  % question cue
     isicue      = design.isicues{blockSeeker(b,4)};  % isi cue
     isicue_x    = isicues_xpos(blockSeeker(b,4));  % isi cue x position
     isicue_y    = isicues_ypos(blockSeeker(b,4));  % isi cue y position
-
+    
     % ________ 3-3. Prepare Question Cue Screen (Still Waiting)__________________________
     if ~strcmpi(defaults.language, 'german')
         Screen('TextSize',w.win, defaults.font.size1); Screen('TextStyle', w.win, 0);
@@ -422,29 +433,29 @@ for b = 1:nBlocks
         Screen('TextStyle',w.win, 1); Screen('TextSize', w.win, defaults.font.size2);
     end
     DrawFormattedText(w.win, pbcue,'center','center', w.white, defaults.font.wrap);
-
+    
     % ________ 3-4. Present Question Screen and Prepare First ISI (Blank) Screen ________
     WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3)); % duration of fixation
     biopac_linux_matlab(biopac, channel.fixation, 0);
-
+    
     T.event01_fixation_dur(blk_rows) = GetSecs - T.RAW_e1_fixation(8*(b-1)+1);
     T.RAW_e1_blockquestion_onset(blk_rows) = Screen('Flip', w.win); % p2_question_cue
     T.RAW_e1_blockquestion_onset_biopac(blk_rows) = biopac_linux_matlab(biopac, channel.question, 1);
     Screen('FillRect', w.win, w.black);
-
+    
     % ________ 3-5. Present Blank Screen Prior to First Trial ___________________________
     WaitSecs('UntilTime', anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur);
     biopac_linux_matlab(biopac, channel.question, 0);
     T.RAW_e1_block_isi_blacksreen(blk_rows) = Screen('Flip', w.win); % p3_fixation_onset
-
-% ------------------------------------------------------------------------------
-%                             4. Trial loop start
-% ------------------------------------------------------------------------------
-
+    
+    % ------------------------------------------------------------------------------
+    %                             4. Trial loop start
+    % ------------------------------------------------------------------------------
+    
     for t = 1:nTrialsBlock
         trl = 8*(b-1) + t;
         % ________ 4-1. Prepare Screen for Current Trial ________________________________
-
+        
         Screen('DrawTexture',w.win,slideTex{tmpSeeker(t,5)})
         if t==1
             WaitSecs('UntilTime',anchor +TR*6+ blockSeeker(b,3) + defaults.cueDur + defaults.firstISI);
@@ -453,7 +464,7 @@ for b = 1:nBlocks
             WaitSecs('UntilTime',offset_dur + defaults.ISI);
             T.event01_blockquestion_dur(trl) = defaults.ISI;
         end
-
+        
         % ________ 4-2. Present Screen for Current Trial & Prepare ISI Screen ___________
         T.RAW_e2_image_onset(trl) = Screen('Flip',w.win); % IMAGE WITH OPTIONS
         T.RAW_e2_image_onset_biopac(trl)    = biopac_linux_matlab(biopac, channel.image, 1);
@@ -463,22 +474,19 @@ for b = 1:nBlocks
         else % present question reminder screen between every block trial
             Screen('DrawText', w.win, isicue, isicue_x, isicue_y);
         end
-
+        
         % ________ 4-3. Look for Button Press ___________________________________________
-        % [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
-        [resp, rt] = ptb_get_resp_windowed_noflip(trigger_inputDevice, resp_set, defaults.maxDur, defaults.ignoreDur);
+        [resp, rt] = ptb_get_resp_windowed_noflip_trackball(trigger_inputDevice, defaults.maxDur, defaults.ignoreDur);
         offset_dur = Screen('Flip', w.win); % QUESTION CUE
         biopac_linux_matlab(biopac, channel.image, 0);
-
+        
         T.event02_image_dur(trl) = offset_dur - T.RAW_e2_image_onset(8*(b-1) + t);
-
+        
         % ________ 4-4. Present ISI, ____________________________________________________
         % and Look a Little Longer for a Response if None Was Registered ________________
-
+        
         norespyet = isempty(resp);
-
-        % if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(inputDevice, resp_set, defaults.ISI*0.90); end
-        if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip(trigger_inputDevice, resp_set, defaults.ISI*0.90); end
+        if norespyet, [resp, rt] = ptb_get_resp_windowed_noflip_trackball(trigger_inputDevice, defaults.ISI*0.90); end
         if ~isempty(resp)
             T.RAW_e3_response_onset(trl) = GetSecs;
             T.event03_response_onset(trl) = T.RAW_e3_response_onset(trl) - T.param_trigger_onset(1) - (TR*6);
@@ -487,9 +495,9 @@ for b = 1:nBlocks
                 fprintf('\nESCAPE KEY DETECTED\n'); return
             end
             % tmpSeeker(t,8) = find(strcmpi(KbName(resp_set), resp));
-            tmpSeeker(t,8) = find(strcmpi(KbName(resp_set), resp));
+            tmpSeeker(t,8) = resp; %find(strcmpi(KbName(resp_set), resp));
             tmpSeeker(t,7) = rt + (defaults.maxDur*norespyet);
-
+            
         end
         tmpSeeker(t,9)                    = offset_dur;
         T.event03_RT(trl)                 = tmpSeeker(t,7);
@@ -497,18 +505,18 @@ for b = 1:nBlocks
         T.RAW_e4_shortquestion_onset(trl) = offset_dur;
         T.param_ques_type_string{trl} = isicue;
         T.param_image_filename{trl}       = slideName{tmpSeeker(t,5)};
-
+        
     end % END TRIAL LOOP
-
-
-% ------------------------------------------------------------------------------
-%               5. Store Block Data & Print to Logfile
-% ------------------------------------------------------------------------------
+    
+    
+    % ------------------------------------------------------------------------------
+    %               5. Store Block Data & Print to Logfile
+    % ------------------------------------------------------------------------------
     trialSeeker(trialSeeker(:,1)==b,:) = tmpSeeker;
     for t = 1:size(tmpSeeker,1), fprintf(fid,[repmat('%d\t',1,size(tmpSeeker,2)) '\n'],tmpSeeker(t,:)); end
     tmp_file_name = fullfile(sub_save_dir,[bids_string, '_TEMPbeh.csv' ]);
     writetable(T,tmp_file_name);
-
+    
 end % END BLOCK LOOP
 
 
@@ -555,7 +563,7 @@ T.event04_shortquestion_onset(:) = T.RAW_e4_shortquestion_onset(:) - T.param_tri
 T.param_end_instruct_onset(:) = T.RAW_param_end_instruct_onset(:) - T.param_trigger_onset(:) - (TR*6);
 T.param_experiment_duration(:) = T.RAW_param_end_instruct_onset(1) - T.param_trigger_onset(1);
 T.event03_response_keyname(ismember(T.event03_response_key(:),1),:) = 'left';
-T.event03_response_keyname(ismember(T.event03_response_key(:),2),:) = 'right';
+T.event03_response_keyname(ismember(T.event03_response_key(:),3),:) = 'right';
 T.accuracy = T.param_normative_response == T.event03_response_key;
 accuracy_freq = sum(T.accuracy);
 
@@ -582,7 +590,7 @@ fprintf('This participants total accuracy was %0.2f percent.\n',(accuracy_freq/2
 fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/256)*10));
 fprintf('*********************************\n*********************************\n');
 
-KbTriggerWait(KbName('e'), stim_PC);
+WaitKeyPress(KbName('e'));
 ShowCursor;
 
 if biopac;  channel.d.close();  end
@@ -594,41 +602,33 @@ clear p; clearvars; Screen('Close'); close all; sca;
 %                                   Function
 %-------------------------------------------------------------------------------
 
-function [time] = biopac_linux_matlab(biopac, channel_num, state_num)
-    if biopac
-        channel.d.setFIOState(pyargs('fioNum', int64(channel_num), 'state', int64(state_num)))
-        time = GetSecs;
-    else
-        time = GetSecs;
-        return
-    end
-end
-
-    function reloadPy()
-        warning('off', 'MATLAB:ClassInstanceExists')
-        clear classes
-        mod = py.importlib.import_module('u3');
-        py.importlib.reload(mod);
-
-    end
-function WaitKeyPress(kID)
-    while KbCheck(-3); end  % Wait until all keys are released.
-
-    while 1
-        % Check the state of the keyboard.
-        [ keyIsDown, ~, keyCode ] = KbCheck(-3);
-        % If the user is pressing a key, then display its code number and name.
-        if keyIsDown
-
-            if keyCode(KbName('ESCAPE'))
-                cleanup; break;
-            elseif keyCode(kID)
-                break;
-            end
-            % make sure key's released
-            while KbCheck(-3); end
+    function [time] = biopac_linux_matlab(biopac, channel_num, state_num)
+        if biopac
+            channel.d.setFIOState(pyargs('fioNum', int64(channel_num), 'state', int64(state_num)))
+            time = GetSecs;
+        else
+            time = GetSecs;
+            return
         end
     end
-end
 
+    function WaitKeyPress(kID)
+        while KbCheck(-3); end  % Wait until all keys are released.
+
+        while 1
+            % Check the state of the keyboard.
+            [ keyIsDown, ~, keyCode ] = KbCheck(-3);
+            % If the user is pressing a key, then display its code number and name.
+            if keyIsDown
+
+                if keyCode(KbName('ESCAPE'))
+                    cleanup; break;
+                elseif keyCode(kID)
+                    break;
+                end
+                % make sure key is released
+                while KbCheck(-3); end
+            end
+        end
+    end
 end

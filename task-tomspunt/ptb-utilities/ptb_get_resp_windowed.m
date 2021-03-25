@@ -28,19 +28,41 @@ onset = GetSecs;
 noresp = 1;
 resp = [];
 rt = [];
+
+
+
+% while noresp && GetSecs - onset < resp_window
+%     
+%     [keyIsDown secs keyCode] = KbCheck(resp_device);
+%     keyPressed = find(keyCode);
+%     if keyIsDown & ismember(keyPressed, resp_set)
+%         
+%         rt = secs - onset;
+%         Screen('FillRect', window, color); 
+%         Screen('Flip', window);
+%         resp = KbName(keyPressed);
+%         noresp = 0;
+%         
+%     end
+%     
+% end
+
 while noresp && GetSecs - onset < resp_window
-    
-    [keyIsDown secs keyCode] = KbCheck(resp_device);
-    keyPressed = find(keyCode);
-    if keyIsDown & ismember(keyPressed, resp_set)
-        
-        rt = secs - onset;
-        Screen('FillRect', window, color); 
-        Screen('Flip', window);
-        resp = KbName(keyPressed);
-        noresp = 0;
-        
+
+    [~,~,buttonpressed] = GetMouse;
+    resp_onset = GetSecs;
+    FlushEvents('keyDown');
+    rt = resp_onset - onset;
+
+        if buttonpressed(1)
+          resp = 1;
+          noresp = 0;
+        elseif buttonpressed(3)
+          resp = 3;
+          noresp = 0;
+        end
+
+
+
     end
-    
-end
 WaitSecs('UntilTime', onset + resp_window)

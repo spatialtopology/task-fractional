@@ -33,7 +33,7 @@ defaults.escape         = 'ESCAPE'; % escape key (to exit early)
 defaults.trigger        = '5%'; % task trigger key (to start task)
 defaults.end            = 'e';
 defaults.start          = 's';
-defaults.valid_keys     = {'1!' '2@'}; % valid response keys
+defaults.valid_keys     = {'1!', '2@', '3#'}; % valid response keys
 defaults.practice_keys  = {'f' 'j'};
 % These correspond to the keys that the participant can use to make their
 % responses during task performance. The key in the first position (e.g.,

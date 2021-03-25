@@ -150,15 +150,15 @@ function tom_localizer(sub_num, run_num, biopac, session, fMRI)
 % ------------------------------------------------------------------------------
 %                                Parameters
 % ------------------------------------------------------------------------------
-if fMRI
-[keyboard_id, keyboard_name] = GetKeyboardIndices;
-trigger_index = find(contains(keyboard_name, 'Current Designs'));
-trigger_inputDevice = keyboard_id(trigger_index);
-stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')));
-else
+%if fMRI
+%[keyboard_id, keyboard_name] = GetKeyboardIndices;
+%trigger_index = find(contains(keyboard_name, 'Current Designs'));
+%trigger_inputDevice = keyboard_id(trigger_index);
+%stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')));
+%else
 trigger_inputDevice = -3;
 stim_PC = -3;
-end
+%end
 
 
 %% 0. Biopac parameters _________________________________________________
@@ -315,7 +315,7 @@ end
 %  instruction screens are set up.
 try
     cd(textdir);
-    
+
 
     Screen('Preference', 'SkipSyncTests', 0);
     PsychDefaultSetup(2);
@@ -382,14 +382,15 @@ HideCursor;
 % ------------------------------------------------------------------------------
 %                           1. Wait for trigger
 % ------------------------------------------------------------------------------
-%WaitKeyPress(p.keys.start)
-KbTriggerWait(p.keys.start, stim_PC);
+WaitKeyPress(p.keys.start)
+%KbTriggerWait(p.keys.start, stim_PC);
 
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2); % will flip immediately
 Screen('Flip', p.ptb.window);
 
-KbTriggerWait(p.keys.trigger, trigger_inputDevice);
+%KbTriggerWait(p.keys.trigger, trigger_inputDevice);
+WaitKeyPress(p.keys.trigger);
 T.param_trigger_onset(:) = GetSecs;
 experimentStart = T.param_trigger_onset(1);
 T.param_start_biopac(:)   = biopac_linux_matlab(biopac, channel.trigger, 1);
@@ -483,17 +484,37 @@ for trl = 1:trialsPerRun
     T.event04_RT(trl) = NaN;
     while ( GetSecs - T.RAW_e3_question_onset(trl) ) < questDur
 
-        [keyIsDown,secs,keyCode]	= KbCheck(trigger_inputDevice); % check to see if a key is being pressed
+        % [keyIsDown,secs,keyCode]	= KbCheck(trigger_inputDevice); % check to see if a key is being pressed
+        [~,~,buttonpressed] = GetMouse;
+        resp_onset = GetSecs;
+        FlushEvents('keyDown');
+        % if keyCode(p.keys.esc)
+            % ShowCursor;
+            % sca;
+            % return
 
-        if keyCode(p.keys.esc)
-            ShowCursor;
-            sca;
-            return
-        elseif keyCode(p.keys.right)
+        if buttonpressed(1)
             biopac_linux_matlab(biopac, channel.question, 0);
-            RT(trl,1)				= secs - T.RAW_e3_question_onset(trl); %responseStart;
+            RT(trl,1)				= resp_onset - T.RAW_e3_question_onset(trl); %responseStart;
+            key(trl,1)			= 1;
+            T.RAW_e4_response_onset(trl) = resp_onset;
+            T.event04_response_key(trl) = 1;
+            T.event04_response_keyname(trl) = "left";
+            T.event04_RT(trl)    = RT(trl,1);
+            WaitSecs(0.5);
+
+            %remainder_time = task_duration-0.5-RT(trl,1);
+            Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
+                p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
+            Screen('Flip', p.ptb.window);
+            biopac_linux_matlab(biopac, channel.fixation, 1);
+            WaitSecs('UntilTime', T.RAW_e3_question_onset(trl) + questDur);
+        %elseif keyCode(p.keys.right)
+        elseif buttonpressed(3)
+            biopac_linux_matlab(biopac, channel.question, 0);
+            RT(trl,1)				= resp_onset - T.RAW_e3_question_onset(trl); %responseStart;
             key(trl,1)    	= 2;
-            T.RAW_e4_response_onset(trl) = secs;
+            T.RAW_e4_response_onset(trl) = resp_onset;
             T.event04_response_key(trl)    = 2;
             T.event04_response_keyname(trl) = "right";
             T.event04_RT(trl)    = RT(trl,1);
@@ -506,25 +527,6 @@ for trl = 1:trialsPerRun
             biopac_linux_matlab(biopac, channel.fixation, 1);
             WaitSecs('UntilTime', T.RAW_e3_question_onset(trl) + questDur);
             %biopac_linux_matlab(biopac, channel.fixation, 0);
-
-
-        elseif keyCode(p.keys.left)
-            biopac_linux_matlab(biopac, channel.question, 0);
-            RT(trl,1)				= secs - T.RAW_e3_question_onset(trl); %responseStart;
-            key(trl,1)			= 1;
-            T.RAW_e4_response_onset(trl) = secs;
-            T.event04_response_key(trl) = 1;
-            T.event04_response_keyname(trl) = "left";
-            T.event04_RT(trl)    = RT(trl,1);
-            WaitSecs(0.5);
-
-            %remainder_time = task_duration-0.5-RT(trl,1);
-            Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
-                p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
-            Screen('Flip', p.ptb.window);
-            biopac_linux_matlab(biopac, channel.fixation, 1);
-            WaitSecs('UntilTime', T.RAW_e3_question_onset(trl) + questDur);
-
         end
     end
     biopac_linux_matlab(biopac, channel.question, 0);
@@ -562,10 +564,9 @@ T.param_experiment_duration(:) = T.RAW_param_end_instruct_onset(1) - T.param_tri
 experimentEnd		               = GetSecs;
 param_experiment_duration	     = T.param_experiment_duration(1);
 numconds		                   = 2;
-saveFileName = fullfile(sub_save_dir,[bids_string, '_beh.csv' ]);
-repoFileName = fullfile(repo_save_dir,[bids_string, '_beh.csv' ]);
-writetable(T,saveFileName);
-writetable(T,repoFileName);
+
+
+
 % convert variables
 T.event01_fixation(:)          = T.RAW_e1_fixation_onset(:)- T.param_trigger_onset(:) - (TR*6);
 T.event01_fixation_dur(:)      = T.RAW_e2_story_onset(:) - T.RAW_e1_fixation_onset(:);
@@ -573,13 +574,12 @@ T.event02_story_onset(:)       = T.RAW_e2_story_onset(:) - T.param_trigger_onset
 T.event03_question_onset(:)    = T.RAW_e3_question_onset(:) - T.param_trigger_onset(:) - (TR*6);
 T.event04_response_onset(:)    = T.RAW_e4_response_onset(:) - T.param_trigger_onset(:) - (TR*6);
 T.param_end_instruct_onset(:)  = T.RAW_param_end_instruct_onset(:) - T.param_trigger_onset(:) - (TR*6);
-%Ttotal = outerjoin(T, answer, 'Type', 'left');
-%Ttotal = innerjoin(T, answer);
-%Ttotal = innerjoin(answer,T);
 
-% [tnew, rows_in_t1] = innerjoin(T, answer);
-% [~, sortinds] = sort(rows_in_t1);
-% Ttotal = tnew(sortinds,:);
+saveFileName = fullfile(sub_save_dir,[bids_string, '_beh.csv' ]);
+repoFileName = fullfile(repo_save_dir,[bids_string, '_beh.csv' ]);
+writetable(T,saveFileName);
+writetable(T,repoFileName);
+
 Tload = readtable(saveFileName);
 answer_filename = fullfile(tomsaxe_dir, 'answer_key.csv');
 answer = readtable(answer_filename, 'Format','%s%u');
@@ -612,8 +612,8 @@ fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/20)*10));
 fprintf('*********************************\n*********************************\n');
 
 
-
-KbTriggerWait(p.keys.end, stim_PC);
+WaitKeyPress(p.keys.end);
+%KbTriggerWait(p.keys.end, stim_PC);
 if biopac;   channel.d.close(); end
 
 try

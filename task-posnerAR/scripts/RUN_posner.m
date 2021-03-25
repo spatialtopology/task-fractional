@@ -7,14 +7,17 @@ function RUN_posner(sub_num, run_num, biopac, session, fMRI)
 %                          Experiment parameters
 %--------------------------------------------------------------------------
 
-if fMRI
-[keyboard_id, keyboard_name] = GetKeyboardIndices;
-trigger_inputDevice = keyboard_id(find(contains(keyboard_name, 'Current Designs')));
-stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')));
-else
+% if fMRI
+%     [keyboard_id, keyboard_name] = GetKeyboardIndices;
+%     trigger_inputDevice = keyboard_id(find(contains(keyboard_name, 'Current Designs')));
+%     stim_PC = keyboard_id(find(contains(keyboard_name, 'AT Translated')));
+% else
+%     trigger_inputDevice = -3;
+%     stim_PC = -3;
+% end
+
 trigger_inputDevice = -3;
 stim_PC = -3;
-end
 
 %% 0. Biopac parameters _________________________________________________
 script_dir = pwd;
@@ -25,7 +28,7 @@ channel.fixation         = 1;
 channel.cue              = 2;
 channel.target           = 3;
 channel.target_remainder = 4;
-channel.fixation_2       = 5;
+% channel.fixation_2       = 5;
 
 
 
@@ -101,9 +104,9 @@ taskname                       = 'posner';
 % bids_string
 % example: sub-0001_ses-04_task-fractional_run-posner-01
 bids_string                         = [strcat('sub-', sprintf('%04d', sub_num)), ...
-strcat('_ses-',sprintf('%02d', session)),...
-strcat('_task-fractional'),...
-strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
+    strcat('_ses-',sprintf('%02d', session)),...
+    strcat('_task-fractional'),...
+    strcat('_run-', sprintf('%02d', run_num),'-', taskname )];
 sub_save_dir = fullfile(main_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)), 'beh'  );
 repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
     'task-fractional');
@@ -123,51 +126,39 @@ cue_duration                   = 0.200;
 
 
 % D. making output table _________________________________________________
-%vnames = {'param_fmriSession', 'param_counterbalanceVer','RAW_param_trigger_onset',...
-%    'param_AR_invalid_sequence', 'param_valid_type',... %'param_cue', 'param_target',...%
-%     'event01_fixation_onset', 'p1_param_jitter','p1_fixation_offset','p1_ptb_fixation_duration',...
-%     'p2_cue_type','event02_cue_onset','p2_cue_offset','event02_cue_duration',...
-%     'p3_target_type','event03_target_onset',...
-%     'event04_response_onset','event04_response_key','event04_response_keyname','event04_RT', 'event04_fixation_remainder_onset', 'event04_fixation_duration',...
-%     'event05_fixation_onset',...
-%     'RAW_event01_fixation_onset','RAW_p1_fixation_offset',...
-%     'RAW_event02_cue_onset','RAW_p2_cue_offset',...
-%     'RAW_event03_target_onset',...
-%     'event04_response_onset','RAW_event04_fixation_remainder_onset',...
-%     'event05_fixation_onset',...
-%     'RAW_param_end_instruct_onset', 'experimentDuration'};
+
 vnames = {
-'src_subject_id','param_session_id','run_num','param_counterbalance_ver',...
-'param_AR_invalid_sequence','param_valid_type','param_cue_location','param_target_location',...
-'param_trigger_onset','param_start_biopac',...
-'event01_param_jitter','event01_fixation_onset','event01_fixation_onset_biopac','event01_fixation_duration',...
-'event02_cue_type','event02_cue_onset','event02_cue_onset_biopac','event02_cue_duration',...
-'event03_target_type','event03_target_onset','event03_target_onset_biopac',...
-'event04_response_key','event04_response_keyname','event04_response_onset','event04_RT',...
-'event04_fixation_remainder_onset','event04_fixation_duration',...
-'event05_fixation_onset','event05_fixation_onset_biopac',...
-'param_end_instruct_onset','param_end_biopac','param_experiment_duration',...
-'RAW_event01_fixation_onset','RAW_event01_fixation_onset_biopac',...
-'RAW_event02_cue_onset','RAW_event02_cue_onset_biopac',...
-'RAW_event03_target_onset','RAW_event03_target_onset_biopac',...
-'RAW_event04_response_onset','RAW_event04_fixation_remainder_onset',...
-'RAW_event05_fixation_onset','RAW_event05_fixation_onset_biopac',...
-'RAW_param_end_instruct_onset','RAW_param_end_biopac'};
+    'src_subject_id','param_session_id','run_num','param_counterbalance_ver',...
+    'param_AR_invalid_sequence','param_valid_type','param_cue_location','param_target_location',...
+    'param_trigger_onset','param_start_biopac',...
+    'event01_param_jitter','event01_fixation_onset','event01_fixation_onset_biopac','event01_fixation_duration',...
+    'event02_cue_type','event02_cue_onset','event02_cue_onset_biopac','event02_cue_duration',...
+    'event03_target_type','event03_target_onset','event03_target_onset_biopac',...
+    'event04_response_key','event04_response_keyname','event04_response_onset','event04_RT',...
+    'event04_fixation_remainder_onset','event04_fixation_duration',...
+    'event05_fixation_onset','event05_fixation_onset_biopac',...
+    'param_end_instruct_onset','param_end_biopac','param_experiment_duration',...
+    'RAW_event01_fixation_onset','RAW_event01_fixation_onset_biopac',...
+    'RAW_event02_cue_onset','RAW_event02_cue_onset_biopac',...
+    'RAW_event03_target_onset','RAW_event03_target_onset_biopac',...
+    'RAW_event04_response_onset','RAW_event04_fixation_remainder_onset',...
+    'RAW_event05_fixation_onset','RAW_event05_fixation_onset_biopac',...
+    'RAW_param_end_instruct_onset','RAW_param_end_biopac'};
 vtypes = {
-  'double','double','double','double','double','string','string','string','double','double',...
-'double','double','double','double',...
-'string','double','double','double',...
-'string','double','double',...
-'double','string','double','double','double','double',...
-'double','double',...
-'double','double','double',...
-'double','double',...
-'double','double',...
-'double','double',...
-'double','double','double','double','double','double'};
+    'double','double','double','double','double','string','string','string','double','double',...
+    'double','double','double','double',...
+    'string','double','double','double',...
+    'string','double','double',...
+    'double','string','double','double','double','double',...
+    'double','double',...
+    'double','double','double',...
+    'double','double',...
+    'double','double',...
+    'double','double',...
+    'double','double','double','double','double','double'};
 T = table('Size', [size(countBalMat,1) size(vnames,2)], 'VariableNames', vnames, 'VariableTypes', vtypes);
 T.src_subject_id(:)            = sub_num;
-T.session_id(:)                = session;
+T.param_session_id(:)          = session;
 T.run_num(:)                   = run_num;
 T.param_counterbalance_ver(:)  = sub_num;
 T.event01_param_jitter         = countBalMat.jitter;
@@ -182,13 +173,21 @@ T.event03_target_type          = countBalMat.target;
 % E. Keyboard information _____________________________________________________
 KbName('UnifyKeyNames');
 p.keys.confirm                 = KbName('return');
-p.keys.right                   = KbName('2@');
+p.keys.right                   = KbName('3#');
 p.keys.left                    = KbName('1!');
 p.keys.space                   = KbName('space');
 p.keys.esc                     = KbName('ESCAPE');
 p.keys.trigger                 = KbName('5%');
 p.keys.start                   = KbName('s');
 p.keys.end                     = KbName('e');
+
+[id, name]                     = GetKeyboardIndices;
+trigger_index                  = find(contains(name, 'Current Designs'));
+trigger_inputDevice            = id(trigger_index);
+
+keyboard_index                 = find(contains(name, 'AT Translated Set 2 Keyboard'));
+keyboard_inputDevice           = id(keyboard_index);
+
 
 % F. fmri Parameters __________________________________________________________
 TR                             = 0.46;
@@ -213,14 +212,15 @@ Screen('Flip',p.ptb.window);
 % ____________________ 1. Wait for Trigger to Begin ______________________
 DisableKeysForKbCheck([]);
 HideCursor;
-KbTriggerWait(p.keys.start, stim_PC);
-%WaitKeyPress(p.keys.start);
+%KbTriggerWait(p.keys.start, stim_PC);
+WaitKeyPress(p.keys.start);
 Screen('DrawLines', p.ptb.window, p.fix.allCoords,...
     p.fix.lineWidthPix, p.ptb.white, [p.ptb.xCenter p.ptb.yCenter], 2);
 Screen('Flip', p.ptb.window);
 % T.param_triggerOnset(:) = KbTriggerWait(p.keys.trigger);
-% WaitKeyPress(p.keys.trigger);
-T.param_trigger_onset(:) = KbTriggerWait(p.keys.trigger, trigger_inputDevice);
+WaitKeyPress(p.keys.trigger);
+T.param_trigger_onset(:) = GetSecs;
+%T.param_trigger_onset(:) = KbTriggerWait(p.keys.trigger);
 T.param_start_biopac(:)                     = biopac_linux_matlab(biopac, channel, channel.trigger, 1);
 % T.param_trigger_onset(:) = GetSecs;
 WaitSecs(TR*6);
@@ -303,16 +303,17 @@ for trl = 1:size(countBalMat,1)
         T.RAW_event04_fixation_remainder_onset(trl) = NaN;
 
         RT = NaN;
-        [keyIsDown,secs, keyCode] = KbCheck(trigger_inputDevice);
-
-        if keyCode(p.keys.esc)
-            ShowCursor;
-            sca;
-            return
-        elseif keyCode(p.keys.left)
-            T.RAW_event04_response_onset(trl) = secs;
-            RT = secs - T.RAW_event03_target_onset(trl);
-            T.event04_RT(trl) = secs - T.RAW_event03_target_onset(trl);
+        % [keyIsDown,secs, keyCode] = KbCheck(trigger_inputDevice);
+        [~,~,buttonpressed] = GetMouse;
+        resp_onset = GetSecs;
+        % if keyCode(p.keys.esc)
+        % ShowCursor;
+        % sca;
+        % return
+        if buttonpressed(1) % keyCode(p.keys.left)
+            T.RAW_event04_response_onset(trl) = resp_onset;
+            RT = resp_onset - T.RAW_event03_target_onset(trl);
+            T.event04_RT(trl) = resp_onset - T.RAW_event03_target_onset(trl);
             biopac_linux_matlab(biopac, channel, channel.target, 0);
             T.event04_response_key(trl)  = 1;
             T.event04_response_keyname{trl} = 'left';
@@ -328,10 +329,10 @@ for trl = 1:size(countBalMat,1)
             T.event04_fixation_duration(trl) = remainder_time;
 
 
-        elseif keyCode(p.keys.right)
-            T.RAW_event04_response_onset(trl) = secs;
-            RT = secs - T.RAW_event03_target_onset(trl);
-            T.event04_RT(trl) = secs - T.RAW_event03_target_onset(trl);
+        elseif buttonpressed(3) % keyCode(p.keys.right)
+            T.RAW_event04_response_onset(trl) = resp_onset;
+            RT = resp_onset - T.RAW_event03_target_onset(trl);
+            T.event04_RT(trl) = resp_onset - T.RAW_event03_target_onset(trl);
             biopac_linux_matlab(biopac, channel, channel.target, 0);
             T.event04_response_key(trl)  = 2; % right
             T.event04_response_keyname{trl} = 'right';
@@ -360,7 +361,7 @@ for trl = 1:size(countBalMat,1)
 
     %% ________________________ 7. temporarily save file _______________________
     tmp_file_name = fullfile(sub_save_dir,[strcat('sub-', sprintf('%04d', sub_num)), ...
-    strcat('_ses-', sprintf('%02d',session)), '_task-fractionl_run-',taskname,'_TEMPbeh.csv' ]);
+        strcat('_ses-', sprintf('%02d',session)), '_task-fractionl_run-',taskname,'_TEMPbeh.csv' ]);
     writetable(T,tmp_file_name);
 
 end
@@ -421,9 +422,9 @@ fprintf('Please pay %0.2f dollars.\nThank you !!\n', ((accuracy_freq/size(countB
 fprintf('*********************************\n*********************************\n');
 
 
-% WaitKeyPress(p.keys.end);
-KbTriggerWait(p.keys.end, stim_PC);
-WaitSecs(0.2);
+WaitKeyPress(p.keys.end);
+%KbTriggerWait(p.keys.end, stim_PC);
+% WaitSecs(0.2);
 ShowCursor;
 
 if biopac;  channel.d.close();  end
@@ -433,20 +434,20 @@ clear p; clearvars; Screen('Close'); close all; sca;
 %                                   Function
 %-------------------------------------------------------------------------------
 
-    % function WaitKeyPress(kID)
-    %     while KbCheck(-3); end
-    %     while 1
-    %         [keyIsDown, ~, keyCode ] = KbCheck(-3);
-    %         if keyIsDown
-    %             if keyCode(p.keys.esc)
-    %                 cleanup; break;
-    %             elseif keyCode(kID)
-    %                 break;
-    %             end
-    %             while KbCheck(-3); end
-    %         end
-    %     end
-    % end
+function WaitKeyPress(kID)
+    while KbCheck(-3); end
+    while 1
+        [keyIsDown, ~, keyCode ] = KbCheck(-3);
+        if keyIsDown
+            if keyCode(p.keys.esc)
+                cleanup; break;
+            elseif keyCode(kID)
+                break;
+            end
+            while KbCheck(-3); end
+        end
+    end
+end
 
     function [time] = biopac_linux_matlab(biopac, channel, channel_num, state_num)
         if biopac

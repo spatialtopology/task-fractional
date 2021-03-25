@@ -145,11 +145,11 @@ for trl = 1 : length(stimList)
         % _________________________ 1. Fixtion Jitter  _______________________
         Screen('TextSize', p.ptb.window, cfg.text.basicTextSize);
         DrawFormattedText(p.ptb.window, cfg.text.fixSymbol, 'center', 'center', cfg.text.basicTextColor);
-        T.event01_fixation_onset(trl) = Screen('Flip', p.ptb.window);
-        T.RAW_event01_fixation_onset(trl) = biopac_linux_matlab(channel, channel.fixation, 1);
+        T.RAW_event01_fixation_onset(trl) = Screen('Flip', p.ptb.window);
+        T.RAW_event01_fixation_biopac(trl) = biopac_linux_matlab(channel, channel.fixation, 1);
         timeFix = sessionCfg.preStim(1) + ((sessionCfg.preStim(2) - sessionCfg.preStim(1)).*rand(1,1));
         T.event01_fixation_duration(trl) = timeFix;
-        WaitSecs('UntilTime', T.event01_fixation_onset(trl) + timeFix);
+        WaitSecs('UntilTime', T.RAW_event01_fixation_onset(trl) + timeFix);
         biopac_linux_matlab(channel, channel.fixation, 0);
     end
     switch cfg.stim.studyType
