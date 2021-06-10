@@ -1,7 +1,7 @@
 % 1. grab participant number ___________________________________________________
 clear all;
 prompt = 'SESSION (default=4): ';
-session = input(prompt);
+ses_num = input(prompt);
 sub_prompt = 'PARTICIPANT (in raw number form, e.g. 1, 2,...,98): ';
 sub_num = input(sub_prompt);
 biopac_prompt = 'BIOPAC (YES=1, NO=0) : ';
@@ -59,8 +59,31 @@ end
 prompt = 'RUN number (1 or 2): ';
 run_num = input(prompt);
 
-run_task1 = strcat(t1, "(" ,num2str(sub_num),",",num2str(1),",", num2str(biopac),",", num2str(session),",", num2str(fMRI),  ")");
-run_task2 = strcat(t2, '(' ,num2str(sub_num),',',num2str(2),",", num2str(biopac),",", num2str(session),",", num2str(fMRI),  ')');
+
+% DOUBLE CHECK MSG ______________________________________________________________
+%% A. Directories ______________________________________________________________
+task_dir                        = pwd;
+repo_dir                        = fileparts(task_dir);
+repo_save_dir = fullfile(repo_dir, 'data', strcat('sub-', sprintf('%04d', sub_num)),...
+    'task-fractional');
+bids_string                     = [strcat('sub-', sprintf('%04d', sub_num)), ...
+    strcat('_ses-',sprintf('%02d', ses_num)),...
+    strcat('_task-*'),...
+    strcat('_run-', sprintf('%02d', run_num))];
+repoFileName = fullfile(repo_save_dir,[bids_string,'*_beh.csv' ]);
+
+%% B. if so, "this run exists. Are you sure?" ___________________________________
+if isempty(dir(repoFileName)) == 0
+    RA_response = input(['\n\n---------------ATTENTION-----------\nThis file already exists in: ', repo_save_dir, '\nDo you want to overwrite?: (YES = 999; NO = 0): ']);
+    if RA_response ~= 999 || isempty(RA_response) == 1
+        error('Aborting!');
+    end
+end
+% ______________________________________________________________
+
+
+run_task1 = strcat(t1, "(" ,num2str(sub_num),",",num2str(1),",", num2str(biopac),",", num2str(ses_num),",", num2str(fMRI),  ")");
+run_task2 = strcat(t2, '(' ,num2str(sub_num),',',num2str(2),",", num2str(biopac),",", num2str(ses_num),",", num2str(fMRI),  ')');
 
 if run_num == 1
 eval(chdir_t1);run(run_task1);
